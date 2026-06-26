@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHATTER BOX — Standalone</title>
+<style>
+/* ── Reset & Base ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #F1F5F9;
+  --dark:     #0F172A;
+  --orange:   #f97316;
+  --orange-d: #ea580c;
+  --blue:     #3b82f6;
+  --blue-d:   #2563eb;
+  --slate-50: #f8fafc;
+  --slate-100:#f1f5f9;
+  --slate-200:#e2e8f0;
+  --slate-300:#cbd5e1;
+  --slate-400:#94a3b8;
+  --slate-500:#64748b;
+  --slate-600:#475569;
+  --slate-700:#334155;
+  --slate-800:#1e293b;
+  --slate-900:#0f172a;
+  --white:    #ffffff;
+  --green:    #22c55e;
+  --red:      #ef4444;
+  --r-xl:     1.5rem;
+  --r-2xl:    2rem;
+  --r-3xl:    2.5rem;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+  --shadow:    0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.06);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,.1), 0 4px 6px rgba(0,0,0,.05);
+  --shadow-xl: 0 20px 25px rgba(0,0,0,.1), 0 8px 10px rgba(0,0,0,.04);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--dark);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Screens ── */
+.screen { display: none; min-height: 100vh; }
+.screen.active { display: flex; flex-direction: column; }
+
+/* ── Nav ── */
+.nav {
+  background: var(--white);
+  border-bottom: 1px solid var(--slate-200);
+  padding: 0 24px;
+  height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+.nav-brand {
+  font-size: 1.1rem; font-weight: 900; letter-spacing: -0.02em;
+  color: var(--dark);
+  display: flex; align-items: center; gap: 8px;
+}
+.nav-brand span { color: var(--orange); }
+.nav-right { display: flex; align-items: center; gap: 10px; }
+.nav-badge {
+  background: var(--slate-100); border: 1px solid var(--slate-200);
+  border-radius: 999px; padding: 4px 14px;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.82rem; font-weight: 500; color: var(--slate-600);
+}
+.nav-level-tag {
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em;
+  color: var(--slate-400); text-transform: uppercase;
+}
+
+/* ── Buttons ── */
+.btn {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.9rem; font-weight: 700;
+  padding: 11px 24px; border: none; border-radius: 12px;
+  cursor: pointer; transition: all 0.15s; display: inline-flex;
+  align-items: center; gap: 6px; white-space: nowrap;
+}
+.btn:active { transform: scale(0.97); }
+.btn-orange {
+  background: var(--orange); color: white;
+  box-shadow: 0 1px 2px rgba(249,115,22,.3);
+}
+.btn-orange:hover { background: var(--orange-d); }
+.btn-dark {
+  background: var(--dark); color: white;
+}
+.btn-dark:hover { background: var(--slate-800); }
+.btn-ghost {
+  background: transparent; color: var(--slate-600);
+  border: 1px solid var(--slate-200);
+}
+.btn-ghost:hover { background: var(--slate-50); color: var(--dark); }
+.btn-blue {
+  background: var(--blue); color: white;
+  box-shadow: 0 1px 2px rgba(59,130,246,.3);
+}
+.btn-blue:hover { background: var(--blue-d); }
+.btn-sm { font-size: 0.8rem; padding: 7px 16px; border-radius: 9px; }
+.btn-lg { font-size: 1rem; padding: 14px 32px; border-radius: 14px; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* ── Bento card base ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--slate-200);
+  border-radius: var(--r-3xl);
+  box-shadow: var(--shadow-xl);
+  padding: 32px;
+}
+.card-dark {
+  background: var(--dark);
+  border: 1px solid var(--slate-800);
+  border-radius: var(--r-3xl);
+  box-shadow: var(--shadow-xl);
+  padding: 32px;
+  color: white;
+}
+.card-orange {
+  background: var(--orange);
+  border-radius: var(--r-3xl);
+  box-shadow: var(--shadow-xl);
+  padding: 32px;
+  color: white;
+}
+.card-sm { border-radius: var(--r-2xl); padding: 24px; }
+
+/* ── Page wrapper ── */
+.page { flex: 1; padding: 32px 24px; max-width: 680px; margin: 0 auto; width: 100%; }
+.page-center { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; padding: 32px 24px; }
+
+/* ── Label / eyebrow ── */
+.eyebrow {
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--slate-400);
+  margin-bottom: 6px;
+}
+.eyebrow-orange { color: var(--orange); }
+
+/* ── Section title ── */
+.title-xl { font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 900; letter-spacing: -0.03em; line-height: 1.15; }
+.title-lg { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; }
+.title-md { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.01em; }
+
+/* ── Divider ── */
+.divider { border: none; border-top: 1px solid var(--slate-200); margin: 4px 0; }
+
+/* ══════════════════════════════════════
+   SCREEN 1 — LOGIN
+══════════════════════════════════════ */
+#screen-login {
+  background: var(--bg);
+}
+.login-outer {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  flex: 1; padding: 32px 20px; gap: 24px;
+}
+.login-logo-block { text-align: center; }
+.login-logo {
+  font-size: clamp(2.4rem, 8vw, 4rem); font-weight: 900;
+  letter-spacing: -0.04em; color: var(--dark); line-height: 1;
+}
+.login-logo em { color: var(--orange); font-style: normal; }
+.login-sub {
+  font-size: 0.8rem; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--slate-400); margin-top: 6px;
+}
+
+.login-card {
+  background: var(--white);
+  border: 1px solid var(--slate-200);
+  border-radius: var(--r-3xl);
+  box-shadow: var(--shadow-xl);
+  padding: 36px 32px;
+  width: 100%; max-width: 380px;
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+}
+
+/* PIN display */
+.pin-row {
+  display: flex; gap: 10px;
+}
+.pin-box {
+  width: 64px; height: 72px;
+  background: var(--slate-50);
+  border: 2px solid var(--slate-200);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 2rem; font-weight: 500;
+  color: var(--dark);
+  transition: all 0.15s;
+}
+.pin-box.filled { border-color: var(--orange); background: #fff7ed; color: var(--orange); }
+.pin-box.complete { border-color: var(--green); background: #f0fdf4; color: var(--green); }
+
+/* Hidden real input */
+.kb-field {
+  position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;
+}
+.enter-hint {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.78rem; font-weight: 600; color: var(--slate-400);
+}
+.kbd {
+  background: var(--slate-100); border: 1px solid var(--slate-300);
+  border-radius: 6px; padding: 2px 8px;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace; font-size: 0.72rem;
+  color: var(--slate-600); box-shadow: 0 1px 0 var(--slate-300);
+}
+
+/* Recent IDs */
+.recent-ids { width: 100%; max-width: 380px; }
+.recent-label {
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--slate-400); text-align: center; margin-bottom: 10px;
+}
+.recent-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.recent-chip {
+  background: var(--white); border: 1px solid var(--slate-200);
+  border-radius: 999px; padding: 5px 16px;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace; font-size: 0.85rem;
+  font-weight: 500; color: var(--slate-600);
+  cursor: pointer; transition: all 0.15s;
+}
+.recent-chip:hover { border-color: var(--orange); color: var(--orange); background: #fff7ed; }
+
+/* Shake */
+.error-shake { animation: err-shake 0.35s ease; }
+@keyframes err-shake {
+  0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 60%{transform:translateX(8px)}
+}
+
+/* ══════════════════════════════════════
+   SCREEN 2 — LEVEL
+══════════════════════════════════════ */
+.level-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+}
+.level-card {
+  background: var(--white);
+  border: 2px solid var(--slate-200);
+  border-radius: var(--r-2xl);
+  padding: 22px 20px;
+  cursor: pointer; transition: all 0.18s;
+  display: flex; flex-direction: column; gap: 6px;
+  position: relative; overflow: hidden;
+}
+.level-card::after {
+  content: ''; position: absolute; inset: 0;
+  border-radius: inherit; opacity: 0; transition: opacity 0.18s;
+  background: linear-gradient(135deg, rgba(249,115,22,.06), transparent);
+}
+.level-card:hover { border-color: var(--orange); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.level-card:hover::after { opacity: 1; }
+.level-card.selected { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(249,115,22,.15), var(--shadow-lg); }
+.level-card.selected::after { opacity: 1; }
+.level-icon { font-size: 1.8rem; }
+.level-name { font-size: 1rem; font-weight: 800; letter-spacing: -0.01em; }
+.level-sub { font-size: 0.75rem; font-weight: 500; color: var(--slate-400); }
+
+/* ══════════════════════════════════════
+   SCREEN 3 — MENU
+══════════════════════════════════════ */
+.menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.menu-card {
+  border-radius: var(--r-2xl); padding: 28px 24px;
+  cursor: pointer; transition: all 0.18s;
+  border: 2px solid transparent;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.menu-card-qa {
+  background: var(--dark); color: white;
+}
+.menu-card-int {
+  background: var(--orange); color: white;
+}
+.menu-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-xl); }
+.menu-card:active { transform: translateY(0); }
+.menu-icon { font-size: 2rem; }
+.menu-title { font-size: 1.3rem; font-weight: 900; letter-spacing: -0.02em; }
+.menu-desc { font-size: 0.8rem; font-weight: 500; opacity: 0.65; line-height: 1.5; }
+.menu-arrow {
+  margin-top: auto; font-size: 1.2rem; opacity: 0.5;
+  transition: transform 0.18s, opacity 0.18s;
+}
+.menu-card:hover .menu-arrow { transform: translateX(4px); opacity: 1; }
+
+/* ══════════════════════════════════════
+   SCREEN 4 — CHALLENGE
+══════════════════════════════════════ */
+.challenge-layout {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 24px 20px; gap: 20px; max-width: 680px; margin: 0 auto; width: 100%;
+}
+
+/* Progress dots */
+.progress-strip { display: flex; gap: 6px; align-items: center; }
+.pdot {
+  width: 8px; height: 8px; border-radius: 999px;
+  background: var(--slate-200); transition: all 0.3s;
+}
+.pdot.done { background: var(--green); }
+.pdot.current { background: var(--orange); width: 24px; }
+
+/* Q counter */
+.q-counter {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--slate-400);
+}
+
+/* Question card */
+.q-card {
+  background: var(--white);
+  border: 1px solid var(--slate-200);
+  border-radius: var(--r-3xl);
+  box-shadow: var(--shadow-xl);
+  padding: 36px 32px;
+  width: 100%; text-align: center;
+  position: relative;
+}
+.q-type-pill {
+  display: inline-block; font-size: 0.68rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 4px 14px; border-radius: 999px;
+  background: var(--slate-100); color: var(--slate-500);
+  margin-bottom: 16px; border: 1px solid var(--slate-200);
+}
+.q-type-pill.greeting { background: #fef3c7; color: #d97706; border-color: #fde68a; }
+.q-type-pill.closed   { background: #dcfce7; color: #16a34a; border-color: #bbf7d0; }
+.q-type-pill.open     { background: #ede9fe; color: #7c3aed; border-color: #ddd6fe; }
+.q-type-pill.topic    { background: #fff7ed; color: var(--orange); border-color: #fed7aa; }
+.q-type-pill.followup { background: #eff6ff; color: var(--blue);  border-color: #bfdbfe; }
+
+.q-text {
+  font-size: clamp(1.2rem, 3.5vw, 1.7rem);
+  font-weight: 800; letter-spacing: -0.02em;
+  line-height: 1.3; color: var(--dark);
+  min-height: 64px;
+}
+.q-text.hidden-text { filter: blur(10px); user-select: none; }
+
+/* Countdown ring */
+.ring-wrap { position: relative; width: 120px; height: 120px; flex-shrink: 0; }
+.ring-wrap svg { transform: rotate(-90deg); }
+.ring-track { fill: none; stroke: var(--slate-200); stroke-width: 7; }
+.ring-fill  { fill: none; stroke: var(--orange); stroke-width: 7; stroke-linecap: round; transition: stroke-dashoffset 0.95s linear, stroke 0.3s; }
+.ring-fill.warn { stroke: var(--red); }
+.ring-num {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 2.2rem; font-weight: 500; color: var(--dark);
+}
+.ring-num.warn { color: var(--red); animation: rshake 0.25s ease; }
+@keyframes rshake { 0%,100%{transform:translate(-50%,-50%)} 30%{transform:translate(-52%,-50%)} 70%{transform:translate(-48%,-50%)} }
+
+/* REC badge */
+.rec-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #fef2f2; border: 1px solid #fecaca;
+  border-radius: 999px; padding: 5px 14px;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+  color: var(--red); opacity: 0; transition: opacity 0.3s;
+}
+.rec-badge.on { opacity: 1; }
+.rec-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); animation: blink 1s step-end infinite; }
+@keyframes blink { 50%{opacity:0} }
+
+/* ══════════════════════════════════════
+   SCREEN 5 — RESULTS
+══════════════════════════════════════ */
+.results-layout {
+  flex: 1; padding: 24px 20px 48px; max-width: 680px; margin: 0 auto; width: 100%;
+  display: flex; flex-direction: column; gap: 16px;
+}
+
+/* Score hero */
+.score-hero {
+  background: var(--dark); color: white;
+  border-radius: var(--r-3xl);
+  padding: 32px;
+  display: flex; align-items: center; gap: 28px;
+  box-shadow: var(--shadow-xl);
+}
+.score-ring-wrap { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+.score-ring-wrap svg { transform: rotate(-90deg); }
+.score-ring-num {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 1.9rem; font-weight: 500; color: var(--orange);
+}
+.score-hero-text {}
+.score-hero-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,.4); margin-bottom: 4px; }
+.score-hero-title { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.02em; }
+.score-hero-sub { font-size: 0.82rem; color: rgba(255,255,255,.5); margin-top: 4px; font-weight: 500; }
+
+/* Metric trio */
+.metric-trio { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.metric-tile {
+  background: var(--white); border: 1px solid var(--slate-200);
+  border-radius: var(--r-xl); padding: 18px 14px; text-align: center;
+  box-shadow: var(--shadow);
+}
+.metric-val { font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace; font-size: 1.6rem; font-weight: 500; }
+.metric-lbl { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--slate-400); margin-top: 4px; }
+.metric-tile.sent .metric-val { color: var(--blue); }
+.metric-tile.acc  .metric-val { color: var(--green); }
+.metric-tile.flu  .metric-val { color: var(--orange); }
+
+/* Audio cards section */
+.section-head { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--slate-400); padding: 4px 0; }
+
+.audio-card {
+  background: var(--white); border: 1px solid var(--slate-200);
+  border-radius: var(--r-xl); padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.audio-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.audio-num {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.72rem; font-weight: 500; color: var(--orange);
+  background: #fff7ed; border: 1px solid #fed7aa;
+  border-radius: 6px; padding: 2px 8px; white-space: nowrap; flex-shrink: 0;
+}
+.audio-q-text { font-size: 0.88rem; font-weight: 600; color: var(--dark); line-height: 1.4; flex: 1; }
+.audio-transcript {
+  font-size: 0.8rem; color: var(--slate-400); font-style: italic; line-height: 1.5;
+  padding-top: 8px; border-top: 1px solid var(--slate-100);
+}
+
+/* Player row */
+.player-row { display: flex; align-items: center; gap: 10px; }
+.play-btn {
+  width: 36px; height: 36px; border-radius: 50%; border: none; flex-shrink: 0;
+  background: var(--dark); color: white; font-size: 0.85rem;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.play-btn:hover { background: var(--orange); transform: scale(1.08); }
+.play-btn.playing { background: var(--orange); }
+.player-track { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.audio-range {
+  width: 100%; height: 4px; border-radius: 4px; cursor: pointer;
+  appearance: none; -webkit-appearance: none; outline: none; border: none;
+  background: linear-gradient(90deg, var(--orange) var(--pct,0%), var(--slate-200) var(--pct,0%));
+}
+.audio-range::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 13px; height: 13px; border-radius: 50%;
+  background: var(--orange); cursor: pointer; border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.audio-time { font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace; font-size: 0.7rem; color: var(--slate-400); text-align: right; }
+.no-audio { font-size: 0.78rem; color: var(--slate-400); font-style: italic; }
+
+/* Result action buttons */
+.result-actions { display: flex; gap: 10px; flex-wrap: wrap; padding-top: 4px; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 28px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--dark); color: white;
+  font-size: 0.85rem; font-weight: 600;
+  padding: 10px 22px; border-radius: 999px;
+  box-shadow: var(--shadow-xl);
+  z-index: 9999; transition: transform 0.35s cubic-bezier(.34,1.56,.64,1);
+  pointer-events: none; white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ── Responsive ── */
+@media (max-width: 500px) {
+  .level-grid { grid-template-columns: repeat(2,1fr); }
+  .menu-grid  { grid-template-columns: 1fr; }
+  .metric-trio{ grid-template-columns: repeat(3,1fr); }
+  .score-hero { flex-direction: column; text-align: center; }
+  .card, .card-dark, .card-orange { padding: 24px 18px; }
+  .q-card { padding: 26px 18px; }
+  .pin-box { width: 56px; height: 64px; font-size: 1.7rem; }
+}
+
+/* ══════════════════════════════════════
+   LIST SCREEN
+══════════════════════════════════════ */
+.list-screen-header {
+  background: var(--white); border-bottom: 1px solid var(--slate-200);
+  padding: 20px 24px; display: flex; flex-direction: column; gap: 4px;
+}
+.q-list-wrap { display: flex; flex-direction: column; gap: 8px; }
+.q-list-item {
+  background: var(--white); border: 1px solid var(--slate-200);
+  border-radius: 14px; padding: 14px 18px;
+  display: flex; gap: 14px; align-items: flex-start;
+}
+.q-list-num {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.78rem; font-weight: 500; color: var(--slate-400);
+  min-width: 28px; padding-top: 2px;
+}
+.q-list-body { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.q-list-text { font-size: 0.9rem; font-weight: 600; color: var(--dark); line-height: 1.4; }
+.q-list-hint { font-size: 0.78rem; color: var(--slate-400); font-weight: 500; line-height: 1.4; }
+.q-list-hint em { color: var(--orange); font-style: normal; font-weight: 600; }
+.q-type-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 7px;
+}
+.q-type-dot.greeting { background: #f59e0b; }
+.q-type-dot.closed   { background: var(--green); }
+.q-type-dot.open     { background: #8b5cf6; }
+.q-type-dot.topic    { background: var(--orange); }
+.list-start-bar {
+  position: sticky; bottom: 0;
+  background: var(--white); border-top: 1px solid var(--slate-200);
+  padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  flex-wrap: wrap;
+}
+.list-start-info { font-size: 0.82rem; font-weight: 600; color: var(--slate-500); }
+.time-sel-btn {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; font-size: 0.8rem; font-weight: 700;
+  padding: 6px 16px; border-radius: 999px; cursor: pointer; transition: all 0.15s;
+  background: var(--slate-100); color: var(--slate-600);
+  border: 1.5px solid var(--slate-200);
+}
+.time-sel-btn:hover { border-color: var(--orange); color: var(--orange); }
+.time-sel-btn.selected {
+  background: var(--orange); color: white;
+  border-color: var(--orange);
+}
+
+.time-sel-btn {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; font-size: 0.78rem; font-weight: 700;
+  padding: 5px 14px; border-radius: 8px; cursor: pointer; transition: all 0.15s;
+  background: var(--slate-100); border: 1px solid var(--slate-200); color: var(--slate-600);
+}
+.time-sel-btn:hover { background: var(--slate-200); }
+.time-sel-btn.selected { background: var(--orange); color: white; border-color: var(--orange); }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     SCREEN 1 — LOGIN
+══════════════════════════════════════ -->
+<div id="screen-login" class="screen active">
+  <div class="login-outer">
+    <div class="login-logo-block">
+      <div class="login-logo">CHATTER<em>BOX</em></div>
+      <div class="login-sub">English Speaking Practice</div>
+    </div>
+
+    <div class="login-card" onclick="focusKbField()">
+      <div style="text-align:center;">
+        <div class="eyebrow" style="margin-bottom:16px;">Student ID — 4 Digits</div>
+        <div class="pin-row" id="pin-display">
+          <div class="pin-box" id="pd0">—</div>
+          <div class="pin-box" id="pd1">—</div>
+          <div class="pin-box" id="pd2">—</div>
+          <div class="pin-box" id="pd3">—</div>
+        </div>
+      </div>
+      <input id="kb-field" class="kb-field" type="text" inputmode="none"
+             maxlength="4" autocomplete="off" autocorrect="off" spellcheck="false"
+             tabindex="-1" aria-hidden="true">
+      <div class="enter-hint">
+        数字を入力して <span class="kbd">Enter</span> でログイン
+      </div>
+    </div>
+
+    <div class="recent-ids" id="login-history" style="display:none;">
+      <div class="recent-label">Recent</div>
+      <div class="recent-chips" id="history-chips"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 2 — LEVEL SELECT
+══════════════════════════════════════ -->
+<div id="screen-level" class="screen">
+  <div class="nav">
+    <div class="nav-brand">🎤 CHATTER<span>BOX</span></div>
+    <div class="nav-right">
+      <div class="nav-badge" id="nav-id">----</div>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">Logout</button>
+    </div>
+  </div>
+  <div class="page" style="display:flex;flex-direction:column;gap:24px;">
+    <div>
+      <div class="eyebrow">Step 1</div>
+      <div class="title-xl">Select Level</div>
+      <div style="font-size:0.85rem;color:var(--slate-500);margin-top:6px;font-weight:500;">タップで即移動</div>
+    </div>
+    <div class="level-grid">
+      <div class="level-card" onclick="selectLevel(1,this)">
+        <div class="level-icon">🌱</div>
+        <div class="level-name">1年生</div>
+        <div class="level-sub">Junior 1st Year</div>
+      </div>
+      <div class="level-card" onclick="selectLevel(2,this)">
+        <div class="level-icon">🌿</div>
+        <div class="level-name">2年生</div>
+        <div class="level-sub">Junior 2nd Year</div>
+      </div>
+      <div class="level-card" onclick="selectLevel(3,this)">
+        <div class="level-icon">🌳</div>
+        <div class="level-name">3年生</div>
+        <div class="level-sub">Junior 3rd Year</div>
+      </div>
+      <div class="level-card" onclick="selectLevel(4,this)">
+        <div class="level-icon">🔥</div>
+        <div class="level-name">High Level</div>
+        <div class="level-sub">Advanced Learner</div>
+      </div>
+      <div class="level-card" onclick="selectLevel(5,this)">
+        <div class="level-icon">⚡</div>
+        <div class="level-name">Super High</div>
+        <div class="level-sub">Expert Level</div>
+      </div>
+      <div class="level-card" onclick="selectLevel(6,this)">
+        <div class="level-icon">👑</div>
+        <div class="level-name">G.O.D.</div>
+        <div class="level-sub">Ultimate Challenge</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 3 — MENU
+══════════════════════════════════════ -->
+<div id="screen-menu" class="screen">
+  <div class="nav">
+    <div>
+      <div class="nav-brand">🎤 CHATTER<span>BOX</span></div>
+      <div class="nav-level-tag" id="nav-level-info"></div>
+    </div>
+    <div class="nav-right">
+      <div class="nav-badge" id="nav-id2">----</div>
+      <button class="btn btn-ghost btn-sm" onclick="goLevel()">← Level</button>
+    </div>
+  </div>
+  <div class="page" style="display:flex;flex-direction:column;gap:24px;">
+    <div>
+      <div class="eyebrow">Step 2</div>
+      <div class="title-xl">Choose Mode</div>
+      <div style="font-size:0.85rem;color:var(--slate-500);margin-top:6px;font-weight:500;">選んで一覧を確認 → チャレンジ開始</div>
+    </div>
+    <div class="menu-grid">
+      <div class="menu-card menu-card-qa" id="menu-qa" onclick="selectMenu('qa',this)">
+        <div class="menu-icon">❓</div>
+        <div class="menu-title">Q&amp;A</div>
+        <div class="menu-desc">質問に答えるモード<br>10 Questions Challenge</div>
+        <div class="menu-arrow">→</div>
+      </div>
+      <div class="menu-card menu-card-int" id="menu-int" onclick="selectMenu('interviewer',this)">
+        <div class="menu-icon">🎙️</div>
+        <div class="menu-title">Interviewer</div>
+        <div class="menu-desc">相手の話を聞いて<br>できるだけ多く質問をするモード</div>
+        <div class="menu-arrow">→</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 3.5 — LIST PREVIEW
+══════════════════════════════════════ -->
+<div id="screen-list" class="screen">
+  <div class="nav">
+    <div>
+      <div class="nav-brand">🎤 CHATTER<span>BOX</span></div>
+      <div class="nav-level-tag" id="list-mode-label"></div>
+    </div>
+    <div class="nav-right">
+      <div class="nav-badge" id="nav-id-list">----</div>
+      <button class="btn btn-ghost btn-sm" onclick="showScreen('menu')">← Back</button>
+    </div>
+  </div>
+
+  <div class="list-screen-header">
+    <div class="eyebrow eyebrow-orange" id="list-eyebrow">Q&A MODE</div>
+    <div class="title-lg" id="list-title">Questions &amp; Answer Examples</div>
+    <div style="font-size:0.82rem;color:var(--slate-400);font-weight:500;margin-top:2px;" id="list-subtitle">全50問中10問がランダム出題されます</div>
+  </div>
+
+  <div class="page" style="padding-top:20px;padding-bottom:100px;">
+    <div class="q-list-wrap" id="q-list-wrap"></div>
+  </div>
+
+  <div class="list-start-bar" id="list-start-bar">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div class="list-start-info" id="list-start-info">準備ができたらスタート！</div>
+      <!-- Time selector: visible for Q&A only -->
+      <div id="qa-time-selector" style="display:none;gap:6px;align-items:center;">
+        <span style="font-size:0.7rem;font-weight:700;color:var(--slate-400);letter-spacing:0.08em;text-transform:uppercase;">回答時間</span>
+        <button class="time-sel-btn" id="ts3" onclick="setQaTime(3)">3秒</button>
+        <button class="time-sel-btn selected" id="ts5" onclick="setQaTime(5)">5秒</button>
+        <button class="time-sel-btn" id="ts7" onclick="setQaTime(7)">7秒</button>
+      </div>
+    </div>
+    <button class="btn btn-orange btn-lg" onclick="goChallenge()">START →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 4 — CHALLENGE
+══════════════════════════════════════ -->
+<div id="screen-challenge" class="screen">
+  <div class="nav">
+    <div class="nav-brand">🎤 CHATTER<span>BOX</span></div>
+    <div class="nav-right">
+      <div class="nav-badge" id="nav-id3">----</div>
+      <div class="nav-level-tag" id="challenge-mode-label"></div>
+    </div>
+  </div>
+  <div class="challenge-layout">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;">
+      <div class="progress-strip" id="challenge-progress"></div>
+      <div class="q-counter" id="q-counter">QUESTION 1 / 10</div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-type-pill" id="q-type-badge">GREETING</div>
+      <div class="q-text" id="q-text">Ready?</div>
+      <div id="live-transcript-wrap" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--slate-100);">
+        <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--slate-400);margin-bottom:6px;">🎤 Your Answer</div>
+        <div id="live-transcript" style="font-size:0.88rem;color:var(--slate-600);font-weight:500;line-height:1.6;min-height:24px;font-style:italic;"></div>
+      </div>
+    </div>
+
+    <div class="ring-wrap">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle class="ring-track" cx="60" cy="60" r="50"/>
+        <circle class="ring-fill" id="ring-fill" cx="60" cy="60" r="50"
+          stroke-dasharray="314.2" stroke-dashoffset="0"/>
+      </svg>
+      <div class="ring-num" id="ring-number">—</div>
+    </div>
+
+    <div class="rec-badge" id="rec-indicator">
+      <div class="rec-dot"></div> RECORDING
+    </div>
+
+    <button class="btn btn-ghost btn-sm" id="btn-back-menu"
+      style="margin-top:4px;color:var(--slate-400);font-size:0.78rem;"
+      onclick="confirmBackToMenu()">← メニューに戻る</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 5 — RESULTS
+══════════════════════════════════════ -->
+<div id="screen-results" class="screen">
+  <div class="nav">
+    <div class="nav-brand">🎤 CHATTER<span>BOX</span></div>
+    <div class="nav-right"><div class="nav-badge" id="nav-id4">----</div></div>
+  </div>
+  <div class="results-layout">
+
+    <!-- Score hero -->
+    <div class="score-hero">
+      <div class="score-ring-wrap">
+        <svg width="110" height="110" viewBox="0 0 110 110">
+          <circle fill="none" stroke="rgba(255,255,255,.1)" stroke-width="9" cx="55" cy="55" r="44"/>
+          <circle fill="none" stroke="#f97316" stroke-width="9" stroke-linecap="round"
+            cx="55" cy="55" r="44"
+            stroke-dasharray="276.5" id="score-ring-arc" stroke-dashoffset="276.5"/>
+        </svg>
+        <div class="score-ring-num" id="score-total">—</div>
+      </div>
+      <div class="score-hero-text">
+        <div class="score-hero-label">Total Score</div>
+        <div class="score-hero-title" id="score-grade">—</div>
+        <div class="score-hero-sub" id="score-comment">チャレンジ完了！</div>
+      </div>
+    </div>
+
+    <!-- Metric trio -->
+    <div class="metric-trio">
+      <div class="metric-tile sent">
+        <div class="metric-val" id="score-sentences">—</div>
+        <div class="metric-lbl">Sentences</div>
+      </div>
+      <div class="metric-tile acc">
+        <div class="metric-val" id="score-accuracy">—</div>
+        <div class="metric-lbl">Accuracy</div>
+      </div>
+      <div class="metric-tile flu">
+        <div class="metric-val" id="score-pronunciation">—</div>
+        <div class="metric-lbl">Fluency</div>
+      </div>
+    </div>
+
+    <!-- Audio cards -->
+    <div class="section-head">🎧 Playback — Your Answers</div>
+    <div id="audio-cards" style="display:flex;flex-direction:column;gap:10px;"></div>
+
+    <!-- Actions -->
+    <div class="result-actions">
+      <button class="btn btn-ghost" onclick="retryChallenge()">🔄 もう一回</button>
+      <button class="btn btn-orange" onclick="goChallenge()">⚡ 別の問題</button>
+      <button class="btn btn-dark" onclick="goMenu()">🏠 メニュー</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== DATA =====================
+
+// Q&A Questions by level (placeholder — user will replace)
+// Format: { type: 'greeting'|'closed'|'open', q: '...', hint: '...' }
+const QA_BANK = {
+  1: [
+    // ── Greetings (12問) ──
+    {type:'greeting', q:'Hi, how are you?',                                    hint:"I'm good, thanks. How about you?"},
+    {type:'greeting', q:'How are you doing?',                                  hint:'Fine, thank you.'},
+    {type:'greeting', q:'Nice to meet you. I\'m [Name].',                     hint:'Nice to meet you too. I\'m [Name].'},
+    {type:'greeting', q:'How\'s it going?',                                   hint:'Pretty good, thanks.'},
+    {type:'greeting', q:'How do you do?',                                      hint:'How do you do?'},
+    {type:'greeting', q:'Good morning. Is it sunny today?',                    hint:'Good morning. Yes, it is. / No, it isn\'t.'},
+    {type:'greeting', q:'Hello, what\'s your name?',                          hint:'Hello. My name is [Name].'},
+    {type:'greeting', q:'May I ask your name, please?',                        hint:'Sure. My name is [Name].'},
+    {type:'greeting', q:'Can you help me?',                                    hint:"Sure! I'm not doing anything now."},
+    {type:'greeting', q:'Thank you for talking with me.',                      hint:"You're welcome. It was fun!"},
+    {type:'greeting', q:'What day is it today?',                               hint:"It's Monday. / It's Wednesday."},
+    {type:'greeting', q:'What is today\'s date?',                             hint:"It's October 15th. / It's the 3rd of June."},
+
+    // ── Closed Questions (20問) ──
+    {type:'closed', q:'Are you from Matsue?',                                  hint:"Yes, I am. I'm from Matsue. / No, I'm from Izumo."},
+    {type:'closed', q:'Are you a first-year student?',                         hint:"Yes, I am. I'm in class 1-A. / No, I'm in second year."},
+    {type:'closed', q:'Is it cold in Matsue in winter?',                       hint:"Yes, it is. It snows a lot here."},
+    {type:'closed', q:'Do you like English class?',                            hint:"Yes, I do. It's interesting. / No, I don't. It's difficult."},
+    {type:'closed', q:'Do you have English class today?',                      hint:"Yes, we do. It's second period. / No, we don't."},
+    {type:'closed', q:'Do you use the school library?',                        hint:"Yes, I do. I go there after school. / No, I don't."},
+    {type:'closed', q:'Can you see Lake Shinji from your classroom?',          hint:"Yes, we can. It's beautiful. / No, we can't."},
+    {type:'closed', q:'Can you name three cities in Shimane?',                 hint:"Yes, I can. Matsue, Izumo, and Hamada."},
+    {type:'closed', q:'Does your school have a swimming pool?',                hint:"Yes, it does. We use it in summer. / No, it doesn't."},
+    {type:'closed', q:'Does the school cafeteria sell bread?',                 hint:"Yes, it does. I buy it sometimes. / No, it doesn't."},
+    {type:'closed', q:'Is Matsue Castle in the center of the city?',           hint:"Yes, it is. It's near the station."},
+    {type:'closed', q:'Are there any convenience stores near your school?',    hint:"Yes, there are. There is a 7-Eleven nearby. / No, there aren't."},
+    {type:'closed', q:'Is there a gym in your school?',                        hint:"Yes, there is. We use it for P.E. class."},
+    {type:'closed', q:'Are you studying for any tests now?',                   hint:"Yes, I am. We have a math test next week. / No, I'm not."},
+    {type:'closed', q:'Is your homeroom teacher strict?',                      hint:"Yes, he is. But he is kind too. / No, she isn't."},
+    {type:'closed', q:'Did you come to school by bus today?',                  hint:"Yes, I did. / No, I didn't. I came by bike."},
+    {type:'closed', q:'Did you eat lunch at school yesterday?',                hint:"Yes, I did. We had curry and rice."},
+    {type:'closed', q:'Did you have a school event last month?',               hint:"Yes, we did. We had a sports day."},
+    {type:'closed', q:'Were you in a club activity yesterday?',                hint:"Yes, I was. I had soccer practice. / No, I wasn't."},
+    {type:'closed', q:'Was your last English test difficult?',                 hint:"Yes, it was. The listening part was hard. / No, it wasn't."},
+
+    // ── Open Questions (20問) ──
+    {type:'open', q:'Where is Matsue Castle?',                                 hint:"It's in the center of Matsue, near Lake Shinji."},
+    {type:'open', q:'Where do you eat lunch at school?',                       hint:"I eat in the classroom with my friends."},
+    {type:'open', q:'When is your school\'s culture festival?',               hint:"It's in October. / It's next month."},
+    {type:'open', q:'When does your first class start?',                       hint:"It starts at 8:45."},
+    {type:'open', q:'What subject do you like the most?',                      hint:"I like P.E. the most. It's exciting."},
+    {type:'open', q:'What can you see from the top of Matsue Castle?',         hint:"You can see Lake Shinji and the whole city."},
+    {type:'open', q:'How many students are in your class?',                    hint:"There are 32 students in my class."},
+    {type:'open', q:'Who is your favorite teacher?',                           hint:"My favorite teacher is Mr. Tanaka. He is funny."},
+    {type:'open', q:'Who is the famous person from Shimane that you know?',    hint:"Lafcadio Hearn is famous. He lived in Matsue."},
+    {type:'open', q:'Which do you like better, summer vacation or winter vacation?', hint:"I like summer vacation better because it is longer."},
+    {type:'open', q:'Why is Matsue Castle popular?',                           hint:"Because it is one of the few original castles in Japan."},
+    {type:'open', q:'Why do students in Japan wear uniforms?',                 hint:"Because it makes everyone equal and easy to get ready."},
+    {type:'open', q:'How do you come to school?',                              hint:"I come by bike. / I walk to school."},
+    {type:'open', q:'How can I get to the school library from here?',          hint:"Go down the hallway and turn right. It\'s on the second floor."},
+    {type:'open', q:'Whose turn is it to clean the classroom today?',          hint:"It\'s my group\'s turn. / It\'s Group 3\'s turn."},
+    {type:'open', q:'What time does school finish today?',                     hint:"School finishes at 3:30 today."},
+    {type:'open', q:'What are you doing in P.E. class these days?',            hint:"We are practicing basketball now."},
+    {type:'open', q:'What did you do during lunch break today?',               hint:"I talked with my friends in the classroom."},
+    {type:'open', q:'How was your school trip?',                               hint:"It was great! We visited many famous places."},
+    {type:'open', q:'What were you doing when the school bell rang?',          hint:"I was talking with my friend in the hallway."},
+  ],
+    2: [], 3: [], 4: [], 5: [], 6: []
+};
+
+// Copy level 1 to others as placeholder (teacher will replace)
+for (let l of [2,3,4,5,6]) QA_BANK[l] = QA_BANK[1].map(q=>({...q}));
+
+// Interviewer Topics by level
+const INT_BANK = {
+  1: [
+    {
+      topic:    'My name is Emily. I am in the basketball team.',
+      topic_jp: '私の名前はエミリーです。バスケットボール部に入っています。',
+      followups:    ['Where are you from?', 'Do you play basketball every day?', 'Do you like basketball very much?', 'What sports do you like?', 'How long have you played basketball?'],
+      followups_jp: ['どこの出身ですか？', '毎日バスケットボールをしますか？', 'バスケットボールはとても好きですか？', 'どんなスポーツが好きですか？', 'どのくらいバスケットボールをしていますか？'],
+    },
+    {
+      topic:    'I live near Matsue Castle. It is a very old and beautiful place.',
+      topic_jp: '私は松江城の近くに住んでいます。とても古くて美しい場所です。',
+      followups:    ['How old is Matsue Castle?', 'Do you visit Matsue Castle often?', 'Is Matsue Castle popular with tourists?', 'What can you see from Matsue Castle?', 'Do you like history?'],
+      followups_jp: ['松江城は何年前に建てられましたか？', 'よく松江城に行きますか？', '松江城は観光客に人気ですか？', '松江城から何が見えますか？', '歴史は好きですか？'],
+    },
+    {
+      topic:    'I go to school by bike every day. It takes about fifteen minutes.',
+      topic_jp: '私は毎日自転車で学校に行きます。だいたい15分かかります。',
+      followups:    ['Is your school far from your house?', 'Do you enjoy riding your bike?', 'What time do you leave home?', 'Do your friends also come by bike?', 'Is it difficult to ride in winter?'],
+      followups_jp: ['学校は家から遠いですか？', '自転車に乗るのは好きですか？', '何時に家を出ますか？', '友達も自転車で来ますか？', '冬に自転車に乗るのは大変ですか？'],
+    },
+    {
+      topic:    'I love Lake Shinji. I sometimes fish there with my grandfather.',
+      topic_jp: '私は宍道湖が大好きです。祖父と一緒に釣りをすることがあります。',
+      followups:    ['Is Lake Shinji near your house?', 'What do you catch there?', 'How often do you go fishing?', 'Is your grandfather a good fisherman?', 'What do you do with the fish?'],
+      followups_jp: ['宍道湖は家の近くですか？', 'そこでは何が釣れますか？', 'どのくらいの頻度で釣りに行きますか？', 'おじいさんは釣りが上手ですか？', '釣った魚はどうしますか？'],
+    },
+    {
+      topic:    'My favorite subject is science. We do experiments every week.',
+      topic_jp: '私の好きな教科は理科です。毎週実験をします。',
+      followups:    ['What kind of experiments do you do?', 'Is science difficult for you?', 'Who is your science teacher?', 'Do you want to be a scientist?', 'What other subjects do you like?'],
+      followups_jp: ['どんな実験をしますか？', '理科は難しいですか？', '理科の先生は誰ですか？', '科学者になりたいですか？', '他にどんな教科が好きですか？'],
+    },
+    {
+      topic:    'I have lunch at school every day. I like curry and rice the best.',
+      topic_jp: '私は毎日学校で昼食を食べます。カレーライスが一番好きです。',
+      followups:    ['Do you eat with your classmates?', 'How many students are in your class?', 'Is your school lunch expensive?', 'What food do you not like?', 'Do you bring lunch sometimes?'],
+      followups_jp: ['クラスメートと一緒に食べますか？', 'クラスには何人いますか？', '給食は高いですか？', '嫌いな食べ物はありますか？', 'お弁当を持ってくることはありますか？'],
+    },
+    {
+      topic:    'I belong to the brass band club. We practice on weekdays after school.',
+      topic_jp: '私は吹奏楽部に入っています。平日の放課後に練習します。',
+      followups:    ['What instrument do you play?', 'How long do you practice?', 'Do you have concerts?', 'How many members are in your club?', 'Is practice hard?'],
+      followups_jp: ['何の楽器を演奏しますか？', 'どのくらい練習しますか？', 'コンサートはありますか？', '部員は何人いますか？', '練習はきついですか？'],
+    },
+    {
+      topic:    'My family went to Izumo Taisha last weekend. It was amazing.',
+      topic_jp: '先週末、家族で出雲大社に行きました。すばらしかったです。',
+      followups:    ['How far is Izumo Taisha from Matsue?', 'Did you go by car?', 'What did you see there?', 'Have you been to Izumo Taisha before?', 'Do you like visiting shrines?'],
+      followups_jp: ['出雲大社は松江からどのくらい離れていますか？', '車で行きましたか？', 'そこで何を見ましたか？', '以前にも出雲大社に行ったことがありますか？', '神社に行くのは好きですか？'],
+    },
+    {
+      topic:    'I usually study for two hours after dinner. Then I watch TV.',
+      topic_jp: '私はたいてい夕食後に2時間勉強します。その後テレビを見ます。',
+      followups:    ['What subjects do you study?', 'Do you study alone or with family?', 'What time do you go to bed?', 'What do you watch on TV?', 'Is studying at night difficult?'],
+      followups_jp: ['どんな教科を勉強しますか？', '一人で勉強しますか、それとも家族と一緒ですか？', '何時に寝ますか？', 'テレビでは何を見ますか？', '夜に勉強するのは大変ですか？'],
+    },
+    {
+      topic:    'I visited the Shimane Art Museum last month. I liked the paintings.',
+      topic_jp: '先月、島根県立美術館に行きました。絵画が気に入りました。',
+      followups:    ['Where is the Shimane Art Museum?', 'What kind of paintings did you see?', 'Do you like art?', 'Did you go alone or with someone?', 'Do you want to go again?'],
+      followups_jp: ['島根県立美術館はどこにありますか？', 'どんな絵画を見ましたか？', '美術は好きですか？', '一人で行きましたか、それとも誰かと一緒に行きましたか？', 'また行きたいですか？'],
+    },
+    {
+      topic:    'I wake up at six thirty every morning. I help my mother make breakfast.',
+      topic_jp: '私は毎朝6時半に起きます。お母さんが朝食を作るのを手伝います。',
+      followups:    ['What do you eat for breakfast?', 'Is it hard to wake up early?', 'Does your whole family eat breakfast together?', 'What time does your mother wake up?', 'Do you like mornings?'],
+      followups_jp: ['朝食に何を食べますか？', '早起きは辛いですか？', '家族全員で朝食を食べますか？', 'お母さんは何時に起きますか？', '朝は好きですか？'],
+    },
+    {
+      topic:    'There is a famous hot spring town called Tamatsukuri Onsen near Matsue.',
+      topic_jp: '松江の近くに玉造温泉という有名な温泉地があります。',
+      followups:    ['Have you ever been to Tamatsukuri Onsen?', 'Do you like hot springs?', 'Is Tamatsukuri Onsen far from school?', 'What do people do at hot springs?', 'Are there hotels there?'],
+      followups_jp: ['玉造温泉に行ったことがありますか？', '温泉は好きですか？', '玉造温泉は学校から遠いですか？', '温泉では何をしますか？', 'そこにホテルはありますか？'],
+    },
+    {
+      topic:    'My classroom is on the third floor. We can see the school garden from the window.',
+      topic_jp: '私の教室は3階にあります。窓から学校の庭が見えます。',
+      followups:    ['Is your classroom big?', 'How many windows does your classroom have?', 'Do you like your classroom?', 'What is in the school garden?', 'Is your school old or new?'],
+      followups_jp: ['教室は広いですか？', '教室に窓はいくつありますか？', '自分の教室は好きですか？', '学校の庭には何がありますか？', '学校は古いですか、新しいですか？'],
+    },
+    {
+      topic:    'I sometimes go to Shinji lake with my family to see the sunset.',
+      topic_jp: '私は家族と宍道湖に夕日を見に行くことがあります。',
+      followups:    ['How often do you go there?', 'Is the sunset beautiful?', 'What time does the sun set?', 'Do you take photos?', 'What else do you do near the lake?'],
+      followups_jp: ['どのくらいの頻度でそこへ行きますか？', '夕日はきれいですか？', '何時に日が沈みますか？', '写真は撮りますか？', '湖の近くで他に何をしますか？'],
+    },
+    {
+      topic:    'My school has a sports day every year in autumn. I run in the relay race.',
+      topic_jp: '私の学校では毎年秋に体育大会があります。私はリレーに出ます。',
+      followups:    ['Is sports day your favorite school event?', 'Are you a fast runner?', 'What other events are there?', 'Does your class win often?', 'What do you eat after sports day?'],
+      followups_jp: ['体育大会は一番好きな学校行事ですか？', '足は速いですか？', '他にどんな競技がありますか？', 'クラスがよく勝ちますか？', '体育大会の後は何を食べますか？'],
+    },
+    {
+      topic:    'In my free time I like reading manga. My favorite is about samurai.',
+      topic_jp: '暇なときは漫画を読むのが好きです。お気に入りは侍の漫画です。',
+      followups:    ['How many manga books do you have?', 'Do you read manga every day?', 'Who is your favorite character?', 'Do you like watching anime too?', 'Where do you buy your manga?'],
+      followups_jp: ['漫画は何冊持っていますか？', '毎日漫画を読みますか？', 'お気に入りのキャラクターは誰ですか？', 'アニメを見るのも好きですか？', '漫画はどこで買いますか？'],
+    },
+    {
+      topic:    'My grandfather lives in a small town in Shimane. He grows vegetables.',
+      topic_jp: '祖父は島根の小さな町に住んでいます。野菜を育てています。',
+      followups:    ['How often do you visit your grandfather?', 'What vegetables does he grow?', 'Is his town far from Matsue?', 'Do you help him in the garden?', 'Does he give you vegetables?'],
+      followups_jp: ['どのくらいの頻度で祖父を訪ねますか？', 'どんな野菜を育てていますか？', '祖父の町は松江から遠いですか？', '畑を手伝いますか？', '野菜をもらいますか？'],
+    },
+    {
+      topic:    'There is a shopping mall called Ito Yokado near Matsue Station. I go there on weekends.',
+      topic_jp: '松江駅の近くにイトーヨーカドーというショッピングモールがあります。週末に行きます。',
+      followups:    ['What do you buy there?', 'Do you go alone or with friends?', 'Is it a big mall?', 'Is there a food court there?', 'How long does it take to get there?'],
+      followups_jp: ['そこでは何を買いますか？', '一人で行きますか、それとも友達と行きますか？', '大きなショッピングモールですか？', 'フードコートはありますか？', 'そこまでどのくらいかかりますか？'],
+    },
+    {
+      topic:    'We have an English speech contest at school every November. I want to enter it.',
+      topic_jp: '学校では毎年11月に英語スピーチコンテストがあります。参加したいです。',
+      followups:    ['What will you talk about?', 'Are you nervous?', 'How long is the speech?', 'Do you practice every day?', 'Who helps you prepare?'],
+      followups_jp: ['何について話しますか？', '緊張しますか？', 'スピーチはどのくらいの長さですか？', '毎日練習しますか？', '誰が準備を手伝ってくれますか？'],
+    },
+    {
+      topic:    'My house has a small garden. In spring, we grow strawberries.',
+      topic_jp: '私の家には小さな庭があります。春にはイチゴを育てます。',
+      followups:    ['Do you like strawberries?', 'Is gardening fun?', 'What else do you grow?', 'Do you eat the strawberries?', 'Who takes care of the garden?'],
+      followups_jp: ['イチゴは好きですか？', 'ガーデニングは楽しいですか？', '他に何を育てますか？', 'イチゴは食べますか？', '庭の手入れは誰がしますか？'],
+    },
+  ],
+    2: [], 3: [], 4: [], 5: [], 6: []
+};
+for (let l of [2,3,4,5,6]) INT_BANK[l] = INT_BANK[1].map(t=>({...t}));
+
+// ===================== STATE =====================
+let state = {
+  studentId: '',
+  level: null,
+  mode: null, // 'qa' | 'interviewer'
+  qaTime: 5, intTime: 15,          // defaults (settings panel removed)
+  showText: { qa: true, int: true },
+  questions: [],   // selected questions for challenge
+  currentQ: 0,
+  recordings: [],  // { transcript, audioBlob, audioUrl, questionText, questionType }
+  timer: null,
+  recognition: null,
+  isRecording: false,
+  currentTranscript: '',
+};
+
+// ===================== STORAGE =====================
+function saveRecord(id, data) {
+  const key = 'cb_' + id;
+  const existing = JSON.parse(localStorage.getItem(key) || '{}');
+  const merged = { ...existing, ...data, lastSeen: Date.now() };
+  localStorage.setItem(key, JSON.stringify(merged));
+}
+function loadRecord(id) {
+  return JSON.parse(localStorage.getItem('cb_' + id) || '{}');
+}
+function getRecentIds() {
+  const ids = [];
+  for (let k of Object.keys(localStorage)) {
+    if (k.startsWith('cb_')) {
+      const data = JSON.parse(localStorage.getItem(k));
+      ids.push({ id: k.replace('cb_',''), lastSeen: data.lastSeen || 0 });
+    }
+  }
+  return ids.sort((a,b) => b.lastSeen - a.lastSeen).slice(0,6).map(x=>x.id);
+}
+
+// ===================== SCREEN CONTROL =====================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  window.scrollTo(0,0);
+  if (id === 'login') { requestAnimationFrame(focusKbField); }
+}
+
+// ===================== LOGIN =====================
+// ===== KEYBOARD LOGIN =====
+let pinVal = '';
+
+function focusKbField() {
+  const f = document.getElementById('kb-field');
+  if (f) f.focus({ preventScroll: true });
+}
+
+// Auto-focus on load and when login screen is shown
+document.addEventListener('DOMContentLoaded', () => {
+  focusKbField();
+  // Re-focus if the page was restored from bfcache
+  window.addEventListener('pageshow', () => {
+    if (document.getElementById('screen-login').classList.contains('active')) focusKbField();
+  });
+});
+
+function updatePinDisplay() {
+  for (let i = 0; i < 4; i++) {
+    const box = document.getElementById('pd' + i);
+    if (i < pinVal.length) {
+      box.textContent = '●';
+      box.classList.add('filled');
+      box.classList.remove('complete');
+    } else {
+      box.textContent = '—';
+      box.classList.remove('filled', 'complete');
+    }
+  }
+  if (pinVal.length === 4) {
+    for (let i = 0; i < 4; i++) document.getElementById('pd' + i).classList.add('complete');
+  }
+}
+
+// Global keydown handler: works regardless of element focus
+// (hidden input focus is unreliable in iframes/sandboxed contexts,
+//  so the login screen listens on document directly)
+function handleKeyDown(e) {
+  const loginScreen = document.getElementById('screen-login');
+  if (!loginScreen || !loginScreen.classList.contains('active')) return;
+
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    pinLogin();
+    return;
+  }
+  if (e.key === 'Backspace') {
+    e.preventDefault();
+    pinVal = pinVal.slice(0, -1);
+    updatePinDisplay();
+    return;
+  }
+  const isDigit = (e.key >= '0' && e.key <= '9') ||
+                  (e.code && e.code.startsWith('Numpad') && e.key >= '0' && e.key <= '9');
+  if (!isDigit) return;
+
+  e.preventDefault();
+  if (pinVal.length >= 4) return;
+  pinVal += e.key;
+  updatePinDisplay();
+  if (pinVal.length === 4) setTimeout(pinLogin, 250);
+}
+
+document.addEventListener('keydown', handleKeyDown);
+
+function shakePin() {
+  const row = document.getElementById('pin-display');
+  row.classList.add('error-shake');
+  setTimeout(() => row.classList.remove('error-shake'), 400);
+}
+
+function pinLogin() {
+  if (pinVal.length !== 4) {
+    shakePin();
+    showToast('4桁の生徒番号を入力してください');
+    return;
+  }
+  state.studentId = pinVal;
+  saveRecord(pinVal, { lastSeen: Date.now() });
+  ['nav-id','nav-id2','nav-id3','nav-id4','nav-id-list'].forEach(id => {
+    document.getElementById(id).textContent = '# ' + pinVal;
+  });
+  showScreen('level');
+  showToast('Welcome! 👋');
+}
+
+function logout() {
+  pinVal = '';
+  document.getElementById('kb-field').value = '';
+  updatePinDisplay();
+  state = { ...state, studentId: '', level: null, mode: null };
+  showScreen('login');
+  renderRecentIds();
+  requestAnimationFrame(focusKbField);
+}
+
+function renderRecentIds() {
+  const ids = getRecentIds();
+  const hist = document.getElementById('login-history');
+  const chips = document.getElementById('history-chips');
+  if (ids.length === 0) { hist.style.display = 'none'; return; }
+  hist.style.display = 'block';
+  chips.innerHTML = ids.map(id =>
+    `<div class="history-chip" onclick="quickLogin('${id}')">${id}</div>`
+  ).join('');
+}
+
+function quickLogin(id) {
+  pinVal = id;
+  document.getElementById('kb-field').value = id;
+  updatePinDisplay();
+  setTimeout(pinLogin, 250);
+}
+
+renderRecentIds();
+
+// ===================== LEVEL =====================
+function selectLevel(n, el) {
+  state.level = n;
+  document.querySelectorAll('.level-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  setTimeout(() => { showScreen('menu'); updateMenuNav(); }, 180);
+}
+function goMenu() { showScreen('menu'); updateMenuNav(); }
+function goLevel() { showScreen('level'); }
+function updateMenuNav() {
+  const names = ['','1年生','2年生','3年生','High Level','Super High','G.O.D.'];
+  document.getElementById('nav-level-info').textContent = 'Level: ' + (names[state.level]||'');
+}
+
+// ===================== MENU =====================
+let menuSelected = null;
+function selectMenu(mode, el) {
+  state.mode = mode;
+  document.getElementById('menu-qa').classList.remove('selected');
+  document.getElementById('menu-int').classList.remove('selected');
+  el.classList.add('selected');
+  setTimeout(goListScreen, 180);
+}
+
+function goListScreen() {
+  if (!state.level || !state.mode) return;
+  showScreen('list');
+
+  const isQa = state.mode === 'qa';
+  document.getElementById('list-mode-label').textContent = isQa ? '❓ Q&A Mode' : '🎙️ Interviewer Mode';
+  document.getElementById('list-eyebrow').textContent    = isQa ? 'Q&A MODE' : 'INTERVIEWER MODE';
+  document.getElementById('list-title').textContent      = isQa ? 'Questions & Answer Examples' : 'Topic List';
+  document.getElementById('list-subtitle').textContent   = isQa
+    ? '全52問中10問出題：挨拶2問 → Closed 4問 → Open 4問（固定順）'
+    : '全20課題文中5文がランダム出題されます';
+  // Show/hide time selector
+  const qaTs = document.getElementById('qa-time-selector');
+  if (qaTs) qaTs.style.display = isQa ? 'flex' : 'none';
+  // Sync active button
+  if (isQa) updateTimeBtns(state.qaTime);
+  document.getElementById('list-start-info').textContent = isQa
+    ? '挨拶2 + Closed4 + Open4 = 10問'
+    : '5トピック · ' + state.intTime + '秒 / 問';
+
+  renderListItems();
+}
+
+function renderListItems() {
+  const wrap = document.getElementById('q-list-wrap');
+  wrap.innerHTML = '';
+
+  function mkHeader(label, count, color) {
+    const h = document.createElement('div');
+    h.style.cssText = 'display:flex;align-items:center;gap:8px;padding:12px 4px 4px;';
+    h.innerHTML = '<span style="font-size:0.72rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:' + color + ';">' + label + '</span>'
+      + '<span style="font-size:0.7rem;color:var(--slate-400);font-weight:600;">' + count + '問</span>';
+    return h;
+  }
+
+  if (state.mode === 'qa') {
+    const qs = QA_BANK[state.level] || [];
+    const groups = [
+      { type:'greeting', label:'👋 挨拶 (Greeting)',      color:'#f59e0b', border:'#fde68a' },
+      { type:'closed',   label:'✅ Closed Questions',     color:'#16a34a', border:'#bbf7d0' },
+      { type:'open',     label:'💭 Open Questions (Wh-)', color:'#7c3aed', border:'#ddd6fe' },
+    ];
+    groups.forEach(function(g) {
+      const groupQs = qs.filter(function(q){ return q.type === g.type; });
+      wrap.appendChild(mkHeader(g.label, groupQs.length, g.color));
+      groupQs.forEach(function(q, i) {
+        const item = document.createElement('div');
+        item.className = 'q-list-item';
+        item.style.borderColor = g.border;
+        item.innerHTML = '<div class="q-type-dot ' + q.type + '"></div>'
+          + '<div class="q-list-num">' + String(i+1).padStart(2,'0') + '</div>'
+          + '<div class="q-list-body">'
+          + '<div class="q-list-text">' + escHtml(q.q) + '</div>'
+          + '<div class="q-list-hint">💡 <em>Example:</em> ' + escHtml(q.hint) + '</div>'
+          + '</div>';
+        wrap.appendChild(item);
+      });
+    });
+  } else {
+    const ts = INT_BANK[state.level] || [];
+    wrap.appendChild(mkHeader('📄 課題文 (Topics) — 聞いてできるだけ多く質問しよう', ts.length, '#f97316'));
+    ts.forEach(function(t, i) {
+      const item = document.createElement('div');
+      item.className = 'q-list-item';
+      item.style.cssText = 'border-color:#fed7aa;flex-direction:column;gap:10px;align-items:stretch;';
+      // Topic row
+      const topicRow = '<div style="display:flex;gap:12px;align-items:flex-start;">'
+        + '<div class="q-type-dot topic" style="margin-top:4px;"></div>'
+        + '<div class="q-list-num">' + String(i+1).padStart(2,'0') + '</div>'
+        + '<div class="q-list-body">'
+        + '<div class="q-list-text">' + escHtml(t.topic) + '</div>'
+        + '<div style="font-size:0.75rem;color:var(--slate-400);font-weight:500;margin-top:2px;">🇯🇵 ' + escHtml(t.topic_jp || '') + '</div>'
+        + '</div></div>';
+      // Followups
+      const fuRows = t.followups.map(function(q, fi) {
+        const jp = (t.followups_jp && t.followups_jp[fi]) ? t.followups_jp[fi] : '';
+        return '<div style="display:flex;gap:8px;align-items:baseline;padding-left:40px;">'
+          + '<span style="font-size:0.72rem;color:var(--orange);font-weight:700;min-width:16px;">Q' + (fi+1) + '</span>'
+          + '<div>'
+          + '<div style="font-size:0.82rem;font-weight:600;color:var(--slate-700);">' + escHtml(q) + '</div>'
+          + '<div style="font-size:0.72rem;color:var(--slate-400);font-weight:500;">🇯🇵 ' + escHtml(jp) + '</div>'
+          + '</div></div>';
+      }).join('');
+      const fuBlock = '<div style="border-top:1px solid var(--slate-100);padding-top:8px;">'
+        + '<div style="font-size:0.68rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--orange);margin-bottom:6px;padding-left:40px;">💬 質問例</div>'
+        + fuRows + '</div>';
+      item.innerHTML = topicRow + fuBlock;
+      wrap.appendChild(item);
+    });
+  }
+}
+
+
+function setTime(val, el, mode) {
+  if (mode==='qa') state.qaTime = val;
+  else state.intTime = val;
+  el.closest('.time-chips').querySelectorAll('.time-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function toggleShow(mode, btn) {
+  state.showText[mode] = !state.showText[mode];
+  btn.classList.toggle('on', state.showText[mode]);
+}
+function renderQaList() {
+  const el = document.getElementById('qa-list-preview');
+  if (!state.level) return;
+  const qs = QA_BANK[state.level];
+  el.innerHTML = qs.map((q,i) =>
+    `<div class="list-item"><span class="list-num">${i+1}</span><div><div>${q.q}</div><div class="answer-hint">💡 ${q.hint}</div></div></div>`
+  ).join('');
+}
+function renderIntList() {
+  const el = document.getElementById('int-list-preview');
+  if (!state.level) return;
+  const ts = INT_BANK[state.level];
+  el.innerHTML = ts.map((t,i) =>
+    `<div class="list-item"><span class="list-num">${i+1}</span><div><div>${t.topic}</div><div class="answer-hint">💬 ${t.followups.join(' / ')}</div></div></div>`
+  ).join('');
+}
+
+// ===================== CHALLENGE =====================
+function goChallenge() {
+  if (!state.level || !state.mode) { showToast('レベルとモードを選んでください'); return; }
+  // Revoke old audio URLs
+  (state.recordings || []).forEach(r => { if (r.audioUrl) URL.revokeObjectURL(r.audioUrl); });
+  prepareQuestions();
+  state.currentQ = 0;
+  state.recordings = [];
+  showScreen('challenge');
+  document.getElementById('challenge-mode-label').textContent =
+    state.mode === 'qa' ? '❓ Q&A Mode' : '🎙️ Interviewer Mode';
+  renderProgress();
+  setTimeout(runQuestion, 600);
+}
+
+function prepareQuestions() {
+  if (state.mode === 'qa') {
+    const bank = QA_BANK[state.level];
+    // Fixed order: greeting×2 → closed×4 → open×4
+    const greetings = shuffle(bank.filter(q=>q.type==='greeting')).slice(0,2);
+    const closed    = shuffle(bank.filter(q=>q.type==='closed')).slice(0,4);
+    const open      = shuffle(bank.filter(q=>q.type==='open')).slice(0,4);
+    state.questions = [...greetings, ...closed, ...open]; // NOT shuffled — fixed order
+  } else {
+    const bank = INT_BANK[state.level];
+    // Pick 5 random topics; each is just the topic text — student asks questions
+    state.questions = shuffle(bank).slice(0,5).map(function(t) {
+      return { type:'topic', q: t.topic };
+    });
+  }
+}
+
+function renderProgress() {
+  const total = state.mode==='qa' ? 10 : 5;
+  const container = document.getElementById('challenge-progress');
+  container.innerHTML = Array.from({length: total}, (_,i) =>
+    `<div class="progress-dot ${i<state.currentQ?'done':i===state.currentQ?'current':''}" id="dot-${i}"></div>`
+  ).join('');
+  const label = document.getElementById('q-counter');
+  const modeTotal = state.mode==='qa' ? 10 : 5;
+  label.textContent = (state.mode==='qa'?'QUESTION ':'TOPIC ') + (state.currentQ+1) + ' / ' + modeTotal;
+}
+
+function runQuestion() {
+  if (state.mode==='qa') runQA();
+  else runInterviewer();
+}
+
+// ===================== SPEECH =====================
+function speak(text, cb) {
+  if (!window.speechSynthesis) { if(cb) cb(); return; }
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US'; u.rate = 0.9;
+  u.onend = () => { setTimeout(cb, 300); };
+  u.onerror = () => { if(cb) cb(); };
+  window.speechSynthesis.speak(u);
+}
+
+let _recognition = null;
+let _mediaRecorder = null;
+let _audioChunks = [];
+
+async function startSpeechRec() {
+  // Show live transcript area
+  const ltWrap = document.getElementById('live-transcript-wrap');
+  const ltEl   = document.getElementById('live-transcript');
+  if (ltWrap) { ltWrap.style.display = 'block'; }
+  if (ltEl)   { ltEl.textContent = ''; }
+
+  // ── Speech recognition (transcript) ──
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SR) {
+    _recognition = new SR();
+    _recognition.lang = 'en-US';
+    _recognition.continuous = true;
+    _recognition.interimResults = true;
+    state.currentTranscript = '';
+    _recognition.onresult = e => {
+      let final = '', interim = '';
+      for (let i = 0; i < e.results.length; i++) {
+        if (e.results[i].isFinal) final += e.results[i][0].transcript + ' ';
+        else interim += e.results[i][0].transcript;
+      }
+      state.currentTranscript = (final + interim).trim();
+      // Update live display
+      if (ltEl) {
+        ltEl.textContent = state.currentTranscript || '…';
+      }
+    };
+    _recognition.onerror = () => {};
+    try { _recognition.start(); } catch(e) {}
+  }
+
+  // ── MediaRecorder (actual audio) ──
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    _audioChunks = [];
+    _mediaRecorder = new MediaRecorder(stream);
+    _mediaRecorder.ondataavailable = e => { if (e.data.size > 0) _audioChunks.push(e.data); };
+    _mediaRecorder.start();
+  } catch(e) {
+    _mediaRecorder = null; // mic permission denied or unavailable
+  }
+}
+
+function stopSpeechRec() {
+  if (_recognition) { try { _recognition.stop(); } catch(e){} _recognition = null; }
+  return new Promise(resolve => {
+    if (_mediaRecorder && _mediaRecorder.state !== 'inactive') {
+      _mediaRecorder.onstop = () => {
+        const blob = new Blob(_audioChunks, { type: 'audio/webm' });
+        const url  = URL.createObjectURL(blob);
+        // Stop all mic tracks
+        _mediaRecorder.stream.getTracks().forEach(t => t.stop());
+        _mediaRecorder = null;
+        resolve({ blob, url });
+      };
+      _mediaRecorder.stop();
+    } else {
+      _mediaRecorder = null;
+      resolve({ blob: null, url: null });
+    }
+  });
+}
+
+// ===================== TICKING SOUND =====================
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playTick(warn) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = warn ? 880 : 660;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.1);
+  } catch(e) {}
+}
+
+// ===================== END =====================
+function endChallenge() {
+  showScreen('results');
+  analyzeResults();
+}
+
+function analyzeResults() {
+  const recs = state.recordings;
+  let totalWords = 0, totalSentences = 0;
+
+  recs.forEach(r => {
+    const words = r.transcript ? r.transcript.split(/\s+/).filter(Boolean) : [];
+    totalWords += words.length;
+    const sentences = r.transcript
+      ? (r.transcript.match(/[.!?]+/g) || []).length || (words.length > 0 ? 1 : 0)
+      : 0;
+    totalSentences += sentences;
+  });
+
+  const avgWords = recs.length > 0 ? Math.round(totalWords / recs.length) : 0;
+
+  // Placeholder scoring (teacher will replace with real rubric)
+  const sentenceScore   = Math.min(100, totalSentences * 10);
+  const accuracyScore   = Math.min(100, avgWords * 5);
+  const pronunciationScore = 75;
+  const total = Math.round((sentenceScore + accuracyScore + pronunciationScore) / 3);
+
+  document.getElementById('score-sentences').textContent    = totalSentences;
+  document.getElementById('score-accuracy').textContent     = accuracyScore + '%';
+  document.getElementById('score-pronunciation').textContent = pronunciationScore + '%';
+  document.getElementById('score-total').textContent        = total;
+
+  // Animate ring
+  const arc = document.getElementById('score-ring-arc');
+  setTimeout(() => {
+    arc.style.transition = 'stroke-dashoffset 1.5s cubic-bezier(.4,0,.2,1)';
+    arc.style.strokeDashoffset = 464.9 * (1 - total / 100);
+  }, 200);
+
+  // ── Render per-question audio cards ──
+  renderAudioCards(recs);
+
+  // Save record
+  saveRecord(state.studentId, {
+    lastScore: total, lastLevel: state.level,
+    lastMode: state.mode, lastDate: new Date().toISOString(),
+  });
+}
+
+function renderAudioCards(recs) {
+  const container = document.getElementById('audio-cards');
+  container.innerHTML = '';
+
+  recs.forEach((r, i) => {
+    const card = document.createElement('div');
+    card.className = 'audio-card';
+
+    const qLabel = state.mode === 'qa' ? `Q${i + 1}` : `Topic ${i + 1}`;
+
+    // Audio player row
+    const hasAudio = !!r.audioUrl;
+    const playerHTML = hasAudio ? `
+      <div class="audio-player-row">
+        <button class="play-btn" id="play-btn-${i}" onclick="togglePlay(${i})">▶</button>
+        <div class="audio-progress-wrap">
+          <input type="range" class="audio-progress" id="prog-${i}"
+            min="0" max="100" value="0"
+            oninput="seekAudio(${i}, this.value)">
+          <div class="audio-time" id="time-${i}">0:00</div>
+        </div>
+        <audio id="audio-${i}" src="${r.audioUrl}"
+          ontimeupdate="updateProgress(${i})"
+          onended="onAudioEnded(${i})"
+          onloadedmetadata="onAudioMeta(${i})"></audio>
+      </div>` : `<div class="no-audio-msg">🎙️ 音声なし（マイク未許可）</div>`;
+
+    card.innerHTML = `
+      <div class="audio-card-header">
+        <span class="audio-q-label">${qLabel}</span>
+      </div>
+      <div class="audio-q-text">${escHtml(r.questionText || '')}</div>
+      ${playerHTML}
+      <div class="audio-transcript">
+        📝 ${r.transcript ? escHtml(r.transcript) : '(音声認識できませんでした)'}
+      </div>`;
+
+    container.appendChild(card);
+  });
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Audio player controls ──
+function togglePlay(i) {
+  const audio = document.getElementById('audio-' + i);
+  const btn   = document.getElementById('play-btn-' + i);
+  if (!audio) return;
+
+  // Pause all others
+  document.querySelectorAll('.audio-card audio').forEach((a, j) => {
+    if (j !== i && !a.paused) {
+      a.pause();
+      const ob = document.getElementById('play-btn-' + j);
+      if (ob) { ob.textContent = '▶'; ob.classList.remove('playing'); }
+    }
+  });
+
+  if (audio.paused) {
+    audio.play();
+    btn.textContent = '⏸';
+    btn.classList.add('playing');
+  } else {
+    audio.pause();
+    btn.textContent = '▶';
+    btn.classList.remove('playing');
+  }
+}
+
+function onAudioEnded(i) {
+  const btn = document.getElementById('play-btn-' + i);
+  const prog = document.getElementById('prog-' + i);
+  if (btn)  { btn.textContent = '▶'; btn.classList.remove('playing'); }
+  if (prog) { prog.value = 0; prog.style.setProperty('--pct','0%'); }
+  const timeEl = document.getElementById('time-' + i);
+  if (timeEl) timeEl.textContent = '0:00';
+}
+
+function onAudioMeta(i) {
+  const audio = document.getElementById('audio-' + i);
+  if (!audio) return;
+  const dur = isFinite(audio.duration) ? audio.duration : 0;
+  const timeEl = document.getElementById('time-' + i);
+  if (timeEl) timeEl.textContent = fmtTime(dur);
+}
+
+function updateProgress(i) {
+  const audio = document.getElementById('audio-' + i);
+  const prog  = document.getElementById('prog-' + i);
+  const timeEl = document.getElementById('time-' + i);
+  if (!audio || !prog) return;
+  const pct = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+  prog.value = pct;
+  prog.style.setProperty('--pct', pct + '%');
+  if (timeEl) timeEl.textContent = fmtTime(audio.currentTime);
+}
+
+function seekAudio(i, val) {
+  const audio = document.getElementById('audio-' + i);
+  if (audio && audio.duration) audio.currentTime = (val / 100) * audio.duration;
+}
+
+function fmtTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return m + ':' + String(sec).padStart(2, '0');
+}
+
+function retryChallenge() {
+  // Revoke old audio object URLs
+  state.recordings.forEach(r => { if (r.audioUrl) URL.revokeObjectURL(r.audioUrl); });
+  state.currentQ = 0; state.recordings = [];
+  showScreen('challenge');
+  renderProgress();
+  setTimeout(runQuestion, 600);
+}
+
+// ===================== HELPERS =====================
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i=a.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// Init (renderRecentIds already called above)
+
+// ── Override renderAudioCards for new design ──
+function renderAudioCards(recs) {
+  const container = document.getElementById('audio-cards');
+  container.innerHTML = '';
+  recs.forEach((r, i) => {
+    const card = document.createElement('div');
+    card.className = 'audio-card';
+    const qLabel = state.mode === 'qa' ? 'Q'+(i+1) : 'Topic '+(i+1)+' — あなたの質問';
+    const hasAudio = !!r.audioUrl;
+    const playerHTML = hasAudio ? `
+      <div class="player-row">
+        <button class="play-btn" id="play-btn-${i}" onclick="togglePlay(${i})">▶</button>
+        <div class="player-track">
+          <input type="range" class="audio-range" id="prog-${i}"
+            min="0" max="100" value="0" style="--pct:0%"
+            oninput="seekAudio(${i}, this.value)">
+          <div class="audio-time" id="time-${i}">0:00</div>
+        </div>
+        <audio id="audio-${i}" src="${r.audioUrl}"
+          ontimeupdate="updateProgress(${i})"
+          onended="onAudioEnded(${i})"
+          onloadedmetadata="onAudioMeta(${i})"></audio>
+      </div>` : `<div class="no-audio">🎙️ 音声なし（マイク未許可）</div>`;
+
+    card.innerHTML = `
+      <div class="audio-top">
+        <span class="audio-num">${qLabel}</span>
+        <div class="audio-q-text">${escHtml(r.questionText || '')}</div>
+      </div>
+      ${playerHTML}
+      <div class="audio-transcript">📝 ${r.transcript ? escHtml(r.transcript) : '(音声認識できませんでした)'}</div>`;
+    container.appendChild(card);
+  });
+}
+
+// ── Override analyzeResults for grade text ──
+const _baseAnalyze = analyzeResults;
+function analyzeResults() {
+  // run base first then add grade
+  const recs = state.recordings;
+  let totalWords = 0, totalSentences = 0;
+  recs.forEach(r => {
+    const words = r.transcript ? r.transcript.split(/\s+/).filter(Boolean) : [];
+    totalWords += words.length;
+    const sentences = r.transcript
+      ? (r.transcript.match(/[.!?]+/g)||[]).length || (words.length > 0 ? 1 : 0) : 0;
+    totalSentences += sentences;
+  });
+  const avgWords = recs.length > 0 ? Math.round(totalWords / recs.length) : 0;
+  const sentenceScore = Math.min(100, totalSentences * 10);
+  const accuracyScore = Math.min(100, avgWords * 5);
+  const pronunciationScore = 75;
+  const total = Math.round((sentenceScore + accuracyScore + pronunciationScore) / 3);
+
+  document.getElementById('score-sentences').textContent = totalSentences;
+  document.getElementById('score-accuracy').textContent = accuracyScore + '%';
+  document.getElementById('score-pronunciation').textContent = pronunciationScore + '%';
+  document.getElementById('score-total').textContent = total;
+
+  // Grade + comment
+  let grade, comment;
+  if (total >= 90) { grade = 'Excellent! 🏆'; comment = 'Outstanding performance!'; }
+  else if (total >= 75) { grade = 'Great! ⭐'; comment = 'Well done, keep it up!'; }
+  else if (total >= 60) { grade = 'Good 👍'; comment = 'Good effort! Try for more detail.'; }
+  else if (total >= 40) { grade = 'Keep Going 💪'; comment = 'Practice makes perfect!'; }
+  else { grade = 'Try Again 🎯'; comment = 'Don\'t give up! You can do it!'; }
+  document.getElementById('score-grade').textContent = grade;
+  document.getElementById('score-comment').textContent = comment;
+
+  // Animate ring
+  const arc = document.getElementById('score-ring-arc');
+  setTimeout(() => {
+    arc.style.transition = 'stroke-dashoffset 1.5s cubic-bezier(.4,0,.2,1)';
+    arc.style.strokeDashoffset = 276.5 * (1 - total / 100);
+  }, 200);
+
+  renderAudioCards(recs);
+
+  saveRecord(state.studentId, {
+    lastScore: total, lastLevel: state.level,
+    lastMode: state.mode, lastDate: new Date().toISOString(),
+  });
+}
+
+// ── Override progress dots for new CSS ──
+function renderProgress() {
+  const total = state.mode === 'qa' ? 10 : 5;
+  const container = document.getElementById('challenge-progress');
+  container.innerHTML = Array.from({length: total}, (_, i) =>
+    `<div class="pdot ${i < state.currentQ ? 'done' : i === state.currentQ ? 'current' : ''}" id="dot-${i}"></div>`
+  ).join('');
+  const label = document.getElementById('q-counter');
+  label.textContent = (state.mode === 'qa' ? 'QUESTION ' : 'TOPIC ') + (state.currentQ + 1) + ' / ' + total;
+}
+
+// ── Override runQA badge classes ──
+function runQA() {
+  const total = 10;
+  if (state.currentQ >= total) { endChallenge(); return; }
+  const q = state.questions[state.currentQ];
+  renderProgress();
+  const badge = document.getElementById('q-type-badge');
+  const typeMap = { greeting: '👋 Greeting', closed: '✅ Closed', open: '💭 Open' };
+  badge.textContent = typeMap[q.type] || q.type;
+  badge.className = 'q-type-pill ' + (q.type || '');
+  const qText = document.getElementById('q-text');
+  qText.textContent = q.q;
+  qText.className = 'q-text' + (state.showText.qa ? '' : ' hidden-text');
+  speak(q.q, () => startCountdown(state.qaTime, () => { state.currentQ++; runQA(); }));
+}
+
+// ── runInterviewer: 課題文読み上げ直後にタイマースタート ──
+function runInterviewer() {
+  const total = 5;
+  if (state.currentQ >= total) { endChallenge(); return; }
+  const item = state.questions[state.currentQ];
+  renderProgress();
+  const badge = document.getElementById('q-type-badge');
+  badge.textContent = '🎙️ できるだけ質問しよう！';
+  badge.className = 'q-type-pill topic';
+  const qText = document.getElementById('q-text');
+  qText.textContent = item.q;
+  qText.className = 'q-text'; // always show topic text
+  // Speak topic, then immediately start countdown
+  speak(item.q, () => {
+    startCountdown(state.intTime, () => {
+      state.currentQ++;
+      runInterviewer();
+    });
+  });
+}
+
+// ── Override startCountdown for new ring (r=50, circ=314.2) ──
+function startCountdown(seconds, onDone) {
+  countdownActive = true;
+  let left = seconds;
+  const ringNum  = document.getElementById('ring-number');
+  const ringFill = document.getElementById('ring-fill');
+  const circ = 314.2;
+  const rec = document.getElementById('rec-indicator');
+  rec.classList.add('on');
+  startSpeechRec();
+
+  const tick = () => {
+    ringNum.textContent = left;
+    ringFill.style.strokeDashoffset = circ * (1 - left / seconds);
+    const warn = left <= 2;
+    ringNum.className = 'ring-num' + (warn ? ' warn' : '');
+    ringFill.className = 'ring-fill' + (warn ? ' warn' : '');
+    if (warn) playTick(true); else playTick(false);
+  };
+  tick();
+  state.timer = setInterval(() => {
+    left--;
+    if (left < 0) {
+      clearInterval(state.timer);
+      rec.classList.remove('on');
+      ringNum.textContent = '—';
+      ringFill.style.strokeDashoffset = 0;
+      ringNum.className = 'ring-num';
+      ringFill.className = 'ring-fill';
+      countdownActive = false;
+      const savedTranscript = state.currentTranscript;
+      state.currentTranscript = '';
+      // Hide live transcript before next question
+      const ltWrap = document.getElementById('live-transcript-wrap');
+      if (ltWrap) ltWrap.style.display = 'none';
+      stopSpeechRec().then(({ blob, url }) => {
+        state.recordings.push({
+          transcript: savedTranscript,
+          audioBlob: blob, audioUrl: url, time: seconds,
+          questionText: document.getElementById('q-text').textContent,
+          questionIndex: state.currentQ,
+        });
+        setTimeout(onDone, 400);
+      });
+    } else { tick(); }
+  }, 1000);
+}
+
+// ══════════════════════════════════════
+// Q&A 秒数選択
+// ══════════════════════════════════════
+function setQaTime(sec) {
+  state.qaTime = sec;
+  updateTimeBtns(sec);
+}
+function updateTimeBtns(sec) {
+  [3,5,7].forEach(function(s) {
+    const btn = document.getElementById('ts' + s);
+    if (btn) btn.className = 'time-sel-btn' + (s === sec ? ' selected' : '');
+  });
+}
+
+// ══════════════════════════════════════
+// メニューに戻る確認
+// ══════════════════════════════════════
+function confirmBackToMenu() {
+  clearInterval(state.timer);
+  stopSpeechRec();
+  window.speechSynthesis && window.speechSynthesis.cancel();
+  state.recordings = [];
+  state.currentQ = 0;
+  countdownActive = false;
+  // Reset challenge UI
+  const ltWrap = document.getElementById('live-transcript-wrap');
+  if (ltWrap) ltWrap.style.display = 'none';
+  document.getElementById('rec-indicator').classList.remove('on');
+  document.getElementById('ring-number').textContent = '—';
+  document.getElementById('ring-fill').style.strokeDashoffset = '0';
+  showScreen('menu');
+}
+</script>
+</body>
+</html>
