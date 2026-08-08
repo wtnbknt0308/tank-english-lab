@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPEED英単語</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>body{margin:0;background:#060612;}</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+
+const STAGES = [
+  {id:"s001",title:"Stage 1",theme:"小学校で習った動詞1",emoji:"🏃",words:[{en:"go",ja:"行く",ex:"",exJa:""}, {en:"see",ja:"わかる/見る",ex:"",exJa:""}, {en:"make",ja:"作る",ex:"",exJa:""}, {en:"visit",ja:"訪問する",ex:"",exJa:""}, {en:"help",ja:"助ける/手伝う",ex:"",exJa:""}, {en:"think",ja:"考える/思う",ex:"",exJa:""}, {en:"learn",ja:"学ぶ",ex:"",exJa:""}, {en:"talk",ja:"話す",ex:"",exJa:""}, {en:"join",ja:"参加する",ex:"",exJa:""}]},
+  {id:"s002",title:"Stage 2",theme:"小学校で習った動詞2",emoji:"🏃",words:[{en:"study",ja:"勉強する",ex:"",exJa:""}, {en:"want",ja:"ほしい",ex:"",exJa:""}, {en:"eat",ja:"食べる",ex:"",exJa:""}, {en:"have",ja:"持っている",ex:"",exJa:""}, {en:"look",ja:"見る",ex:"",exJa:""}, {en:"read",ja:"読む",ex:"",exJa:""}, {en:"write",ja:"書く",ex:"",exJa:""}, {en:"take",ja:"取る/連れて行く",ex:"",exJa:""}, {en:"come",ja:"来る",ex:"",exJa:""}]},
+  {id:"s003",title:"Stage 3",theme:"小学校で習った動詞3",emoji:"🏃",words:[{en:"play",ja:"遊ぶ/演奏する",ex:"",exJa:""}, {en:"clean",ja:"掃除する",ex:"",exJa:""}, {en:"cook",ja:"料理する",ex:"",exJa:""}, {en:"enjoy",ja:"楽しむ",ex:"",exJa:""}, {en:"get",ja:"得る/～になる",ex:"",exJa:""}, {en:"listen",ja:"聞く",ex:"",exJa:""}, {en:"live",ja:"住む",ex:"",exJa:""}, {en:"meet",ja:"会う",ex:"",exJa:""}, {en:"open",ja:"開ける/開く",ex:"",exJa:""}]},
+  {id:"s004",title:"Stage 4",theme:"小学校で習った動詞4",emoji:"🏃",words:[{en:"speak",ja:"話す",ex:"",exJa:""}, {en:"start",ja:"始める/出発する",ex:"",exJa:""}, {en:"stay",ja:"滞在する",ex:"",exJa:""}, {en:"stop",ja:"止まる/止める",ex:"",exJa:""}, {en:"teach",ja:"教える",ex:"",exJa:""}, {en:"travel",ja:"旅行する",ex:"",exJa:""}, {en:"try",ja:"ためす",ex:"",exJa:""}, {en:"wash",ja:"洗う",ex:"",exJa:""}, {en:"watch",ja:"見る",ex:"",exJa:""}]},
+  {id:"s005",title:"Stage 5",theme:"小学校で習った動詞5",emoji:"🏃",words:[{en:"practice",ja:"練習する",ex:"",exJa:""}, {en:"say",ja:"言う",ex:"",exJa:""}, {en:"smile",ja:"ほほえむ",ex:"",exJa:""}, {en:"draw",ja:"描く",ex:"",exJa:""}, {en:"drink",ja:"飲む",ex:"",exJa:""}, {en:"fly",ja:"飛ぶ",ex:"",exJa:""}, {en:"jump",ja:"跳ぶ",ex:"",exJa:""}, {en:"put",ja:"置く",ex:"",exJa:""}, {en:"ride",ja:"乗る",ex:"",exJa:""}]},
+  {id:"s006",title:"Stage 6",theme:"小学校で習った動詞6",emoji:"🏃",words:[{en:"sit",ja:"座る",ex:"",exJa:""}, {en:"skate",ja:"スケートをする",ex:"",exJa:""}, {en:"swim",ja:"泳ぐ",ex:"",exJa:""}, {en:"touch",ja:"さわる",ex:"",exJa:""}, {en:"turn",ja:"曲がる",ex:"",exJa:""}, {en:"walk",ja:"歩く/散歩させる",ex:"",exJa:""}, {en:"buy",ja:"買う",ex:"",exJa:""}, {en:"sing",ja:"歌う",ex:"",exJa:""}, {en:"dance",ja:"踊る",ex:"",exJa:""}]},
+  {id:"s007",title:"Stage 7",theme:"小学校で習った動詞7",emoji:"🏃",words:[{en:"be",ja:"～である",ex:"",exJa:""}, {en:"am",ja:"～です",ex:"",exJa:""}, {en:"is",ja:"～です",ex:"",exJa:""}, {en:"are",ja:"～です",ex:"",exJa:""}, {en:"was",ja:"～だった",ex:"",exJa:""}, {en:"were",ja:"～だった",ex:"",exJa:""}, {en:"been",ja:"～であった",ex:"",exJa:""}, {en:"do",ja:"する",ex:"",exJa:""}, {en:"does",ja:"する",ex:"",exJa:""}]},
+  {id:"s008",title:"Stage 8",theme:"小学校で習った動詞8",emoji:"🏃",words:[{en:"did",ja:"した",ex:"",exJa:""}, {en:"done",ja:"された",ex:"",exJa:""}]},
+  {id:"s009",title:"Stage 9",theme:"小学校で習った名詞1",emoji:"📝",words:[{en:"number",ja:"数",ex:"",exJa:""}, {en:"zero",ja:"0",ex:"",exJa:""}, {en:"one",ja:"1",ex:"",exJa:""}, {en:"two",ja:"2",ex:"",exJa:""}, {en:"three",ja:"3",ex:"",exJa:""}, {en:"four",ja:"4",ex:"",exJa:""}, {en:"five",ja:"5",ex:"",exJa:""}]},
+  {id:"s010",title:"Stage 10",theme:"小学校で習った名詞2",emoji:"📝",words:[{en:"six",ja:"6",ex:"",exJa:""}, {en:"seven",ja:"7",ex:"",exJa:""}, {en:"eight",ja:"8",ex:"",exJa:""}, {en:"nine",ja:"9",ex:"",exJa:""}, {en:"ten",ja:"10",ex:"",exJa:""}, {en:"eleven",ja:"11",ex:"",exJa:""}, {en:"twelve",ja:"12",ex:"",exJa:""}, {en:"thirteen",ja:"13",ex:"",exJa:""}, {en:"fourteen",ja:"14",ex:"",exJa:""}]},
+  {id:"s011",title:"Stage 11",theme:"小学校で習った名詞3",emoji:"📝",words:[{en:"fifteen",ja:"15",ex:"",exJa:""}, {en:"sixteen",ja:"16",ex:"",exJa:""}, {en:"seventeen",ja:"17",ex:"",exJa:""}, {en:"eighteen",ja:"18",ex:"",exJa:""}, {en:"nineteen",ja:"19",ex:"",exJa:""}, {en:"twenty",ja:"20",ex:"",exJa:""}, {en:"thirty",ja:"30",ex:"",exJa:""}, {en:"forty",ja:"40",ex:"",exJa:""}, {en:"fifty",ja:"50",ex:"",exJa:""}]},
+  {id:"s012",title:"Stage 12",theme:"小学校で習った名詞4",emoji:"📝",words:[{en:"sixty",ja:"60",ex:"",exJa:""}, {en:"seventy",ja:"70",ex:"",exJa:""}, {en:"eighty",ja:"80",ex:"",exJa:""}, {en:"ninety",ja:"90",ex:"",exJa:""}, {en:"hundred",ja:"100",ex:"",exJa:""}, {en:"first",ja:"1番目",ex:"",exJa:""}, {en:"second",ja:"2番目",ex:"",exJa:""}, {en:"third",ja:"3番目",ex:"",exJa:""}, {en:"fourth",ja:"4番目",ex:"",exJa:""}]},
+  {id:"s013",title:"Stage 13",theme:"小学校で習った名詞5",emoji:"📝",words:[{en:"fifth",ja:"5番目",ex:"",exJa:""}, {en:"sixth",ja:"6番目",ex:"",exJa:""}, {en:"seventh",ja:"7番目",ex:"",exJa:""}, {en:"eighth",ja:"8番目",ex:"",exJa:""}, {en:"ninth",ja:"9番目",ex:"",exJa:""}, {en:"tenth",ja:"10番目",ex:"",exJa:""}, {en:"eleventh",ja:"11番目",ex:"",exJa:""}, {en:"twelfth",ja:"12番目",ex:"",exJa:""}, {en:"thirteenth",ja:"13番目",ex:"",exJa:""}]},
+  {id:"s014",title:"Stage 14",theme:"小学校で習った名詞6",emoji:"📝",words:[{en:"fourteenth",ja:"14番目",ex:"",exJa:""}, {en:"fifteenth",ja:"15番目",ex:"",exJa:""}, {en:"sixteenth",ja:"16番目",ex:"",exJa:""}, {en:"seventeenth",ja:"17番目",ex:"",exJa:""}, {en:"eighteenth",ja:"18番目",ex:"",exJa:""}, {en:"nineteenth",ja:"19番目",ex:"",exJa:""}, {en:"twentieth",ja:"20番目",ex:"",exJa:""}, {en:"thirtieth",ja:"30番目",ex:"",exJa:""}, {en:"minute",ja:"分",ex:"",exJa:""}]},
+  {id:"s015",title:"Stage 15",theme:"小学校で習った名詞7",emoji:"📝",words:[{en:"time",ja:"時刻/時間",ex:"",exJa:""}, {en:"day",ja:"日",ex:"",exJa:""}, {en:"week",ja:"週",ex:"",exJa:""}, {en:"month",ja:"月",ex:"",exJa:""}, {en:"year",ja:"年",ex:"",exJa:""}, {en:"Monday",ja:"月曜日",ex:"",exJa:""}, {en:"Tuesday",ja:"火曜日",ex:"",exJa:""}, {en:"Wednesday",ja:"水曜日",ex:"",exJa:""}, {en:"Thursday",ja:"木曜日",ex:"",exJa:""}]},
+  {id:"s016",title:"Stage 16",theme:"小学校で習った名詞8",emoji:"📝",words:[{en:"Friday",ja:"金曜日",ex:"",exJa:""}, {en:"Saturday",ja:"土曜日",ex:"",exJa:""}, {en:"Sunday",ja:"日曜日",ex:"",exJa:""}, {en:"January",ja:"1月",ex:"",exJa:""}, {en:"February",ja:"2月",ex:"",exJa:""}, {en:"March",ja:"3月",ex:"",exJa:""}, {en:"April",ja:"4月",ex:"",exJa:""}, {en:"May",ja:"5月",ex:"",exJa:""}, {en:"June",ja:"6月",ex:"",exJa:""}]},
+  {id:"s017",title:"Stage 17",theme:"小学校で習った名詞9",emoji:"📝",words:[{en:"July",ja:"7月",ex:"",exJa:""}, {en:"August",ja:"8月",ex:"",exJa:""}, {en:"September",ja:"9月",ex:"",exJa:""}, {en:"October",ja:"10月",ex:"",exJa:""}, {en:"November",ja:"11月",ex:"",exJa:""}, {en:"December",ja:"12月",ex:"",exJa:""}, {en:"spring",ja:"春",ex:"",exJa:""}, {en:"summer",ja:"夏",ex:"",exJa:""}, {en:"autumn",ja:"秋",ex:"",exJa:""}]},
+  {id:"s018",title:"Stage 18",theme:"小学校で習った名詞10",emoji:"📝",words:[{en:"winter",ja:"冬",ex:"",exJa:""}, {en:"east",ja:"東",ex:"",exJa:""}, {en:"west",ja:"西",ex:"",exJa:""}, {en:"south",ja:"南",ex:"",exJa:""}, {en:"north",ja:"北",ex:"",exJa:""}, {en:"white",ja:"白",ex:"",exJa:""}, {en:"black",ja:"黒",ex:"",exJa:""}, {en:"red",ja:"赤",ex:"",exJa:""}, {en:"blue",ja:"青",ex:"",exJa:""}]},
+  {id:"s019",title:"Stage 19",theme:"小学校で習った名詞11",emoji:"📝",words:[{en:"yellow",ja:"黄色",ex:"",exJa:""}, {en:"green",ja:"緑",ex:"",exJa:""}, {en:"orange",ja:"オレンジ",ex:"",exJa:""}, {en:"pink",ja:"ピンク",ex:"",exJa:""}, {en:"brown",ja:"茶色",ex:"",exJa:""}, {en:"purple",ja:"紫",ex:"",exJa:""}, {en:"shape",ja:"形",ex:"",exJa:""}, {en:"circle",ja:"円",ex:"",exJa:""}, {en:"triangle",ja:"三角形",ex:"",exJa:""}]},
+  {id:"s020",title:"Stage 20",theme:"小学校で習った名詞12",emoji:"📝",words:[{en:"square",ja:"正方形",ex:"",exJa:""}, {en:"rectangle",ja:"長方形",ex:"",exJa:""}, {en:"diamond",ja:"ひし形",ex:"",exJa:""}, {en:"heart",ja:"ハート",ex:"",exJa:""}, {en:"star",ja:"星",ex:"",exJa:""}, {en:"cross",ja:"十字",ex:"",exJa:""}, {en:"man",ja:"男の人",ex:"",exJa:""}, {en:"woman",ja:"女の人",ex:"",exJa:""}, {en:"boy",ja:"男の子",ex:"",exJa:""}]},
+  {id:"s021",title:"Stage 21",theme:"小学校で習った名詞13",emoji:"📝",words:[{en:"girl",ja:"女の子",ex:"",exJa:""}, {en:"father",ja:"父",ex:"",exJa:""}, {en:"mother",ja:"母",ex:"",exJa:""}, {en:"brother",ja:"兄/弟",ex:"",exJa:""}, {en:"sister",ja:"姉/妹",ex:"",exJa:""}, {en:"grandfather",ja:"祖父",ex:"",exJa:""}, {en:"grandmother",ja:"祖母",ex:"",exJa:""}, {en:"friend",ja:"友達",ex:"",exJa:""}, {en:"eye",ja:"目",ex:"",exJa:""}]},
+  {id:"s022",title:"Stage 22",theme:"小学校で習った名詞14",emoji:"📝",words:[{en:"ear",ja:"耳",ex:"",exJa:""}, {en:"nose",ja:"鼻",ex:"",exJa:""}, {en:"mouth",ja:"口",ex:"",exJa:""}, {en:"teeth",ja:"歯",ex:"",exJa:""}, {en:"face",ja:"顔",ex:"",exJa:""}, {en:"head",ja:"頭",ex:"",exJa:""}, {en:"hand",ja:"手",ex:"",exJa:""}, {en:"shoulder",ja:"肩",ex:"",exJa:""}, {en:"knee",ja:"ひざ",ex:"",exJa:""}]},
+  {id:"s023",title:"Stage 23",theme:"小学校で習った名詞15",emoji:"📝",words:[{en:"leg",ja:"あし",ex:"",exJa:""}, {en:"toe",ja:"つま先",ex:"",exJa:""}, {en:"school",ja:"学校",ex:"",exJa:""}, {en:"class",ja:"授業",ex:"",exJa:""}, {en:"English",ja:"英語",ex:"",exJa:""}, {en:"math",ja:"算数/数学",ex:"",exJa:""}, {en:"music",ja:"音楽",ex:"",exJa:""}, {en:"science",ja:"理科",ex:"",exJa:""}, {en:"station",ja:"駅",ex:"",exJa:""}]},
+  {id:"s024",title:"Stage 24",theme:"小学校で習った名詞16",emoji:"📝",words:[{en:"hospital",ja:"病院",ex:"",exJa:""}, {en:"museum",ja:"博物館",ex:"",exJa:""}, {en:"zoo",ja:"動物園",ex:"",exJa:""}, {en:"park",ja:"公園",ex:"",exJa:""}, {en:"shrine",ja:"神社",ex:"",exJa:""}, {en:"temple",ja:"寺",ex:"",exJa:""}, {en:"castle",ja:"城",ex:"",exJa:""}, {en:"store",ja:"店",ex:"",exJa:""}, {en:"supermarket",ja:"スーパー",ex:"",exJa:""}]},
+  {id:"s025",title:"Stage 25",theme:"小学校で習った名詞17",emoji:"📝",words:[{en:"restaurant",ja:"レストラン",ex:"",exJa:""}, {en:"nature",ja:"自然",ex:"",exJa:""}, {en:"world",ja:"世界",ex:"",exJa:""}, {en:"earth",ja:"地球",ex:"",exJa:""}, {en:"sky",ja:"空",ex:"",exJa:""}, {en:"sun",ja:"太陽",ex:"",exJa:""}, {en:"moon",ja:"月",ex:"",exJa:""}, {en:"mountain",ja:"山",ex:"",exJa:""}, {en:"river",ja:"川",ex:"",exJa:""}]},
+  {id:"s026",title:"Stage 26",theme:"小学校で習った名詞18",emoji:"📝",words:[{en:"lake",ja:"湖",ex:"",exJa:""}, {en:"sea",ja:"海",ex:"",exJa:""}, {en:"island",ja:"島",ex:"",exJa:""}, {en:"flower",ja:"花",ex:"",exJa:""}, {en:"tree",ja:"木",ex:"",exJa:""}, {en:"home",ja:"家",ex:"",exJa:""}, {en:"room",ja:"部屋",ex:"",exJa:""}, {en:"bed",ja:"ベッド",ex:"",exJa:""}, {en:"desk",ja:"机",ex:"",exJa:""}]},
+  {id:"s027",title:"Stage 27",theme:"小学校で習った名詞19",emoji:"📝",words:[{en:"chair",ja:"いす",ex:"",exJa:""}, {en:"table",ja:"テーブル",ex:"",exJa:""}, {en:"box",ja:"箱",ex:"",exJa:""}, {en:"bag",ja:"かばん",ex:"",exJa:""}, {en:"wallet",ja:"財布",ex:"",exJa:""}, {en:"watch",ja:"腕時計",ex:"",exJa:""}, {en:"umbrella",ja:"傘",ex:"",exJa:""}, {en:"key",ja:"かぎ",ex:"",exJa:""}, {en:"clothes",ja:"服",ex:"",exJa:""}]},
+  {id:"s028",title:"Stage 28",theme:"小学校で習った名詞20",emoji:"📝",words:[{en:"shirt",ja:"シャツ",ex:"",exJa:""}, {en:"shoe",ja:"靴",ex:"",exJa:""}, {en:"uniform",ja:"制服",ex:"",exJa:""}, {en:"letter",ja:"手紙",ex:"",exJa:""}, {en:"card",ja:"カード",ex:"",exJa:""}, {en:"picture",ja:"写真/絵",ex:"",exJa:""}, {en:"ticket",ja:"チケット",ex:"",exJa:""}, {en:"money",ja:"お金",ex:"",exJa:""}, {en:"yen",ja:"円",ex:"",exJa:""}]},
+  {id:"s029",title:"Stage 29",theme:"小学校で習った名詞21",emoji:"📝",words:[{en:"dollar",ja:"ドル",ex:"",exJa:""}, {en:"breakfast",ja:"朝食",ex:"",exJa:""}, {en:"lunch",ja:"昼食",ex:"",exJa:""}, {en:"dinner",ja:"夕食",ex:"",exJa:""}, {en:"food",ja:"食べ物",ex:"",exJa:""}, {en:"weather",ja:"天気",ex:"",exJa:""}, {en:"dream",ja:"夢",ex:"",exJa:""}, {en:"idea",ja:"考え",ex:"",exJa:""}, {en:"name",ja:"名前",ex:"",exJa:""}]},
+  {id:"s030",title:"Stage 30",theme:"小学校で習った名詞22",emoji:"📝",words:[{en:"job",ja:"仕事",ex:"",exJa:""}, {en:"culture",ja:"文化",ex:"",exJa:""}, {en:"event",ja:"行事",ex:"",exJa:""}, {en:"history",ja:"歴史",ex:"",exJa:""}, {en:"memory",ja:"思い出",ex:"",exJa:""}, {en:"soccer",ja:"サッカー",ex:"",exJa:""}, {en:"baseball",ja:"野球",ex:"",exJa:""}, {en:"basketball",ja:"バスケットボール",ex:"",exJa:""}, {en:"volleyball",ja:"バレーボール",ex:"",exJa:""}]},
+  {id:"s031",title:"Stage 31",theme:"小学校で習った名詞23",emoji:"📝",words:[{en:"swimming",ja:"水泳",ex:"",exJa:""}, {en:"tennis",ja:"テニス",ex:"",exJa:""}, {en:"marathon",ja:"マラソン",ex:"",exJa:""}, {en:"gymnastics",ja:"体操",ex:"",exJa:""}, {en:"cycling",ja:"サイクリング",ex:"",exJa:""}, {en:"rugby",ja:"ラグビー",ex:"",exJa:""}, {en:"football",ja:"フットボール",ex:"",exJa:""}, {en:"bat",ja:"バット",ex:"",exJa:""}, {en:"ball",ja:"ボール",ex:"",exJa:""}]},
+  {id:"s032",title:"Stage 32",theme:"小学校で習った名詞24",emoji:"📝",words:[{en:"racket",ja:"ラケット",ex:"",exJa:""}, {en:"camping",ja:"キャンプ",ex:"",exJa:""}, {en:"fishing",ja:"釣り",ex:"",exJa:""}, {en:"hiking",ja:"ハイキング",ex:"",exJa:""}, {en:"jogging",ja:"ジョギング",ex:"",exJa:""}, {en:"reading",ja:"読書",ex:"",exJa:""}, {en:"shopping",ja:"買い物",ex:"",exJa:""}, {en:"piano",ja:"ピアノ",ex:"",exJa:""}, {en:"guitar",ja:"ギター",ex:"",exJa:""}]},
+  {id:"s033",title:"Stage 33",theme:"小学校で習った名詞25",emoji:"📝",words:[{en:"violin",ja:"バイオリン",ex:"",exJa:""}, {en:"drum",ja:"ドラム",ex:"",exJa:""}, {en:"recorder",ja:"リコーダー",ex:"",exJa:""}, {en:"vacation",ja:"休暇",ex:"",exJa:""}, {en:"animal",ja:"動物",ex:"",exJa:""}, {en:"cat",ja:"猫",ex:"",exJa:""}, {en:"dog",ja:"犬",ex:"",exJa:""}, {en:"fish",ja:"魚",ex:"",exJa:""}, {en:"bear",ja:"熊",ex:"",exJa:""}]},
+  {id:"s034",title:"Stage 34",theme:"小学校で習った名詞26",emoji:"📝",words:[{en:"elephant",ja:"象",ex:"",exJa:""}, {en:"panda",ja:"パンダ",ex:"",exJa:""}, {en:"lion",ja:"ライオン",ex:"",exJa:""}, {en:"pig",ja:"豚",ex:"",exJa:""}, {en:"monkey",ja:"猿",ex:"",exJa:""}, {en:"mouse",ja:"ねずみ",ex:"",exJa:""}, {en:"horse",ja:"馬",ex:"",exJa:""}, {en:"chicken",ja:"鶏",ex:"",exJa:""}, {en:"gorilla",ja:"ゴリラ",ex:"",exJa:""}]},
+  {id:"s035",title:"Stage 35",theme:"小学校で習った名詞27",emoji:"📝",words:[{en:"sheep",ja:"羊",ex:"",exJa:""}, {en:"tiger",ja:"虎",ex:"",exJa:""}, {en:"rabbit",ja:"うさぎ",ex:"",exJa:""}, {en:"koala",ja:"コアラ",ex:"",exJa:""}, {en:"fox",ja:"きつね",ex:"",exJa:""}, {en:"frog",ja:"かえる",ex:"",exJa:""}, {en:"snake",ja:"へび",ex:"",exJa:""}, {en:"wolf",ja:"狼",ex:"",exJa:""}, {en:"ant",ja:"あり",ex:"",exJa:""}]},
+  {id:"s036",title:"Stage 36",theme:"小学校で習った名詞28",emoji:"📝",words:[{en:"cow",ja:"牛",ex:"",exJa:""}, {en:"zebra",ja:"しまうま",ex:"",exJa:""}, {en:"spider",ja:"くも",ex:"",exJa:""}, {en:"bread",ja:"パン",ex:"",exJa:""}, {en:"sandwich",ja:"サンドイッチ",ex:"",exJa:""}, {en:"spaghetti",ja:"スパゲッティ",ex:"",exJa:""}, {en:"pizza",ja:"ピザ",ex:"",exJa:""}, {en:"hamburger",ja:"ハンバーガー",ex:"",exJa:""}, {en:"steak",ja:"ステーキ",ex:"",exJa:""}]},
+  {id:"s037",title:"Stage 37",theme:"小学校で習った名詞29",emoji:"📝",words:[{en:"soup",ja:"スープ",ex:"",exJa:""}, {en:"salad",ja:"サラダ",ex:"",exJa:""}, {en:"egg",ja:"卵",ex:"",exJa:""}, {en:"cheese",ja:"チーズ",ex:"",exJa:""}, {en:"cake",ja:"ケーキ",ex:"",exJa:""}, {en:"apple",ja:"りんご",ex:"",exJa:""}, {en:"banana",ja:"バナナ",ex:"",exJa:""}, {en:"orange",ja:"オレンジ",ex:"",exJa:""}, {en:"strawberry",ja:"いちご",ex:"",exJa:""}]},
+  {id:"s038",title:"Stage 38",theme:"小学校で習った名詞30",emoji:"📝",words:[{en:"peach",ja:"桃",ex:"",exJa:""}, {en:"grape",ja:"ぶどう",ex:"",exJa:""}, {en:"melon",ja:"メロン",ex:"",exJa:""}, {en:"pineapple",ja:"パイナップル",ex:"",exJa:""}, {en:"lemon",ja:"レモン",ex:"",exJa:""}, {en:"vegetable",ja:"野菜",ex:"",exJa:""}, {en:"tomato",ja:"トマト",ex:"",exJa:""}, {en:"potato",ja:"じゃがいも",ex:"",exJa:""}, {en:"onion",ja:"たまねぎ",ex:"",exJa:""}]},
+  {id:"s039",title:"Stage 39",theme:"小学校で習った名詞31",emoji:"📝",words:[{en:"carrot",ja:"にんじん",ex:"",exJa:""}, {en:"cabbage",ja:"キャベツ",ex:"",exJa:""}, {en:"corn",ja:"とうもろこし",ex:"",exJa:""}, {en:"water",ja:"水",ex:"",exJa:""}, {en:"milk",ja:"牛乳",ex:"",exJa:""}, {en:"juice",ja:"ジュース",ex:"",exJa:""}, {en:"tea",ja:"茶",ex:"",exJa:""}, {en:"coffee",ja:"コーヒー",ex:"",exJa:""}, {en:"Australia",ja:"オーストラリア",ex:"",exJa:""}]},
+  {id:"s040",title:"Stage 40",theme:"小学校で習った名詞32",emoji:"📝",words:[{en:"America",ja:"アメリカ",ex:"",exJa:""}, {en:"China",ja:"中国",ex:"",exJa:""}, {en:"Korea",ja:"韓国",ex:"",exJa:""}, {en:"Brazil",ja:"ブラジル",ex:"",exJa:""}, {en:"France",ja:"フランス",ex:"",exJa:""}, {en:"Germany",ja:"ドイツ",ex:"",exJa:""}, {en:"Italy",ja:"イタリア",ex:"",exJa:""}, {en:"U.K.",ja:"イギリス",ex:"",exJa:""}, {en:"U.S.",ja:"アメリカ合衆国",ex:"",exJa:""}]},
+  {id:"s041",title:"Stage 41",theme:"小学校で習った名詞33",emoji:"📝",words:[{en:"Canada",ja:"カナダ",ex:"",exJa:""}, {en:"doctor",ja:"医者",ex:"",exJa:""}, {en:"nurse",ja:"看護師",ex:"",exJa:""}, {en:"teacher",ja:"先生",ex:"",exJa:""}, {en:"police officer",ja:"警察官",ex:"",exJa:""}, {en:"firefighter",ja:"消防士",ex:"",exJa:""}, {en:"pilot",ja:"パイロット",ex:"",exJa:""}, {en:"astronaut",ja:"宇宙飛行士",ex:"",exJa:""}, {en:"singer",ja:"歌手",ex:"",exJa:""}]},
+  {id:"s042",title:"Stage 42",theme:"小学校で習った名詞34",emoji:"📝",words:[{en:"dancer",ja:"ダンサー",ex:"",exJa:""}, {en:"artist",ja:"芸術家",ex:"",exJa:""}, {en:"farmer",ja:"農家",ex:"",exJa:""}, {en:"chef",ja:"料理人",ex:"",exJa:""}, {en:"baker",ja:"パン屋",ex:"",exJa:""}, {en:"carpenter",ja:"大工",ex:"",exJa:""}, {en:"florist",ja:"花屋",ex:"",exJa:""}]},
+  {id:"s043",title:"Stage 43",theme:"小学校で習った形容詞1",emoji:"✨",words:[{en:"good",ja:"良い/上手な",ex:"",exJa:""}, {en:"beautiful",ja:"美しい",ex:"",exJa:""}, {en:"great",ja:"すごい/すばらしい",ex:"",exJa:""}, {en:"wonderful",ja:"すばらしい",ex:"",exJa:""}, {en:"nice",ja:"良い/すてきな",ex:"",exJa:""}, {en:"special",ja:"特別な",ex:"",exJa:""}, {en:"famous",ja:"有名な",ex:"",exJa:""}, {en:"favorite",ja:"お気に入りの",ex:"",exJa:""}, {en:"popular",ja:"人気のある",ex:"",exJa:""}]},
+  {id:"s044",title:"Stage 44",theme:"小学校で習った形容詞2",emoji:"✨",words:[{en:"happy",ja:"幸せな",ex:"",exJa:""}, {en:"sad",ja:"悲しい",ex:"",exJa:""}, {en:"busy",ja:"忙しい",ex:"",exJa:""}, {en:"tired",ja:"疲れた",ex:"",exJa:""}, {en:"hungry",ja:"空腹の",ex:"",exJa:""}, {en:"sleepy",ja:"眠い",ex:"",exJa:""}, {en:"sick",ja:"病気の",ex:"",exJa:""}, {en:"kind",ja:"親切な",ex:"",exJa:""}, {en:"strong",ja:"強い",ex:"",exJa:""}]},
+  {id:"s045",title:"Stage 45",theme:"小学校で習った形容詞3",emoji:"✨",words:[{en:"new",ja:"新しい",ex:"",exJa:""}, {en:"old",ja:"古い/～歳の",ex:"",exJa:""}, {en:"big",ja:"大きい",ex:"",exJa:""}, {en:"small",ja:"小さい",ex:"",exJa:""}, {en:"tall",ja:"背が高い",ex:"",exJa:""}, {en:"short",ja:"短い/低い",ex:"",exJa:""}, {en:"long",ja:"長い",ex:"",exJa:""}, {en:"high",ja:"高い",ex:"",exJa:""}, {en:"low",ja:"低い/少ない",ex:"",exJa:""}]},
+  {id:"s046",title:"Stage 46",theme:"小学校で習った形容詞4",emoji:"✨",words:[{en:"fast",ja:"速い",ex:"",exJa:""}, {en:"slow",ja:"遅い",ex:"",exJa:""}, {en:"easy",ja:"簡単な",ex:"",exJa:""}, {en:"difficult",ja:"難しい",ex:"",exJa:""}, {en:"sunny",ja:"晴れの",ex:"",exJa:""}, {en:"cloudy",ja:"くもりの",ex:"",exJa:""}, {en:"rainy",ja:"雨の",ex:"",exJa:""}, {en:"snowy",ja:"雪の",ex:"",exJa:""}, {en:"hot",ja:"暑い",ex:"",exJa:""}]},
+  {id:"s047",title:"Stage 47",theme:"小学校で習った形容詞5",emoji:"✨",words:[{en:"cool",ja:"涼しい/かっこいい",ex:"",exJa:""}, {en:"warm",ja:"暖かい",ex:"",exJa:""}, {en:"cute",ja:"かわいい",ex:"",exJa:""}, {en:"delicious",ja:"おいしい",ex:"",exJa:""}, {en:"sweet",ja:"甘い",ex:"",exJa:""}, {en:"healthy",ja:"健康な",ex:"",exJa:""}, {en:"safe",ja:"安全な",ex:"",exJa:""}, {en:"free",ja:"自由な/無料の",ex:"",exJa:""}, {en:"best",ja:"もっともよい",ex:"",exJa:""}]},
+  {id:"s048",title:"Stage 48",theme:"小学校で習った副詞1",emoji:"⚡",words:[{en:"really",ja:"本当に",ex:"",exJa:""}, {en:"very",ja:"とても",ex:"",exJa:""}, {en:"always",ja:"いつも",ex:"",exJa:""}, {en:"usually",ja:"たいてい",ex:"",exJa:""}, {en:"often",ja:"よく/しばしば",ex:"",exJa:""}, {en:"sometimes",ja:"ときどき",ex:"",exJa:""}, {en:"never",ja:"一度も～ない",ex:"",exJa:""}, {en:"also",ja:"～もまた",ex:"",exJa:""}, {en:"together",ja:"いっしょに",ex:"",exJa:""}]},
+  {id:"s049",title:"Stage 49",theme:"小学校で習った副詞2",emoji:"⚡",words:[{en:"finally",ja:"ついに",ex:"",exJa:""}, {en:"already",ja:"すでに",ex:"",exJa:""}, {en:"soon",ja:"すぐに",ex:"",exJa:""}, {en:"now",ja:"今",ex:"",exJa:""}, {en:"today",ja:"今日",ex:"",exJa:""}, {en:"tomorrow",ja:"明日",ex:"",exJa:""}, {en:"yesterday",ja:"昨日",ex:"",exJa:""}, {en:"early",ja:"早く",ex:"",exJa:""}, {en:"late",ja:"遅く",ex:"",exJa:""}]},
+  {id:"s050",title:"Stage 50",theme:"小学校で習った副詞3",emoji:"⚡",words:[{en:"here",ja:"ここに",ex:"",exJa:""}, {en:"there",ja:"そこに",ex:"",exJa:""}, {en:"back",ja:"戻って",ex:"",exJa:""}, {en:"well",ja:"上手に",ex:"",exJa:""}, {en:"hard",ja:"一生懸命に",ex:"",exJa:""}, {en:"just",ja:"ちょうど",ex:"",exJa:""}, {en:"only",ja:"～だけ",ex:"",exJa:""}, {en:"even",ja:"～でさえ",ex:"",exJa:""}, {en:"almost",ja:"ほとんど",ex:"",exJa:""}]},
+  {id:"s051",title:"Stage 51",theme:"小学校で習った副詞4",emoji:"⚡",words:[{en:"pretty",ja:"かなり",ex:"",exJa:""}, {en:"too",ja:"～もまた/～すぎる",ex:"",exJa:""}]},
+  {id:"s052",title:"Stage 52",theme:"小学校で習った代名詞1",emoji:"📝",words:[{en:"I",ja:"私は",ex:"",exJa:""}, {en:"my",ja:"私の",ex:"",exJa:""}, {en:"me",ja:"私を",ex:"",exJa:""}, {en:"mine",ja:"私のもの",ex:"",exJa:""}, {en:"you",ja:"あなたは",ex:"",exJa:""}, {en:"your",ja:"あなたの",ex:"",exJa:""}, {en:"yours",ja:"あなたのもの",ex:"",exJa:""}, {en:"he",ja:"彼は",ex:"",exJa:""}, {en:"his",ja:"彼の",ex:"",exJa:""}]},
+  {id:"s053",title:"Stage 53",theme:"小学校で習った代名詞2",emoji:"📝",words:[{en:"him",ja:"彼を",ex:"",exJa:""}, {en:"she",ja:"彼女は",ex:"",exJa:""}, {en:"her",ja:"彼女の",ex:"",exJa:""}, {en:"hers",ja:"彼女のもの",ex:"",exJa:""}, {en:"it",ja:"それは",ex:"",exJa:""}, {en:"its",ja:"その",ex:"",exJa:""}, {en:"we",ja:"私たちは",ex:"",exJa:""}, {en:"our",ja:"私たちの",ex:"",exJa:""}, {en:"ours",ja:"私たちのもの",ex:"",exJa:""}]},
+  {id:"s054",title:"Stage 54",theme:"小学校で習った代名詞3",emoji:"📝",words:[{en:"they",ja:"彼らは",ex:"",exJa:""}, {en:"their",ja:"彼らの",ex:"",exJa:""}, {en:"them",ja:"彼らを",ex:"",exJa:""}, {en:"theirs",ja:"彼らのもの",ex:"",exJa:""}, {en:"this",ja:"これ",ex:"",exJa:""}, {en:"that",ja:"あれ/それ",ex:"",exJa:""}, {en:"everyone",ja:"みんな",ex:"",exJa:""}, {en:"everything",ja:"すべてのこと",ex:"",exJa:""}, {en:"nothing",ja:"何も～ない",ex:"",exJa:""}]},
+  {id:"s056",title:"Stage 56",theme:"小学校で習った疑問詞1",emoji:"❓",words:[{en:"who",ja:"だれ",ex:"",exJa:""}, {en:"what",ja:"何",ex:"",exJa:""}, {en:"when",ja:"いつ",ex:"",exJa:""}, {en:"where",ja:"どこ",ex:"",exJa:""}, {en:"why",ja:"なぜ",ex:"",exJa:""}, {en:"how",ja:"どうやって",ex:"",exJa:""}, {en:"which",ja:"どちら",ex:"",exJa:""}, {en:"whose",ja:"だれの",ex:"",exJa:""}]},
+  {id:"s057",title:"Stage 57",theme:"小学校で習った接続詞1",emoji:"🔗",words:[{en:"and",ja:"そして",ex:"",exJa:""}, {en:"but",ja:"しかし",ex:"",exJa:""}, {en:"or",ja:"または",ex:"",exJa:""}, {en:"because",ja:"なぜなら",ex:"",exJa:""}, {en:"if",ja:"もし～なら",ex:"",exJa:""}]},
+  {id:"s058",title:"Stage 58",theme:"小学校で習った前置詞1",emoji:"📍",words:[{en:"at",ja:"～に",ex:"",exJa:""}, {en:"in",ja:"～の中に",ex:"",exJa:""}, {en:"on",ja:"～の上に",ex:"",exJa:""}, {en:"by",ja:"～のそばに",ex:"",exJa:""}, {en:"for",ja:"～のために",ex:"",exJa:""}, {en:"from",ja:"～から",ex:"",exJa:""}, {en:"to",ja:"～へ",ex:"",exJa:""}, {en:"with",ja:"～といっしょに",ex:"",exJa:""}, {en:"about",ja:"～について",ex:"",exJa:""}]},
+  {id:"s059",title:"Stage 59",theme:"小学校で習った前置詞2",emoji:"📍",words:[{en:"under",ja:"～の下に",ex:"",exJa:""}, {en:"near",ja:"～の近くに",ex:"",exJa:""}, {en:"between",ja:"～の間に",ex:"",exJa:""}, {en:"over",ja:"～をこえて",ex:"",exJa:""}, {en:"through",ja:"～を通して",ex:"",exJa:""}]},
+  {id:"s060",title:"Stage 60",theme:"小学校で習った助動詞1",emoji:"🏃",words:[{en:"can",ja:"～できる",ex:"",exJa:""}, {en:"will",ja:"～だろう",ex:"",exJa:""}, {en:"should",ja:"～すべきだ",ex:"",exJa:""}, {en:"must",ja:"～しなければならない",ex:"",exJa:""}, {en:"may",ja:"～してもよい",ex:"",exJa:""}]},
+  {id:"s061",title:"Stage 61",theme:"中学校基礎動詞1",emoji:"🏃",words:[{en:"become",ja:"～になる",ex:"",exJa:""}, {en:"believe",ja:"信じる",ex:"",exJa:""}, {en:"bring",ja:"持ってくる",ex:"",exJa:""}, {en:"build",ja:"建てる",ex:"",exJa:""}, {en:"call",ja:"呼ぶ/電話する",ex:"",exJa:""}, {en:"carry",ja:"運ぶ",ex:"",exJa:""}, {en:"catch",ja:"捕まえる",ex:"",exJa:""}, {en:"change",ja:"変える",ex:"",exJa:""}, {en:"check",ja:"確かめる",ex:"",exJa:""}]},
+  {id:"s062",title:"Stage 62",theme:"中学校基礎動詞2",emoji:"🏃",words:[{en:"choose",ja:"選ぶ",ex:"",exJa:""}, {en:"close",ja:"閉める",ex:"",exJa:""}, {en:"collect",ja:"集める",ex:"",exJa:""}, {en:"cut",ja:"切る",ex:"",exJa:""}, {en:"decide",ja:"決める",ex:"",exJa:""}, {en:"die",ja:"死ぬ",ex:"",exJa:""}, {en:"drive",ja:"運転する",ex:"",exJa:""}, {en:"feel",ja:"感じる",ex:"",exJa:""}, {en:"finish",ja:"終える",ex:"",exJa:""}]},
+  {id:"s063",title:"Stage 63",theme:"中学校基礎動詞3",emoji:"🏃",words:[{en:"forget",ja:"忘れる",ex:"",exJa:""}, {en:"give",ja:"与える",ex:"",exJa:""}, {en:"grow",ja:"育てる",ex:"",exJa:""}, {en:"happen",ja:"起こる",ex:"",exJa:""}, {en:"hear",ja:"聞こえる",ex:"",exJa:""}, {en:"hold",ja:"持つ/開催する",ex:"",exJa:""}, {en:"hope",ja:"望む",ex:"",exJa:""}, {en:"keep",ja:"保つ",ex:"",exJa:""}, {en:"know",ja:"知っている",ex:"",exJa:""}]},
+  {id:"s064",title:"Stage 64",theme:"中学校基礎動詞4",emoji:"🏃",words:[{en:"leave",ja:"出発する/残す",ex:"",exJa:""}, {en:"lend",ja:"貸す",ex:"",exJa:""}, {en:"lose",ja:"失う",ex:"",exJa:""}, {en:"mean",ja:"意味する",ex:"",exJa:""}, {en:"move",ja:"動く/感動させる",ex:"",exJa:""}, {en:"need",ja:"必要とする",ex:"",exJa:""}, {en:"pass",ja:"通り過ぎる/合格する",ex:"",exJa:""}, {en:"produce",ja:"生産する",ex:"",exJa:""}, {en:"reach",ja:"到着する",ex:"",exJa:""}]},
+  {id:"s065",title:"Stage 65",theme:"中学校基礎動詞5",emoji:"🏃",words:[{en:"receive",ja:"受け取る",ex:"",exJa:""}, {en:"remember",ja:"覚えている",ex:"",exJa:""}, {en:"return",ja:"戻る",ex:"",exJa:""}, {en:"save",ja:"救う/節約する",ex:"",exJa:""}, {en:"sell",ja:"売る",ex:"",exJa:""}, {en:"send",ja:"送る",ex:"",exJa:""}, {en:"show",ja:"見せる",ex:"",exJa:""}, {en:"spend",ja:"過ごす",ex:"",exJa:""}, {en:"understand",ja:"理解する",ex:"",exJa:""}]},
+  {id:"s066",title:"Stage 66",theme:"中学校基礎動詞6",emoji:"🏃",words:[{en:"use",ja:"使う",ex:"",exJa:""}, {en:"wait",ja:"待つ",ex:"",exJa:""}, {en:"win",ja:"勝つ",ex:"",exJa:""}, {en:"work",ja:"働く",ex:"",exJa:""}, {en:"worry",ja:"心配する",ex:"",exJa:""}, {en:"arrive",ja:"到着する",ex:"",exJa:""}, {en:"ask",ja:"尋ねる",ex:"",exJa:""}, {en:"begin",ja:"始まる",ex:"",exJa:""}, {en:"break",ja:"壊す",ex:"",exJa:""}]},
+  {id:"s067",title:"Stage 67",theme:"中学校基礎名詞1",emoji:"📝",words:[{en:"activity",ja:"活動",ex:"",exJa:""}, {en:"advice",ja:"助言",ex:"",exJa:""}, {en:"airport",ja:"空港",ex:"",exJa:""}, {en:"area",ja:"地域",ex:"",exJa:""}, {en:"athlete",ja:"運動選手",ex:"",exJa:""}, {en:"audience",ja:"聴衆",ex:"",exJa:""}, {en:"building",ja:"建物",ex:"",exJa:""}, {en:"business",ja:"商売",ex:"",exJa:""}, {en:"camera",ja:"カメラ",ex:"",exJa:""}]},
+  {id:"s068",title:"Stage 68",theme:"中学校基礎名詞2",emoji:"📝",words:[{en:"camp",ja:"キャンプ",ex:"",exJa:""}, {en:"century",ja:"世紀",ex:"",exJa:""}, {en:"challenge",ja:"挑戦",ex:"",exJa:""}, {en:"chance",ja:"機会",ex:"",exJa:""}, {en:"character",ja:"登場人物",ex:"",exJa:""}, {en:"city hall",ja:"市役所",ex:"",exJa:""}, {en:"club activity",ja:"部活動",ex:"",exJa:""}, {en:"communication",ja:"伝達",ex:"",exJa:""}, {en:"community",ja:"地域社会",ex:"",exJa:""}]},
+  {id:"s069",title:"Stage 69",theme:"中学校基礎名詞3",emoji:"📝",words:[{en:"concert",ja:"コンサート",ex:"",exJa:""}, {en:"condition",ja:"状態",ex:"",exJa:""}, {en:"cost",ja:"費用",ex:"",exJa:""}, {en:"cousin",ja:"いとこ",ex:"",exJa:""}, {en:"dictionary",ja:"辞書",ex:"",exJa:""}, {en:"difference",ja:"違い",ex:"",exJa:""}, {en:"electricity",ja:"電気",ex:"",exJa:""}, {en:"environment",ja:"環境",ex:"",exJa:""}, {en:"experience",ja:"経験",ex:"",exJa:""}]},
+  {id:"s070",title:"Stage 70",theme:"中学校基礎名詞4",emoji:"📝",words:[{en:"festival",ja:"祭り",ex:"",exJa:""}, {en:"field",ja:"分野/畑",ex:"",exJa:""}, {en:"fire",ja:"火",ex:"",exJa:""}, {en:"forest",ja:"森",ex:"",exJa:""}, {en:"future",ja:"未来",ex:"",exJa:""}, {en:"garbage",ja:"ごみ",ex:"",exJa:""}, {en:"goal",ja:"目標",ex:"",exJa:""}, {en:"health",ja:"健康",ex:"",exJa:""}, {en:"hobby",ja:"趣味",ex:"",exJa:""}]},
+  {id:"s071",title:"Stage 71",theme:"中学校基礎名詞5",emoji:"📝",words:[{en:"holiday",ja:"休日",ex:"",exJa:""}, {en:"information",ja:"情報",ex:"",exJa:""}, {en:"internet",ja:"インターネット",ex:"",exJa:""}, {en:"language",ja:"言語",ex:"",exJa:""}, {en:"leader",ja:"指導者",ex:"",exJa:""}, {en:"lesson",ja:"授業",ex:"",exJa:""}, {en:"life",ja:"生活/命",ex:"",exJa:""}, {en:"market",ja:"市場",ex:"",exJa:""}, {en:"message",ja:"伝言",ex:"",exJa:""}]},
+  {id:"s072",title:"Stage 72",theme:"中学校基礎名詞6",emoji:"📝",words:[{en:"mistake",ja:"間違い",ex:"",exJa:""}, {en:"news",ja:"知らせ",ex:"",exJa:""}, {en:"noise",ja:"騒音",ex:"",exJa:""}, {en:"ocean",ja:"大洋",ex:"",exJa:""}, {en:"opinion",ja:"意見",ex:"",exJa:""}, {en:"party",ja:"パーティー",ex:"",exJa:""}, {en:"peace",ja:"平和",ex:"",exJa:""}, {en:"person",ja:"人",ex:"",exJa:""}, {en:"place",ja:"場所",ex:"",exJa:""}]},
+  {id:"s073",title:"Stage 73",theme:"中学校基礎名詞7",emoji:"📝",words:[{en:"plan",ja:"計画",ex:"",exJa:""}, {en:"plant",ja:"植物",ex:"",exJa:""}, {en:"player",ja:"選手",ex:"",exJa:""}, {en:"pollution",ja:"汚染",ex:"",exJa:""}, {en:"population",ja:"人口",ex:"",exJa:""}, {en:"power",ja:"力",ex:"",exJa:""}, {en:"present",ja:"贈り物",ex:"",exJa:""}, {en:"price",ja:"価格",ex:"",exJa:""}, {en:"problem",ja:"問題",ex:"",exJa:""}]},
+  {id:"s074",title:"Stage 74",theme:"中学校基礎名詞8",emoji:"📝",words:[{en:"program",ja:"番組/計画",ex:"",exJa:""}, {en:"project",ja:"計画",ex:"",exJa:""}, {en:"purpose",ja:"目的",ex:"",exJa:""}, {en:"reason",ja:"理由",ex:"",exJa:""}, {en:"result",ja:"結果",ex:"",exJa:""}, {en:"rule",ja:"規則",ex:"",exJa:""}, {en:"society",ja:"社会",ex:"",exJa:""}, {en:"space",ja:"宇宙/空間",ex:"",exJa:""}, {en:"speech",ja:"演説",ex:"",exJa:""}]},
+  {id:"s075",title:"Stage 75",theme:"中学校基礎名詞9",emoji:"📝",words:[{en:"technology",ja:"技術",ex:"",exJa:""}, {en:"ticket",ja:"切符",ex:"",exJa:""}, {en:"tradition",ja:"伝統",ex:"",exJa:""}, {en:"volunteer",ja:"ボランティア",ex:"",exJa:""}]},
+  {id:"s076",title:"Stage 76",theme:"中学校基礎形容詞1",emoji:"✨",words:[{en:"useful",ja:"役に立つ",ex:"",exJa:""}, {en:"interesting",ja:"興味深い",ex:"",exJa:""}, {en:"exciting",ja:"わくわくさせる",ex:"",exJa:""}, {en:"healthy",ja:"健康な",ex:"",exJa:""}, {en:"safe",ja:"安全な",ex:"",exJa:""}, {en:"sick",ja:"病気の",ex:"",exJa:""}, {en:"tired",ja:"疲れて",ex:"",exJa:""}, {en:"hungry",ja:"おなかがすいて",ex:"",exJa:""}]},
+  {id:"s077",title:"Stage 77",theme:"中学校基礎形容詞2",emoji:"✨",words:[{en:"rainy",ja:"雨の",ex:"",exJa:""}, {en:"cloudy",ja:"くもりの",ex:"",exJa:""}, {en:"snowy",ja:"雪の降る",ex:"",exJa:""}]},
+  {id:"s078",title:"Stage 78",theme:"中学校基礎副詞1",emoji:"⚡",words:[{en:"maybe",ja:"たぶん",ex:"",exJa:""}, {en:"later",ja:"あとで",ex:"",exJa:""}, {en:"abroad",ja:"外国へ",ex:"",exJa:""}, {en:"carefully",ja:"注意深く",ex:"",exJa:""}, {en:"slowly",ja:"ゆっくりと",ex:"",exJa:""}, {en:"quickly",ja:"速く",ex:"",exJa:""}, {en:"especially",ja:"特に",ex:"",exJa:""}]},
+  {id:"s079",title:"Stage 79",theme:"中学校基礎接続詞1",emoji:"🔗",words:[{en:"since",ja:"～以来",ex:"",exJa:""}, {en:"though",ja:"～だけれども",ex:"",exJa:""}, {en:"while",ja:"～する間に",ex:"",exJa:""}]},
+  {id:"s080",title:"Stage 80",theme:"中学校基礎前置詞1",emoji:"📍",words:[{en:"into",ja:"～の中へ",ex:"",exJa:""}, {en:"until",ja:"～まで",ex:"",exJa:""}, {en:"than",ja:"～よりも",ex:"",exJa:""}, {en:"without",ja:"～なしで",ex:"",exJa:""}, {en:"along",ja:"～に沿って",ex:"",exJa:""}, {en:"among",ja:"～の間で",ex:"",exJa:""}, {en:"as",ja:"～として",ex:"",exJa:""}]},
+  {id:"s081",title:"Stage 81",theme:"中学校基礎助動詞1",emoji:"🏃",words:[{en:"would",ja:"～だろう",ex:"",exJa:""}, {en:"could",ja:"～できた",ex:"",exJa:""}, {en:"has",ja:"持っている(三単現)",ex:"",exJa:""}]},
+  {id:"s082",title:"Stage 82",theme:"中学校基礎熟語1",emoji:"💬",words:[{en:"a lot of",ja:"たくさんの",ex:"",exJa:""}, {en:"look at",ja:"～を見る",ex:"",exJa:""}, {en:"of course",ja:"もちろん",ex:"",exJa:""}, {en:"for example",ja:"たとえば",ex:"",exJa:""}, {en:"take a picture",ja:"写真を撮る",ex:"",exJa:""}, {en:"thank you for",ja:"～をありがとう",ex:"",exJa:""}, {en:"be good at",ja:"～が得意な",ex:"",exJa:""}, {en:"be interested in",ja:"～に興味がある",ex:"",exJa:""}, {en:"around the world",ja:"世界中で",ex:"",exJa:""}]},
+  {id:"s083",title:"Stage 83",theme:"中学校基礎熟語2",emoji:"💬",words:[{en:"each other",ja:"お互いに",ex:"",exJa:""}, {en:"how to",ja:"～のしかた",ex:"",exJa:""}, {en:"take care of",ja:"～の世話をする",ex:"",exJa:""}, {en:"listen to",ja:"～を聞く",ex:"",exJa:""}, {en:"be from",ja:"～の出身である",ex:"",exJa:""}, {en:"would like to",ja:"～したい",ex:"",exJa:""}, {en:"want to",ja:"～したい",ex:"",exJa:""}, {en:"have to",ja:"～しなければならない",ex:"",exJa:""}, {en:"go shopping",ja:"買い物に行く",ex:"",exJa:""}]},
+  {id:"s084",title:"Stage 84",theme:"中学校基礎熟語3",emoji:"💬",words:[{en:"arrive at",ja:"～に到着する",ex:"",exJa:""}, {en:"go on a trip",ja:"旅行に行く",ex:"",exJa:""}, {en:"look for",ja:"～を探す",ex:"",exJa:""}, {en:"give up",ja:"～をあきらめる",ex:"",exJa:""}, {en:"shake hands with",ja:"～と握手する",ex:"",exJa:""}, {en:"look forward to",ja:"～を楽しみに待つ",ex:"",exJa:""}, {en:"take part in",ja:"～に参加する",ex:"",exJa:""}, {en:"come true",ja:"実現する",ex:"",exJa:""}, {en:"make a mistake",ja:"間違える",ex:"",exJa:""}]},
+  {id:"s085",title:"Stage 85",theme:"中学校基礎熟語4",emoji:"💬",words:[{en:"on the way to",ja:"～へ行く途中で",ex:"",exJa:""}, {en:"be proud of",ja:"～を誇りに思う",ex:"",exJa:""}, {en:"thanks to",ja:"～のおかげで",ex:"",exJa:""}, {en:"because of",ja:"～の理由で",ex:"",exJa:""}, {en:"one of",ja:"～の１つ",ex:"",exJa:""}, {en:"according to",ja:"～によれば",ex:"",exJa:""}, {en:"at first",ja:"最初は",ex:"",exJa:""}, {en:"at last",ja:"ついに",ex:"",exJa:""}, {en:"at once",ja:"すぐに",ex:"",exJa:""}]},
+  {id:"s086",title:"Stage 86",theme:"中学校基礎熟語5",emoji:"💬",words:[{en:"at the same time",ja:"同時に",ex:"",exJa:""}, {en:"by the way",ja:"ところで",ex:"",exJa:""}, {en:"do one's best",ja:"最善を尽くす",ex:"",exJa:""}, {en:"for the first time",ja:"初めて",ex:"",exJa:""}, {en:"get up",ja:"起きる",ex:"",exJa:""}, {en:"how about",ja:"～はどうですか",ex:"",exJa:""}, {en:"have a good time",ja:"楽しい時を過ごす",ex:"",exJa:""}, {en:"in fact",ja:"実は",ex:"",exJa:""}, {en:"in front of",ja:"～の前で",ex:"",exJa:""}]},
+  {id:"s087",title:"Stage 87",theme:"中学校基礎熟語6",emoji:"💬",words:[{en:"in total",ja:"合計で",ex:"",exJa:""}, {en:"instead of",ja:"～の代わりに",ex:"",exJa:""}, {en:"just a moment",ja:"少々お待ちください",ex:"",exJa:""}, {en:"keep in touch",ja:"連絡を保つ",ex:"",exJa:""}, {en:"next to",ja:"～の隣に",ex:"",exJa:""}, {en:"no problem",ja:"どういたしまして",ex:"",exJa:""}, {en:"out of",ja:"～の中から外へ",ex:"",exJa:""}, {en:"over there",ja:"あそこに",ex:"",exJa:""}, {en:"right now",ja:"たった今",ex:"",exJa:""}]},
+  {id:"s088",title:"Stage 88",theme:"中学校基礎熟語7",emoji:"💬",words:[{en:"so that",ja:"～するために",ex:"",exJa:""}, {en:"take a walk",ja:"散歩する",ex:"",exJa:""}, {en:"wait a minute",ja:"ちょっと待って",ex:"",exJa:""}, {en:"wake up",ja:"目を覚ます",ex:"",exJa:""}, {en:"what about",ja:"～はどうですか",ex:"",exJa:""}, {en:"why don't you",ja:"～してはどうですか",ex:"",exJa:""}, {en:"used to",ja:"かつては～した",ex:"",exJa:""}, {en:"be able to",ja:"～することができる",ex:"",exJa:""}, {en:"be afraid of",ja:"～を恐れる",ex:"",exJa:""}]},
+  {id:"s089",title:"Stage 89",theme:"中学校基礎熟語8",emoji:"💬",words:[{en:"be filled with",ja:"～で満たされている",ex:"",exJa:""}, {en:"be full of",ja:"～でいっぱいだ",ex:"",exJa:""}, {en:"be known to",ja:"～に知られている",ex:"",exJa:""}, {en:"be made of",ja:"～でできている",ex:"",exJa:""}, {en:"be surprised at",ja:"～に驚く",ex:"",exJa:""}, {en:"break out",ja:"起こる",ex:"",exJa:""}, {en:"carry out",ja:"実行する",ex:"",exJa:""}]},
+  {id:"s090",title:"Stage 90",theme:"中学校標準動詞1",emoji:"🏃",words:[{en:"dribble",ja:"ドリブルをする",ex:"",exJa:""}, {en:"shoot",ja:"シュートする",ex:"",exJa:""}, {en:"climb",ja:"登る",ex:"",exJa:""}, {en:"sew",ja:"縫い物をする",ex:"",exJa:""}, {en:"land",ja:"着陸する/上陸する",ex:"",exJa:""}, {en:"excuse",ja:"許す",ex:"",exJa:""}, {en:"invent",ja:"発明する",ex:"",exJa:""}, {en:"increase",ja:"増やす/強める",ex:"",exJa:""}, {en:"improve",ja:"改良する/向上させる",ex:"",exJa:""}]},
+  {id:"s091",title:"Stage 91",theme:"中学校標準動詞2",emoji:"🏃",words:[{en:"warm",ja:"温める/温かくする",ex:"",exJa:""}, {en:"steam",ja:"湯気を立てる",ex:"",exJa:""}, {en:"pull",ja:"引く",ex:"",exJa:""}, {en:"text",ja:"メールを送る",ex:"",exJa:""}, {en:"coach",ja:"コーチする",ex:"",exJa:""}, {en:"foster",ja:"育てる",ex:"",exJa:""}, {en:"recommend",ja:"勧める/推薦する",ex:"",exJa:""}, {en:"scoop",ja:"すくい上げる",ex:"",exJa:""}, {en:"earn",ja:"得る/稼ぐ",ex:"",exJa:""}]},
+  {id:"s092",title:"Stage 92",theme:"中学校標準動詞3",emoji:"🏃",words:[{en:"share",ja:"分け合う",ex:"",exJa:""}, {en:"taste",ja:"～の味がする",ex:"",exJa:""}, {en:"exercise",ja:"運動する",ex:"",exJa:""}, {en:"borrow",ja:"借りる",ex:"",exJa:""}, {en:"let",ja:"～させる",ex:"",exJa:""}, {en:"collide",ja:"衝突する",ex:"",exJa:""}, {en:"explain",ja:"説明する",ex:"",exJa:""}, {en:"compete",ja:"競争する",ex:"",exJa:""}, {en:"limit",ja:"制限する",ex:"",exJa:""}]},
+  {id:"s093",title:"Stage 93",theme:"中学校標準動詞4",emoji:"🏃",words:[{en:"cause",ja:"引き起こす",ex:"",exJa:""}, {en:"decrease",ja:"減る/減少させる",ex:"",exJa:""}, {en:"spread",ja:"広がる/広める",ex:"",exJa:""}, {en:"announce",ja:"発表する/知らせる",ex:"",exJa:""}, {en:"ban",ja:"禁止する",ex:"",exJa:""}, {en:"solve",ja:"解決する",ex:"",exJa:""}, {en:"assign",ja:"任命する/割り当てる",ex:"",exJa:""}, {en:"achieve",ja:"達成する",ex:"",exJa:""}, {en:"aim",ja:"目指す",ex:"",exJa:""}]},
+  {id:"s094",title:"Stage 94",theme:"中学校標準動詞5",emoji:"🏃",words:[{en:"publish",ja:"出版する",ex:"",exJa:""}, {en:"prepare",ja:"準備する",ex:"",exJa:""}, {en:"relax",ja:"くつろぐ",ex:"",exJa:""}, {en:"beat",ja:"打ち負かす",ex:"",exJa:""}, {en:"rise",ja:"昇る",ex:"",exJa:""}, {en:"set",ja:"沈む",ex:"",exJa:""}, {en:"surf",ja:"ネットサーフィンをする",ex:"",exJa:""}, {en:"fold",ja:"折る",ex:"",exJa:""}, {en:"relay",ja:"伝える",ex:"",exJa:""}]},
+  {id:"s095",title:"Stage 95",theme:"中学校標準名詞1",emoji:"📝",words:[{en:"brass band",ja:"吹奏楽部",ex:"",exJa:""}, {en:"dolphin",ja:"イルカ",ex:"",exJa:""}, {en:"giraffe",ja:"キリン",ex:"",exJa:""}, {en:"melon",ja:"メロン",ex:"",exJa:""}, {en:"mouse",ja:"ハツカネズミ",ex:"",exJa:""}, {en:"sheep",ja:"ヒツジ",ex:"",exJa:""}, {en:"snake",ja:"ヘビ",ex:"",exJa:""}, {en:"jam",ja:"ジャム",ex:"",exJa:""}, {en:"pancake",ja:"パンケーキ",ex:"",exJa:""}]},
+  {id:"s096",title:"Stage 96",theme:"中学校標準名詞2",emoji:"📝",words:[{en:"pudding",ja:"プリン",ex:"",exJa:""}, {en:"seafood",ja:"シーフード",ex:"",exJa:""}, {en:"aquarium",ja:"水族館",ex:"",exJa:""}, {en:"chorus",ja:"合唱（部）",ex:"",exJa:""}, {en:"drama",ja:"演劇/ドラマ",ex:"",exJa:""}, {en:"gorilla",ja:"ゴリラ",ex:"",exJa:""}, {en:"ice cream",ja:"アイスクリーム",ex:"",exJa:""}, {en:"octopus",ja:"タコ",ex:"",exJa:""}, {en:"violin",ja:"バイオリン",ex:"",exJa:""}]},
+  {id:"s097",title:"Stage 97",theme:"中学校標準名詞3",emoji:"📝",words:[{en:"yacht",ja:"ヨット",ex:"",exJa:""}, {en:"video game",ja:"テレビゲーム",ex:"",exJa:""}, {en:"frog",ja:"カエル",ex:"",exJa:""}, {en:"dancer",ja:"ダンサー",ex:"",exJa:""}, {en:"pie",ja:"パイ",ex:"",exJa:""}, {en:"total",ja:"総計",ex:"",exJa:""}, {en:"ant",ja:"アリ",ex:"",exJa:""}, {en:"elephant",ja:"ゾウ",ex:"",exJa:""}, {en:"chef",ja:"シェフ/料理長",ex:"",exJa:""}]},
+  {id:"s098",title:"Stage 98",theme:"中学校標準名詞4",emoji:"📝",words:[{en:"corn",ja:"トウモロコシ",ex:"",exJa:""}, {en:"vegetable",ja:"野菜",ex:"",exJa:""}, {en:"photo",ja:"写真",ex:"",exJa:""}, {en:"sandwich",ja:"サンドイッチ",ex:"",exJa:""}, {en:"steak",ja:"ステーキ",ex:"",exJa:""}, {en:"koala",ja:"コアラ",ex:"",exJa:""}, {en:"heart",ja:"ハート形",ex:"",exJa:""}, {en:"pond",ja:"池",ex:"",exJa:""}, {en:"stadium",ja:"球場/競技場",ex:"",exJa:""}]},
+  {id:"s099",title:"Stage 99",theme:"中学校標準名詞5",emoji:"📝",words:[{en:"corner",ja:"角",ex:"",exJa:""}, {en:"entrance",ja:"入り口/玄関",ex:"",exJa:""}, {en:"site",ja:"場所/ウェブサイト",ex:"",exJa:""}, {en:"body",ja:"体",ex:"",exJa:""}, {en:"teeth",ja:"歯(複数形)",ex:"",exJa:""}, {en:"hero",ja:"英雄",ex:"",exJa:""}, {en:"astronaut",ja:"宇宙飛行士",ex:"",exJa:""}, {en:"ruler",ja:"定規",ex:"",exJa:""}, {en:"scissor",ja:"はさみ",ex:"",exJa:""}]},
+  {id:"s100",title:"Stage 100",theme:"中学校標準名詞6",emoji:"📝",words:[{en:"stapler",ja:"ホチキス",ex:"",exJa:""}, {en:"noodle",ja:"めん類",ex:"",exJa:""}, {en:"doll",ja:"人形",ex:"",exJa:""}, {en:"smartphone",ja:"スマートフォン",ex:"",exJa:""}, {en:"snack",ja:"おやつ/軽食",ex:"",exJa:""}, {en:"unicycle",ja:"一輪車",ex:"",exJa:""}, {en:"yogurt",ja:"ヨーグルト",ex:"",exJa:""}, {en:"ship",ja:"船",ex:"",exJa:""}, {en:"firework",ja:"花火",ex:"",exJa:""}]},
+  {id:"s101",title:"Stage 101",theme:"中学校標準名詞7",emoji:"📝",words:[{en:"mushroom",ja:"キノコ",ex:"",exJa:""}, {en:"recorder",ja:"リコーダー",ex:"",exJa:""}, {en:"carrot",ja:"ニンジン",ex:"",exJa:""}, {en:"scientist",ja:"科学者",ex:"",exJa:""}, {en:"hall",ja:"ホール/会館",ex:"",exJa:""}, {en:"rainbow",ja:"虹",ex:"",exJa:""}, {en:"dessert",ja:"デザート",ex:"",exJa:""}, {en:"basket",ja:"かご",ex:"",exJa:""}, {en:"wheelchair",ja:"車いす",ex:"",exJa:""}]},
+  {id:"s102",title:"Stage 102",theme:"中学校標準名詞8",emoji:"📝",words:[{en:"restroom",ja:"トイレ",ex:"",exJa:""}, {en:"comedian",ja:"お笑い芸人",ex:"",exJa:""}, {en:"bean",ja:"豆",ex:"",exJa:""}, {en:"story",ja:"物語",ex:"",exJa:""}, {en:"sound",ja:"音",ex:"",exJa:""}, {en:"weekend",ja:"週末",ex:"",exJa:""}, {en:"break",ja:"休憩",ex:"",exJa:""}, {en:"question",ja:"質問",ex:"",exJa:""}, {en:"song",ja:"歌",ex:"",exJa:""}]},
+  {id:"s103",title:"Stage 103",theme:"中学校標準名詞9",emoji:"📝",words:[{en:"aunt",ja:"おば",ex:"",exJa:""}, {en:"uncle",ja:"おじ",ex:"",exJa:""}, {en:"internet",ja:"インターネット",ex:"",exJa:""}, {en:"thing",ja:"もの/こと",ex:"",exJa:""}, {en:"dollar",ja:"ドル",ex:"",exJa:""}, {en:"woman",ja:"女性",ex:"",exJa:""}, {en:"boy",ja:"少年",ex:"",exJa:""}, {en:"man",ja:"男性",ex:"",exJa:""}, {en:"clothes",ja:"衣服",ex:"",exJa:""}]},
+  {id:"s104",title:"Stage 104",theme:"中学校標準名詞10",emoji:"📝",words:[{en:"way",ja:"道/方法",ex:"",exJa:""}, {en:"hour",ja:"時間/1時間",ex:"",exJa:""}, {en:"parent",ja:"親",ex:"",exJa:""}, {en:"example",ja:"例",ex:"",exJa:""}, {en:"lot",ja:"たくさん",ex:"",exJa:""}, {en:"floor",ja:"階/床",ex:"",exJa:""}, {en:"email",ja:"Eメール",ex:"",exJa:""}, {en:"line",ja:"線",ex:"",exJa:""}, {en:"party",ja:"パーティー",ex:"",exJa:""}]},
+  {id:"s105",title:"Stage 105",theme:"中学校標準名詞11",emoji:"📝",words:[{en:"minute",ja:"分",ex:"",exJa:""}, {en:"care",ja:"注意/用心",ex:"",exJa:""}, {en:"voice",ja:"声",ex:"",exJa:""}, {en:"child",ja:"子ども",ex:"",exJa:""}, {en:"program",ja:"番組",ex:"",exJa:""}, {en:"person",ja:"人",ex:"",exJa:""}, {en:"peace",ja:"平和",ex:"",exJa:""}, {en:"power",ja:"力/影響力",ex:"",exJa:""}, {en:"swimming",ja:"水泳",ex:"",exJa:""}]},
+  {id:"s106",title:"Stage 106",theme:"中学校標準名詞12",emoji:"📝",words:[{en:"smell",ja:"におい",ex:"",exJa:""}, {en:"mind",ja:"心/精神",ex:"",exJa:""}, {en:"news",ja:"知らせ",ex:"",exJa:""}, {en:"trouble",ja:"困ったこと",ex:"",exJa:""}, {en:"meter",ja:"メートル",ex:"",exJa:""}, {en:"camera",ja:"カメラ",ex:"",exJa:""}, {en:"piece",ja:"1つ/1片",ex:"",exJa:""}, {en:"plan",ja:"予定/計画",ex:"",exJa:""}, {en:"war",ja:"戦争",ex:"",exJa:""}]},
+  {id:"s107",title:"Stage 107",theme:"中学校標準名詞13",emoji:"📝",words:[{en:"word",ja:"ことば",ex:"",exJa:""}, {en:"noon",ja:"正午",ex:"",exJa:""}, {en:"bank",ja:"銀行",ex:"",exJa:""}, {en:"daughter",ja:"娘",ex:"",exJa:""}, {en:"ground",ja:"地面",ex:"",exJa:""}, {en:"son",ja:"息子",ex:"",exJa:""}, {en:"health",ja:"健康",ex:"",exJa:""}, {en:"chance",ja:"機会",ex:"",exJa:""}, {en:"phone",ja:"電話",ex:"",exJa:""}]},
+  {id:"s108",title:"Stage 108",theme:"中学校標準名詞14",emoji:"📝",words:[{en:"clock",ja:"時計",ex:"",exJa:""}, {en:"part",ja:"部分",ex:"",exJa:""}, {en:"medicine",ja:"薬",ex:"",exJa:""}, {en:"price",ja:"価格",ex:"",exJa:""}, {en:"bottle",ja:"ボトル",ex:"",exJa:""}, {en:"age",ja:"年齢",ex:"",exJa:""}, {en:"dictionary",ja:"辞書",ex:"",exJa:""}]},
+  {id:"s109",title:"Stage 109",theme:"中学校標準形容詞1",emoji:"✨",words:[{en:"fantastic",ja:"すばらしい",ex:"",exJa:""}, {en:"fresh",ja:"新鮮な",ex:"",exJa:""}, {en:"active",ja:"活発な",ex:"",exJa:""}, {en:"brave",ja:"勇敢な",ex:"",exJa:""}, {en:"excellent",ja:"すばらしい",ex:"",exJa:""}, {en:"sour",ja:"すっぱい",ex:"",exJa:""}, {en:"traditional",ja:"伝統的な",ex:"",exJa:""}, {en:"expensive",ja:"高価な",ex:"",exJa:""}, {en:"bad",ja:"悪い",ex:"",exJa:""}]},
+  {id:"s110",title:"Stage 110",theme:"中学校標準形容詞2",emoji:"✨",words:[{en:"lucky",ja:"幸運な",ex:"",exJa:""}, {en:"heavy",ja:"重い",ex:"",exJa:""}, {en:"large",ja:"大きい/広い",ex:"",exJa:""}, {en:"ready",ja:"準備ができて",ex:"",exJa:""}, {en:"all",ja:"すべての",ex:"",exJa:""}, {en:"amazing",ja:"すばらしい",ex:"",exJa:""}, {en:"rich",ja:"豊かな/金持ちの",ex:"",exJa:""}, {en:"next",ja:"次の",ex:"",exJa:""}, {en:"foreign",ja:"外国の",ex:"",exJa:""}]},
+  {id:"s111",title:"Stage 111",theme:"中学校標準形容詞3",emoji:"✨",words:[{en:"deep",ja:"深い",ex:"",exJa:""}, {en:"interested",ja:"興味のある",ex:"",exJa:""}, {en:"light",ja:"軽い",ex:"",exJa:""}, {en:"each",ja:"それぞれの",ex:"",exJa:""}, {en:"such",ja:"そのような",ex:"",exJa:""}, {en:"poor",ja:"貧しい",ex:"",exJa:""}, {en:"glad",ja:"うれしい",ex:"",exJa:""}, {en:"TRUE",ja:"ほんとうの",ex:"",exJa:""}, {en:"own",ja:"自分自身の",ex:"",exJa:""}]},
+  {id:"s112",title:"Stage 112",theme:"中学校標準形容詞4",emoji:"✨",words:[{en:"future",ja:"将来の",ex:"",exJa:""}, {en:"another",ja:"別の",ex:"",exJa:""}, {en:"able",ja:"できる",ex:"",exJa:""}, {en:"better",ja:"よりよい",ex:"",exJa:""}, {en:"colorful",ja:"カラフルな",ex:"",exJa:""}, {en:"few",ja:"少数の",ex:"",exJa:""}, {en:"angry",ja:"怒って",ex:"",exJa:""}, {en:"necessary",ja:"必要な",ex:"",exJa:""}, {en:"afraid",ja:"残念ながら",ex:"",exJa:""}]},
+  {id:"s113",title:"Stage 113",theme:"中学校標準形容詞5",emoji:"✨",words:[{en:"perfect",ja:"完ぺきな",ex:"",exJa:""}, {en:"skillful",ja:"熟練した",ex:"",exJa:""}, {en:"tiny",ja:"ちっちゃな",ex:"",exJa:""}, {en:"jealous",ja:"うらやましい",ex:"",exJa:""}, {en:"tasty",ja:"おいしい",ex:"",exJa:""}, {en:"awesome",ja:"素晴らしい",ex:"",exJa:""}, {en:"freezing",ja:"凍るような",ex:"",exJa:""}, {en:"terrible",ja:"恐ろしい",ex:"",exJa:""}, {en:"fluffy",ja:"ふわふわした",ex:"",exJa:""}]},
+  {id:"s114",title:"Stage 114",theme:"中学校標準副詞1",emoji:"⚡",words:[{en:"still",ja:"まだ/今でも",ex:"",exJa:""}, {en:"almost",ja:"ほとんど",ex:"",exJa:""}, {en:"ago",ja:"～前に",ex:"",exJa:""}, {en:"pretty",ja:"たいへん/とても",ex:"",exJa:""}, {en:"once",ja:"一度/1回",ex:"",exJa:""}, {en:"finally",ja:"やっと",ex:"",exJa:""}, {en:"sure",ja:"もちろん",ex:"",exJa:""}, {en:"then",ja:"それでは",ex:"",exJa:""}, {en:"far",ja:"遠くに",ex:"",exJa:""}]},
+  {id:"s115",title:"Stage 115",theme:"中学校標準副詞2",emoji:"⚡",words:[{en:"little",ja:"少し",ex:"",exJa:""}, {en:"around",ja:"あちこちを",ex:"",exJa:""}, {en:"away",ja:"去って",ex:"",exJa:""}, {en:"either",ja:"～もまた(ない)",ex:"",exJa:""}, {en:"maybe",ja:"たぶん",ex:"",exJa:""}, {en:"later",ja:"あとで",ex:"",exJa:""}, {en:"more",ja:"もっと",ex:"",exJa:""}, {en:"most",ja:"もっとも",ex:"",exJa:""}, {en:"even",ja:"～でさえ",ex:"",exJa:""}]},
+  {id:"s116",title:"Stage 116",theme:"中学校標準副詞3",emoji:"⚡",words:[{en:"yet",ja:"まだ(～でない)",ex:"",exJa:""}, {en:"tonight",ja:"今夜",ex:"",exJa:""}, {en:"ever",ja:"今までに",ex:"",exJa:""}, {en:"quite",ja:"非常に",ex:"",exJa:""}, {en:"successfully",ja:"成功して",ex:"",exJa:""}, {en:"safely",ja:"安全に",ex:"",exJa:""}, {en:"exactly",ja:"まさに",ex:"",exJa:""}, {en:"outside",ja:"屋外で",ex:"",exJa:""}]},
+  {id:"s117",title:"Stage 117",theme:"中学校標準熟語1",emoji:"💬",words:[{en:"i see.",ja:"なるほど。",ex:"",exJa:""}, {en:"many kinds of",ja:"たくさんの種類の",ex:"",exJa:""}, {en:"what’s the matter?",ja:"どうしたのですか。",ex:"",exJa:""}, {en:"hold on to",ja:"～にしがみつく",ex:"",exJa:""}, {en:"every day",ja:"毎日",ex:"",exJa:""}, {en:"i’m sorry.",ja:"すみません。",ex:"",exJa:""}, {en:"nice to meet you.",ja:"お会いできてうれしいです。",ex:"",exJa:""}, {en:"after school",ja:"放課後",ex:"",exJa:""}, {en:"very much",ja:"とても",ex:"",exJa:""}]},
+  {id:"s118",title:"Stage 118",theme:"中学校標準熟語2",emoji:"💬",words:[{en:"take a bath",ja:"ふろに入る",ex:"",exJa:""}, {en:"good luck!",ja:"幸運を祈ります。",ex:"",exJa:""}, {en:"can i",ja:"～してもよいですか。",ex:"",exJa:""}, {en:"here you are.",ja:"はい、どうぞ。",ex:"",exJa:""}, {en:"i got it!",ja:"わかった。",ex:"",exJa:""}, {en:"that’s right.",ja:"そのとおりです。",ex:"",exJa:""}, {en:"would you like",ja:"～はいかがですか。",ex:"",exJa:""}, {en:"show around",ja:"～を案内して回る",ex:"",exJa:""}, {en:"all over",ja:"～のいたるところに",ex:"",exJa:""}]},
+  {id:"s119",title:"Stage 119",theme:"中学校標準熟語3",emoji:"💬",words:[{en:"in order to",ja:"～するために",ex:"",exJa:""}, {en:"warm up",ja:"～を温める",ex:"",exJa:""}, {en:"have no idea",ja:"わからない",ex:"",exJa:""}, {en:"not always",ja:"必ずしも～とは限らない",ex:"",exJa:""}, {en:"pass away",ja:"亡くなる",ex:"",exJa:""}, {en:"get well",ja:"よくなる",ex:"",exJa:""}, {en:"make the most of",ja:"～を最大限に活用する",ex:"",exJa:""}, {en:"go bowling",ja:"ボウリングに行く",ex:"",exJa:""}, {en:"do the dishes",ja:"皿洗いをする",ex:"",exJa:""}]},
+  {id:"s120",title:"Stage 120",theme:"中学校標準熟語4",emoji:"💬",words:[{en:"sounds nice.",ja:"楽しそうですね。",ex:"",exJa:""}, {en:"take place",ja:"開催される",ex:"",exJa:""}, {en:"believe in",ja:"～を信じる",ex:"",exJa:""}, {en:"for a while",ja:"しばらくの間",ex:"",exJa:""}, {en:"don’t have to",ja:"～する必要はない",ex:"",exJa:""}, {en:"hear from",ja:"～から便りをもらう",ex:"",exJa:""}, {en:"go to bed",ja:"寝る",ex:"",exJa:""}, {en:"on time",ja:"時間どおりに",ex:"",exJa:""}, {en:"be ready to",ja:"～する準備ができている",ex:"",exJa:""}]},
+  {id:"s121",title:"Stage 121",theme:"中学校標準熟語5",emoji:"💬",words:[{en:"for free",ja:"無料で",ex:"",exJa:""}, {en:"by mistake",ja:"間違って",ex:"",exJa:""}, {en:"take action",ja:"行動を起こす",ex:"",exJa:""}, {en:"fall asleep",ja:"眠りに落ちる",ex:"",exJa:""}, {en:"make use of",ja:"～を利用する",ex:"",exJa:""}, {en:"one day",ja:"ある日",ex:"",exJa:""}, {en:"turn off",ja:"～を消す",ex:"",exJa:""}, {en:"a piece of",ja:"1つの～",ex:"",exJa:""}, {en:"one after another",ja:"次々と",ex:"",exJa:""}]},
+  {id:"s122",title:"Stage 122",theme:"中学校標準熟語6",emoji:"💬",words:[{en:"run short",ja:"不足する",ex:"",exJa:""}, {en:"more than",ja:"～より多い",ex:"",exJa:""}, {en:"get along with",ja:"～と仲よくやっていく",ex:"",exJa:""}, {en:"no longer",ja:"もはや～でない",ex:"",exJa:""}, {en:"not but",ja:"～ではなく",ex:"",exJa:""}, {en:"all right",ja:"大丈夫な",ex:"",exJa:""}, {en:"on the other hand",ja:"一方では",ex:"",exJa:""}, {en:"say to oneself",ja:"心の中で思う",ex:"",exJa:""}, {en:"as a result of",ja:"～の結果として",ex:"",exJa:""}]},
+  {id:"s123",title:"Stage 123",theme:"中学校標準熟語7",emoji:"💬",words:[{en:"feel like",ja:"～のように感じる",ex:"",exJa:""}, {en:"a few",ja:"少しの",ex:"",exJa:""}, {en:"be based on",ja:"～に基づいている",ex:"",exJa:""}, {en:"in a hurry",ja:"急いで",ex:"",exJa:""}, {en:"at least",ja:"少なくとも",ex:"",exJa:""}, {en:"make up for",ja:"～を補う",ex:"",exJa:""}, {en:"concentrate on",ja:"～に集中する",ex:"",exJa:""}, {en:"as a result",ja:"その結果として",ex:"",exJa:""}, {en:"not only but also",ja:"～だけでなく～も",ex:"",exJa:""}]},
+  {id:"s124",title:"Stage 124",theme:"中学校標準熟語8",emoji:"💬",words:[{en:"change trains",ja:"電車を乗りかえる",ex:"",exJa:""}, {en:"it is true that",ja:"～は本当だ",ex:"",exJa:""}, {en:"agree with",ja:"～に賛成する",ex:"",exJa:""}, {en:"in addition",ja:"さらに",ex:"",exJa:""}, {en:"it is said that",ja:"～だと言われている",ex:"",exJa:""}, {en:"even if",ja:"たとえ～でも",ex:"",exJa:""}, {en:"go with",ja:"～と合う",ex:"",exJa:""}, {en:"what’s more",ja:"そのうえ",ex:"",exJa:""}, {en:"belong to",ja:"～に属する",ex:"",exJa:""}]},
+  {id:"s125",title:"Stage 125",theme:"中学校標準熟語9",emoji:"💬",words:[{en:"look forward to",ja:"～を楽しみに待つ",ex:"",exJa:""}, {en:"take part in",ja:"参加する",ex:"",exJa:""}, {en:"thanks to",ja:"～のおかげで",ex:"",exJa:""}, {en:"how about?",ja:"～はどうですか",ex:"",exJa:""}, {en:"i'm looking for",ja:"～を探しています",ex:"",exJa:""}, {en:"would you like?",ja:"～はいかがですか",ex:"",exJa:""}, {en:"of course",ja:"もちろん",ex:"",exJa:""}, {en:"by the way",ja:"ところで",ex:"",exJa:""}]},
+  {id:"s126",title:"Stage 126",theme:"中学校標準熟語10",emoji:"💬",words:[{en:"wait a minute",ja:"ちょっと待って",ex:"",exJa:""}, {en:"wake up",ja:"目を覚ます",ex:"",exJa:""}, {en:"used to",ja:"かつては～した",ex:"",exJa:""}, {en:"be afraid of",ja:"～を恐れる",ex:"",exJa:""}, {en:"be filled with",ja:"～で満たされている",ex:"",exJa:""}, {en:"break out",ja:"起こる",ex:"",exJa:""}, {en:"carry out",ja:"実行する",ex:"",exJa:""}, {en:"check up",ja:"検査する",ex:"",exJa:""}, {en:"come up with",ja:"～を思いつく",ex:"",exJa:""}]},
+  {id:"s127",title:"Stage 127",theme:"中学校標準熟語11",emoji:"💬",words:[{en:"get out of",ja:"～から出る",ex:"",exJa:""}, {en:"keep in touch",ja:"連絡を保つ",ex:"",exJa:""}, {en:"look into",ja:"～を調査する",ex:"",exJa:""}, {en:"make plans",ja:"計画を立てる",ex:"",exJa:""}, {en:"pay attention to",ja:"～に注意を払う",ex:"",exJa:""}, {en:"put on",ja:"身につける",ex:"",exJa:""}, {en:"shake hands with",ja:"～と握手する",ex:"",exJa:""}, {en:"take care",ja:"気をつける",ex:"",exJa:""}, {en:"try one's best",ja:"最善を尽くす",ex:"",exJa:""}]},
+  {id:"s128",title:"Stage 128",theme:"中学校標準熟語12",emoji:"💬",words:[{en:"up to",ja:"～まで",ex:"",exJa:""}, {en:"working as",ja:"～として働く",ex:"",exJa:""}, {en:"write down",ja:"書き留める",ex:"",exJa:""}, {en:"as you can see",ja:"ご覧のように",ex:"",exJa:""}, {en:"according to",ja:"～によれば",ex:"",exJa:""}, {en:"become popular",ja:"人気が出る",ex:"",exJa:""}, {en:"believe in",ja:"～の存在を信じる",ex:"",exJa:""}, {en:"by oneself",ja:"自分自身で",ex:"",exJa:""}, {en:"feel good",ja:"気分が良い",ex:"",exJa:""}]},
+  {id:"s129",title:"Stage 129",theme:"中学校標準熟語13",emoji:"💬",words:[{en:"for the first time",ja:"初めて",ex:"",exJa:""}, {en:"get a job",ja:"職を得る",ex:"",exJa:""}, {en:"get interested in",ja:"～に興味を持つ",ex:"",exJa:""}, {en:"have a great time",ja:"素晴らしい時を過ごす",ex:"",exJa:""}, {en:"how to use",ja:"～の使い方",ex:"",exJa:""}, {en:"keep trying",ja:"挑戦し続ける",ex:"",exJa:""}, {en:"know a lot about",ja:"～についてよく知っている",ex:"",exJa:""}, {en:"learn about",ja:"～について学ぶ",ex:"",exJa:""}, {en:"look like",ja:"～のように見える",ex:"",exJa:""}]},
+  {id:"s130",title:"Stage 130",theme:"中学校標準熟語14",emoji:"💬",words:[{en:"make a speech",ja:"スピーチをする",ex:"",exJa:""}, {en:"one of the",ja:"～の1つ",ex:"",exJa:""}, {en:"proud of",ja:"～を誇りに思う",ex:"",exJa:""}, {en:"save energy",ja:"エネルギーを節約する",ex:"",exJa:""}, {en:"talk with",ja:"～と話す",ex:"",exJa:""}, {en:"try new things",ja:"新しいことに挑戦する",ex:"",exJa:""}, {en:"walk along",ja:"～に沿って歩く",ex:"",exJa:""}, {en:"work with",ja:"～と一緒に働く",ex:"",exJa:""}, {en:"would like to",ja:"～したいと思う",ex:"",exJa:""}]},
+  {id:"s131",title:"Stage 131",theme:"中学校標準熟語15",emoji:"💬",words:[{en:"across from",ja:"～の向かいに",ex:"",exJa:""}, {en:"all over the world",ja:"世界中で",ex:"",exJa:""}, {en:"at home",ja:"家で",ex:"",exJa:""}, {en:"at the age of",ja:"～歳の時に",ex:"",exJa:""}, {en:"because of",ja:"～の理由で",ex:"",exJa:""}, {en:"get better",ja:"良くなる",ex:"",exJa:""}, {en:"how many?",ja:"いくつですか",ex:"",exJa:""}, {en:"in the future",ja:"将来",ex:"",exJa:""}, {en:"take a rest",ja:"休息をとる",ex:"",exJa:""}]},
+  {id:"s132",title:"Stage 132",theme:"中学校標準熟語16",emoji:"💬",words:[{en:"want to be",ja:"～になりたい",ex:"",exJa:""}, {en:"what kind of",ja:"どのような種類の",ex:"",exJa:""}, {en:"why don't we?",ja:"～しませんか",ex:"",exJa:""}, {en:"a lot",ja:"たくさん",ex:"",exJa:""}, {en:"all day",ja:"一日中",ex:"",exJa:""}, {en:"arrive at",ja:"～に到着する",ex:"",exJa:""}, {en:"be good at",ja:"～が得意だ",ex:"",exJa:""}, {en:"be surprised at",ja:"～に驚く",ex:"",exJa:""}, {en:"fall over",ja:"転ぶ",ex:"",exJa:""}]},
+  {id:"s133",title:"Stage 133",theme:"中学校標準熟語17",emoji:"💬",words:[{en:"go on a trip",ja:"旅行に行く",ex:"",exJa:""}, {en:"have lunch",ja:"昼食を食べる",ex:"",exJa:""}, {en:"look at",ja:"～を見る",ex:"",exJa:""}, {en:"many students",ja:"多くの生徒",ex:"",exJa:""}, {en:"next year",ja:"来年",ex:"",exJa:""}, {en:"right away",ja:"すぐに",ex:"",exJa:""}, {en:"some day",ja:"いつか",ex:"",exJa:""}, {en:"tell me about",ja:"～について教えて",ex:"",exJa:""}, {en:"too much",ja:"多すぎる",ex:"",exJa:""}]},
+  {id:"s134",title:"Stage 134",theme:"中学校標準熟語18",emoji:"💬",words:[{en:"very soon",ja:"もうすぐ",ex:"",exJa:""}, {en:"want to see",ja:"～を見たい",ex:"",exJa:""}, {en:"would you?",ja:"～してくれますか",ex:"",exJa:""}, {en:"after dinner",ja:"夕食後",ex:"",exJa:""}, {en:"at school",ja:"学校で",ex:"",exJa:""}, {en:"be interested in",ja:"～に興味がある",ex:"",exJa:""}, {en:"buy a present",ja:"プレゼントを買う",ex:"",exJa:""}, {en:"draw pictures",ja:"絵を描く",ex:"",exJa:""}, {en:"get up early",ja:"早く起きる",ex:"",exJa:""}]},
+  {id:"s135",title:"Stage 135",theme:"中学校標準熟語19",emoji:"💬",words:[{en:"go shopping",ja:"買い物に行く",ex:"",exJa:""}, {en:"have been to",ja:"～へ行ったことがある",ex:"",exJa:""}, {en:"listen to",ja:"～を聞く",ex:"",exJa:""}, {en:"look for",ja:"～を探す",ex:"",exJa:""}, {en:"no way!",ja:"まさか！",ex:"",exJa:""}, {en:"of all",ja:"すべての中で",ex:"",exJa:""}, {en:"read a book",ja:"本を読んでいる",ex:"",exJa:""}, {en:"so far",ja:"今までのところ",ex:"",exJa:""}, {en:"thank you for",ja:"～をありがとう",ex:"",exJa:""}]},
+  {id:"s136",title:"Stage 136",theme:"中学校標準熟語20",emoji:"💬",words:[{en:"try it out",ja:"試してみる",ex:"",exJa:""}, {en:"wait for",ja:"～を待つ",ex:"",exJa:""}, {en:"what's up?",ja:"どうしたの？",ex:"",exJa:""}, {en:"with friends",ja:"友達と一緒に",ex:"",exJa:""}, {en:"you know",ja:"知っての通り",ex:"",exJa:""}, {en:"a few days",ja:"数日",ex:"",exJa:""}, {en:"all together",ja:"みんな一緒に",ex:"",exJa:""}, {en:"at first",ja:"最初は",ex:"",exJa:""}, {en:"be able to do",ja:"～することができる",ex:"",exJa:""}]},
+  {id:"s137",title:"Stage 137",theme:"中学校標準熟語21",emoji:"💬",words:[{en:"by bus",ja:"バスで",ex:"",exJa:""}, {en:"clean up",ja:"掃除する",ex:"",exJa:""}, {en:"every week",ja:"毎週",ex:"",exJa:""}, {en:"go back to",ja:"～に戻る",ex:"",exJa:""}, {en:"have to do",ja:"～しなければならない",ex:"",exJa:""}, {en:"in need",ja:"困っている",ex:"",exJa:""}, {en:"like this",ja:"このように",ex:"",exJa:""}, {en:"more and more",ja:"ますます多くの",ex:"",exJa:""}, {en:"once a week",ja:"週に一度",ex:"",exJa:""}]},
+  {id:"s138",title:"Stage 138",theme:"中学校標準熟語22",emoji:"💬",words:[{en:"put it away",ja:"片付ける",ex:"",exJa:""}, {en:"say hello to",ja:"～によろしく言う",ex:"",exJa:""}, {en:"take a look at",ja:"～をちょっと見る",ex:"",exJa:""}, {en:"understand well",ja:"よく理解する",ex:"",exJa:""}, {en:"with a smile",ja:"笑顔で",ex:"",exJa:""}, {en:"at that time",ja:"その時",ex:"",exJa:""}, {en:"be famous for",ja:"～で有名だ",ex:"",exJa:""}, {en:"cannot help",ja:"～せずにはいられない",ex:"",exJa:""}, {en:"each year",ja:"毎年",ex:"",exJa:""}]},
+  {id:"s139",title:"Stage 139",theme:"中学校標準熟語23",emoji:"💬",words:[{en:"for a long time",ja:"長い間",ex:"",exJa:""}, {en:"grow up",ja:"成長する",ex:"",exJa:""}, {en:"have a dream",ja:"夢を持つ",ex:"",exJa:""}, {en:"in the past",ja:"過去に",ex:"",exJa:""}, {en:"learn a lot",ja:"多くを学ぶ",ex:"",exJa:""}, {en:"most people",ja:"たいていの人々",ex:"",exJa:""}, {en:"on weekends",ja:"週末に",ex:"",exJa:""}, {en:"so that",ja:"～するために",ex:"",exJa:""}, {en:"take photos",ja:"写真を撮る",ex:"",exJa:""}]},
+  {id:"s141",title:"Stage 141",theme:"中学校標準名詞15",emoji:"📝",words:[{en:"bathroom",ja:"浴室/トイレ",ex:"",exJa:""}, {en:"countdown",ja:"カウントダウン",ex:"",exJa:""}, {en:"shrimp",ja:"エビ",ex:"",exJa:""}, {en:"shower",ja:"シャワー",ex:"",exJa:""}, {en:"midnight",ja:"真夜中",ex:"",exJa:""}, {en:"figure",ja:"人形",ex:"",exJa:""}, {en:"marker pen",ja:"マーカーペン",ex:"",exJa:""}, {en:"aurora",ja:"オーロラ",ex:"",exJa:""}, {en:"jet lag",ja:"時差ぼけ",ex:"",exJa:""}]},
+  {id:"s142",title:"Stage 142",theme:"中学校標準名詞16",emoji:"📝",words:[{en:"checkup",ja:"検査",ex:"",exJa:""}, {en:"sauna",ja:"サウナ",ex:"",exJa:""}, {en:"reindeer",ja:"トナカイ",ex:"",exJa:""}, {en:"grandparent",ja:"祖父母",ex:"",exJa:""}, {en:"photographer",ja:"写真家",ex:"",exJa:""}, {en:"warming",ja:"温暖化",ex:"",exJa:""}, {en:"freezing",ja:"凍結",ex:"",exJa:""}, {en:"bedroom",ja:"寝室",ex:"",exJa:""}, {en:"trampoline",ja:"トランポリン",ex:"",exJa:""}]},
+  {id:"s143",title:"Stage 143",theme:"中学校標準名詞17",emoji:"📝",words:[{en:"sleigh",ja:"そり",ex:"",exJa:""}, {en:"hill",ja:"丘",ex:"",exJa:""}, {en:"slope",ja:"斜面",ex:"",exJa:""}, {en:"speed",ja:"速度",ex:"",exJa:""}, {en:"closet",ja:"押入れ",ex:"",exJa:""}, {en:"quilt",ja:"布団",ex:"",exJa:""}, {en:"raccoon dog",ja:"タヌキ",ex:"",exJa:""}, {en:"hobby",ja:"趣味",ex:"",exJa:""}, {en:"performance",ja:"演技/上演",ex:"",exJa:""}]},
+  {id:"s144",title:"Stage 144",theme:"中学校標準名詞18",emoji:"📝",words:[{en:"shot",ja:"写真",ex:"",exJa:""}, {en:"view",ja:"眺め",ex:"",exJa:""}, {en:"alligator",ja:"ワニ",ex:"",exJa:""}, {en:"apricot",ja:"アンズ",ex:"",exJa:""}, {en:"avocado",ja:"アボカド",ex:"",exJa:""}, {en:"beetle",ja:"カブトムシ",ex:"",exJa:""}, {en:"carp",ja:"コイ",ex:"",exJa:""}, {en:"crab",ja:"カニ",ex:"",exJa:""}, {en:"crocodile",ja:"ワニ",ex:"",exJa:""}]},
+  {id:"s145",title:"Stage 145",theme:"中学校標準名詞19",emoji:"📝",words:[{en:"donkey",ja:"ロバ",ex:"",exJa:""}, {en:"flamingo",ja:"フラミンゴ",ex:"",exJa:""}, {en:"grapefruit",ja:"グレープフルーツ",ex:"",exJa:""}, {en:"hawk",ja:"タカ",ex:"",exJa:""}, {en:"hippo",ja:"カバ",ex:"",exJa:""}, {en:"rhino",ja:"サイ",ex:"",exJa:""}, {en:"seagull",ja:"カモメ",ex:"",exJa:""}, {en:"seal",ja:"アザラシ",ex:"",exJa:""}, {en:"whale",ja:"クジラ",ex:"",exJa:""}]},
+  {id:"s146",title:"Stage 146",theme:"中学校標準名詞20",emoji:"📝",words:[{en:"harmonica",ja:"ハーモニカ",ex:"",exJa:""}, {en:"hockey",ja:"ホッケー",ex:"",exJa:""}, {en:"organ",ja:"オルガン",ex:"",exJa:""}, {en:"pool",ja:"プール",ex:"",exJa:""}, {en:"tambourine",ja:"タンバリン",ex:"",exJa:""}, {en:"port",ja:"港",ex:"",exJa:""}, {en:"clerk",ja:"店員",ex:"",exJa:""}, {en:"handkerchief",ja:"ハンカチ",ex:"",exJa:""}, {en:"shampoo",ja:"シャンプー",ex:"",exJa:""}]},
+  {id:"s147",title:"Stage 147",theme:"中学校標準名詞21",emoji:"📝",words:[{en:"pajama",ja:"パジャマ",ex:"",exJa:""}, {en:"design",ja:"デザイン",ex:"",exJa:""}, {en:"championship",ja:"選手権",ex:"",exJa:""}, {en:"education",ja:"教育",ex:"",exJa:""}, {en:"effect",ja:"影響",ex:"",exJa:""}, {en:"sportsmanship",ja:"スポーツマンシップ",ex:"",exJa:""}, {en:"degree",ja:"度(温度)",ex:"",exJa:""}, {en:"forecast",ja:"予報",ex:"",exJa:""}, {en:"temperature",ja:"温度",ex:"",exJa:""}]},
+  {id:"s148",title:"Stage 148",theme:"中学校標準名詞22",emoji:"📝",words:[{en:"revolution",ja:"革命",ex:"",exJa:""}, {en:"amount",ja:"量",ex:"",exJa:""}, {en:"flour",ja:"小麦粉",ex:"",exJa:""}, {en:"ingredient",ja:"材料",ex:"",exJa:""}, {en:"topping",ja:"トッピング",ex:"",exJa:""}, {en:"bone",ja:"骨",ex:"",exJa:""}, {en:"slice",ja:"1切れ",ex:"",exJa:""}, {en:"bottom",ja:"底",ex:"",exJa:""}, {en:"puzzle",ja:"パズル",ex:"",exJa:""}]},
+  {id:"s149",title:"Stage 149",theme:"中学校標準名詞23",emoji:"📝",words:[{en:"interior",ja:"内部",ex:"",exJa:""}, {en:"exterior",ja:"外部",ex:"",exJa:""}, {en:"wire",ja:"針金",ex:"",exJa:""}, {en:"gossip",ja:"うわさ話",ex:"",exJa:""}, {en:"secret",ja:"秘密",ex:"",exJa:""}, {en:"moment",ja:"瞬間",ex:"",exJa:""}, {en:"volume",ja:"音量",ex:"",exJa:""}, {en:"hallway",ja:"廊下",ex:"",exJa:""}, {en:"gate",ja:"門",ex:"",exJa:""}]},
+  {id:"s150",title:"Stage 150",theme:"中学校標準名詞24",emoji:"📝",words:[{en:"guest",ja:"来客",ex:"",exJa:""}, {en:"skill",ja:"技術",ex:"",exJa:""}, {en:"brain",ja:"脳",ex:"",exJa:""}, {en:"mammal",ja:"ほ乳類",ex:"",exJa:""}, {en:"enemy",ja:"敵",ex:"",exJa:""}, {en:"stock",ja:"だし汁/在庫",ex:"",exJa:""}, {en:"grass",ja:"草",ex:"",exJa:""}, {en:"pocket",ja:"ポケット",ex:"",exJa:""}, {en:"seed",ja:"種",ex:"",exJa:""}]},
+  {id:"s151",title:"Stage 151",theme:"中学校標準名詞25",emoji:"📝",words:[{en:"wood",ja:"木材",ex:"",exJa:""}, {en:"clay",ja:"粘土",ex:"",exJa:""}, {en:"soap",ja:"せっけん",ex:"",exJa:""}, {en:"bomb",ja:"爆弾",ex:"",exJa:""}, {en:"monument",ja:"記念碑",ex:"",exJa:""}, {en:"victim",ja:"犠牲者",ex:"",exJa:""}, {en:"badge",ja:"バッジ",ex:"",exJa:""}, {en:"mascot",ja:"マスコット",ex:"",exJa:""}, {en:"straw",ja:"ストロー",ex:"",exJa:""}]},
+  {id:"s152",title:"Stage 152",theme:"中学校標準名詞26",emoji:"📝",words:[{en:"wine",ja:"ワイン",ex:"",exJa:""}, {en:"boarding",ja:"搭乗",ex:"",exJa:""}, {en:"flight",ja:"飛行便",ex:"",exJa:""}, {en:"passenger",ja:"乗客",ex:"",exJa:""}, {en:"pioneer",ja:"先駆者",ex:"",exJa:""}, {en:"planet",ja:"惑星",ex:"",exJa:""}, {en:"protection",ja:"保護",ex:"",exJa:""}, {en:"writer",ja:"作家",ex:"",exJa:""}, {en:"emergency",ja:"緊急事態",ex:"",exJa:""}]},
+  {id:"s153",title:"Stage 153",theme:"中学校標準名詞27",emoji:"📝",words:[{en:"oxygen",ja:"酸素",ex:"",exJa:""}, {en:"tank",ja:"タンク",ex:"",exJa:""}, {en:"crew",ja:"乗組員",ex:"",exJa:""}, {en:"solution",ja:"解決策",ex:"",exJa:""}, {en:"failure",ja:"失敗",ex:"",exJa:""}, {en:"option",ja:"選択肢",ex:"",exJa:""}, {en:"parachute",ja:"パラシュート",ex:"",exJa:""}, {en:"situation",ja:"状況",ex:"",exJa:""}, {en:"wisdom",ja:"知恵",ex:"",exJa:""}]},
+  {id:"s154",title:"Stage 154",theme:"中学校標準名詞28",emoji:"📝",words:[{en:"material",ja:"材料",ex:"",exJa:""}, {en:"border",ja:"国境",ex:"",exJa:""}, {en:"friendship",ja:"友情",ex:"",exJa:""}, {en:"president",ja:"大統領",ex:"",exJa:""}, {en:"coast",ja:"海岸",ex:"",exJa:""}, {en:"mission",ja:"使命",ex:"",exJa:""}, {en:"typhoon",ja:"台風",ex:"",exJa:""}, {en:"village",ja:"村",ex:"",exJa:""}, {en:"ambassador",ja:"大使",ex:"",exJa:""}]},
+  {id:"s155",title:"Stage 155",theme:"中学校標準名詞29",emoji:"📝",words:[{en:"earthquake",ja:"地震",ex:"",exJa:""}, {en:"emotion",ja:"感情",ex:"",exJa:""}, {en:"imagination",ja:"想像力",ex:"",exJa:""}, {en:"mask",ja:"仮面",ex:"",exJa:""}, {en:"loneliness",ja:"孤独",ex:"",exJa:""}, {en:"trash can",ja:"くず入れ",ex:"",exJa:""}, {en:"document",ja:"文書",ex:"",exJa:""}, {en:"password",ja:"パスワード",ex:"",exJa:""}, {en:"exhibition",ja:"展覧会",ex:"",exJa:""}]},
+  {id:"s156",title:"Stage 156",theme:"中学校標準名詞30",emoji:"📝",words:[{en:"introduction",ja:"紹介",ex:"",exJa:""}, {en:"race",ja:"競走",ex:"",exJa:""}, {en:"freedom",ja:"自由",ex:"",exJa:""}, {en:"prize",ja:"賞",ex:"",exJa:""}, {en:"reality",ja:"現実",ex:"",exJa:""}, {en:"soldier",ja:"兵士",ex:"",exJa:""}, {en:"hometown",ja:"故郷",ex:"",exJa:""}, {en:"victory",ja:"勝利",ex:"",exJa:""}, {en:"graduation",ja:"卒業",ex:"",exJa:""}]},
+  {id:"s157",title:"Stage 157",theme:"中学校標準名詞31",emoji:"📝",words:[{en:"counter",ja:"カウンター",ex:"",exJa:""}, {en:"routine",ja:"日課",ex:"",exJa:""}, {en:"affection",ja:"愛情",ex:"",exJa:""}, {en:"curiosity",ja:"好奇心",ex:"",exJa:""}, {en:"value",ja:"価値",ex:"",exJa:""}, {en:"miracle",ja:"奇跡",ex:"",exJa:""}, {en:"canal",ja:"運河",ex:"",exJa:""}, {en:"drought",ja:"干ばつ",ex:"",exJa:""}, {en:"hunger",ja:"飢え",ex:"",exJa:""}]},
+  {id:"s158",title:"Stage 158",theme:"中学校標準名詞32",emoji:"📝",words:[{en:"stream",ja:"流れ",ex:"",exJa:""}, {en:"construction",ja:"建設",ex:"",exJa:""}, {en:"period",ja:"時代",ex:"",exJa:""}, {en:"technique",ja:"技術",ex:"",exJa:""}, {en:"joy",ja:"喜び",ex:"",exJa:""}, {en:"source",ja:"源",ex:"",exJa:""}, {en:"weapon",ja:"武器",ex:"",exJa:""}, {en:"clinic",ja:"診療所",ex:"",exJa:""}, {en:"quality",ja:"質",ex:"",exJa:""}]},
+  {id:"s159",title:"Stage 159",theme:"中学校標準名詞33",emoji:"📝",words:[{en:"muscle",ja:"筋肉",ex:"",exJa:""}, {en:"patient",ja:"患者",ex:"",exJa:""}, {en:"poverty",ja:"貧困",ex:"",exJa:""}, {en:"climate change",ja:"気候変動",ex:"",exJa:""}, {en:"habitat",ja:"生息地",ex:"",exJa:""}, {en:"generation",ja:"世代",ex:"",exJa:""}, {en:"heritage",ja:"遺産",ex:"",exJa:""}, {en:"resident",ja:"居住者",ex:"",exJa:""}, {en:"access",ja:"利用機会",ex:"",exJa:""}]},
+  {id:"s160",title:"Stage 160",theme:"中学校標準名詞34",emoji:"📝",words:[{en:"nutrition",ja:"栄養",ex:"",exJa:""}, {en:"animal feed",ja:"飼料",ex:"",exJa:""}, {en:"protein",ja:"タンパク質",ex:"",exJa:""}, {en:"soy meat",ja:"大豆肉",ex:"",exJa:""}, {en:"government",ja:"政府",ex:"",exJa:""}, {en:"confidence",ja:"自信",ex:"",exJa:""}, {en:"effort",ja:"努力",ex:"",exJa:""}, {en:"proverb",ja:"ことわざ",ex:"",exJa:""}, {en:"humor",ja:"ユーモア",ex:"",exJa:""}]},
+  {id:"s161",title:"Stage 161",theme:"中学校標準動詞6",emoji:"🏃",words:[{en:"admire",ja:"賞賛する",ex:"",exJa:""}, {en:"explode",ja:"爆発する",ex:"",exJa:""}, {en:"launch",ja:"発射する",ex:"",exJa:""}, {en:"approach",ja:"近づく",ex:"",exJa:""}, {en:"contact",ja:"連絡をとる",ex:"",exJa:""}, {en:"rent",ja:"借りる",ex:"",exJa:""}, {en:"donate",ja:"寄付する",ex:"",exJa:""}, {en:"wrap",ja:"包む",ex:"",exJa:""}, {en:"escape",ja:"逃げる",ex:"",exJa:""}]},
+  {id:"s162",title:"Stage 162",theme:"中学校標準動詞7",emoji:"🏃",words:[{en:"rescue",ja:"救助する",ex:"",exJa:""}, {en:"bury",ja:"埋める",ex:"",exJa:""}, {en:"sink",ja:"沈む",ex:"",exJa:""}, {en:"connect",ja:"つながる",ex:"",exJa:""}, {en:"shrink",ja:"縮む",ex:"",exJa:""}, {en:"hide",ja:"隠す",ex:"",exJa:""}, {en:"recover",ja:"回復する",ex:"",exJa:""}, {en:"marry",ja:"結婚する",ex:"",exJa:""}, {en:"celebrate",ja:"祝う",ex:"",exJa:""}]},
+  {id:"s163",title:"Stage 163",theme:"中学校標準動詞8",emoji:"🏃",words:[{en:"notice",ja:"気づく",ex:"",exJa:""}, {en:"shout",ja:"叫ぶ",ex:"",exJa:""}, {en:"remove",ja:"取り除く",ex:"",exJa:""}, {en:"swallow",ja:"飲み込む",ex:"",exJa:""}, {en:"lift",ja:"持ち上げる",ex:"",exJa:""}, {en:"shake",ja:"振る",ex:"",exJa:""}, {en:"control",ja:"制御する",ex:"",exJa:""}, {en:"identify",ja:"特定する",ex:"",exJa:""}, {en:"conserve",ja:"保存する",ex:"",exJa:""}]},
+  {id:"s164",title:"Stage 164",theme:"中学校標準動詞9",emoji:"🏃",words:[{en:"reduce",ja:"減らす",ex:"",exJa:""}, {en:"consume",ja:"消費する",ex:"",exJa:""}, {en:"restore",ja:"修復する",ex:"",exJa:""}, {en:"adjust",ja:"調整する",ex:"",exJa:""}, {en:"emit",ja:"発する",ex:"",exJa:""}, {en:"attract",ja:"引きつける",ex:"",exJa:""}, {en:"preserve",ja:"保存する",ex:"",exJa:""}, {en:"continue",ja:"続ける",ex:"",exJa:""}, {en:"develop",ja:"発達させる",ex:"",exJa:""}]},
+  {id:"s166",title:"Stage 166",theme:"中学校標準形容詞6",emoji:"✨",words:[{en:"creative",ja:"創造的な",ex:"",exJa:""}, {en:"nervous",ja:"不安な",ex:"",exJa:""}, {en:"chilly",ja:"肌寒い",ex:"",exJa:""}, {en:"foggy",ja:"霧のかかった",ex:"",exJa:""}, {en:"humid",ja:"蒸し暑い",ex:"",exJa:""}, {en:"positive",ja:"積極的な",ex:"",exJa:""}, {en:"reliable",ja:"信頼できる",ex:"",exJa:""}, {en:"responsible",ja:"責任感の強い",ex:"",exJa:""}, {en:"sociable",ja:"社交的な",ex:"",exJa:""}]},
+  {id:"s167",title:"Stage 167",theme:"中学校標準形容詞7",emoji:"✨",words:[{en:"strict",ja:"厳しい",ex:"",exJa:""}, {en:"talented",ja:"才能のある",ex:"",exJa:""}, {en:"adorable",ja:"とてもかわいい",ex:"",exJa:""}, {en:"surprising",ja:"驚くべき",ex:"",exJa:""}, {en:"lasting",ja:"永続的な",ex:"",exJa:""}, {en:"environmental",ja:"環境の",ex:"",exJa:""}, {en:"calm",ja:"落ち着いた",ex:"",exJa:""}, {en:"miserable",ja:"みじめな",ex:"",exJa:""}, {en:"silent",ja:"静かな",ex:"",exJa:""}]},
+  {id:"s168",title:"Stage 168",theme:"中学校標準形容詞8",emoji:"✨",words:[{en:"daily",ja:"毎日の",ex:"",exJa:""}, {en:"humorous",ja:"ユーモアのある",ex:"",exJa:""}, {en:"historic",ja:"歴史的な",ex:"",exJa:""}, {en:"technical",ja:"専門的な",ex:"",exJa:""}, {en:"flexible",ja:"しなやかな",ex:"",exJa:""}, {en:"effective",ja:"効果的な",ex:"",exJa:""}, {en:"sustainable",ja:"持続可能な",ex:"",exJa:""}, {en:"artificial",ja:"人工的な",ex:"",exJa:""}, {en:"diverse",ja:"多様な",ex:"",exJa:""}]},
+  {id:"s169",title:"Stage 169",theme:"中学校標準形容詞9",emoji:"✨",words:[{en:"endangered",ja:"絶滅危惧の",ex:"",exJa:""}, {en:"eco-friendly",ja:"環境に優しい",ex:"",exJa:""}, {en:"unique",ja:"独特な",ex:"",exJa:""}, {en:"successful",ja:"成功した",ex:"",exJa:""}, {en:"unstable",ja:"不安定な",ex:"",exJa:""}, {en:"historical",ja:"歴史的な",ex:"",exJa:""}, {en:"capable",ja:"能力がある",ex:"",exJa:""}]},
+  {id:"s170",title:"Stage 170",theme:"中学校標準副詞4",emoji:"⚡",words:[{en:"recently",ja:"最近",ex:"",exJa:""}, {en:"absolutely",ja:"まったくその通り",ex:"",exJa:""}, {en:"neither",ja:"～もまたない",ex:"",exJa:""}, {en:"quietly",ja:"静かに",ex:"",exJa:""}, {en:"suddenly",ja:"突然",ex:"",exJa:""}, {en:"probably",ja:"たぶん",ex:"",exJa:""}, {en:"certainly",ja:"確かに",ex:"",exJa:""}, {en:"freely",ja:"自由に",ex:"",exJa:""}, {en:"immediately",ja:"直ちに",ex:"",exJa:""}]},
+  {id:"s171",title:"Stage 171",theme:"中学校標準副詞5",emoji:"⚡",words:[{en:"miraculously",ja:"奇跡的に",ex:"",exJa:""}, {en:"mostly",ja:"大部分は",ex:"",exJa:""}, {en:"mainly",ja:"主に",ex:"",exJa:""}, {en:"twice",ja:"2回",ex:"",exJa:""}]},
+  {id:"s172",title:"Stage 172",theme:"中学校標準形容詞10",emoji:"✨",words:[{en:"opposite",ja:"反対の",ex:"",exJa:""}, {en:"effective",ja:"効果的な",ex:"",exJa:""}, {en:"sustainable",ja:"持続可能な",ex:"",exJa:""}, {en:"artificial",ja:"人工的な",ex:"",exJa:""}, {en:"diverse",ja:"多様な",ex:"",exJa:""}, {en:"endangered",ja:"絶滅危惧の",ex:"",exJa:""}, {en:"eco-friendly",ja:"環境に優しい",ex:"",exJa:""}, {en:"unique",ja:"独特な",ex:"",exJa:""}, {en:"positive",ja:"前向きな",ex:"",exJa:""}]},
+  {id:"s173",title:"Stage 173",theme:"中学校標準形容詞11",emoji:"✨",words:[{en:"successful",ja:"成功した",ex:"",exJa:""}, {en:"unstable",ja:"不安定な",ex:"",exJa:""}, {en:"historical",ja:"歴史的な",ex:"",exJa:""}, {en:"flexible",ja:"柔軟な",ex:"",exJa:""}, {en:"capable",ja:"能力がある",ex:"",exJa:""}]},
+  {id:"s174",title:"Stage 174",theme:"中学校標準動詞11",emoji:"🏃",words:[{en:"identify",ja:"特定する",ex:"",exJa:""}, {en:"conserve",ja:"保存する",ex:"",exJa:""}, {en:"produce",ja:"生産する",ex:"",exJa:""}, {en:"reduce",ja:"減らす",ex:"",exJa:""}, {en:"consume",ja:"消費する",ex:"",exJa:""}, {en:"restore",ja:"修復する",ex:"",exJa:""}, {en:"adjust",ja:"調整する",ex:"",exJa:""}, {en:"emit",ja:"発する",ex:"",exJa:""}, {en:"attract",ja:"引きつける",ex:"",exJa:""}]},
+  {id:"s175",title:"Stage 175",theme:"中学校標準動詞12",emoji:"🏃",words:[{en:"preserve",ja:"保存する",ex:"",exJa:""}, {en:"solve",ja:"解決する",ex:"",exJa:""}, {en:"continue",ja:"続ける",ex:"",exJa:""}, {en:"improve",ja:"改善する",ex:"",exJa:""}, {en:"develop",ja:"発達させる",ex:"",exJa:""}, {en:"achieve",ja:"達成する",ex:"",exJa:""}, {en:"communicate",ja:"伝える",ex:"",exJa:""}]},
+  {id:"s176",title:"Stage 176",theme:"中学校標準名詞35",emoji:"📝",words:[{en:"poverty",ja:"貧困",ex:"",exJa:""}, {en:"climate change",ja:"気候変動",ex:"",exJa:""}, {en:"habitat",ja:"生息地",ex:"",exJa:""}, {en:"generation",ja:"世代",ex:"",exJa:""}, {en:"heritage",ja:"遺産",ex:"",exJa:""}, {en:"resident",ja:"居住者",ex:"",exJa:""}, {en:"wisdom",ja:"知恵",ex:"",exJa:""}, {en:"access",ja:"利用機会",ex:"",exJa:""}, {en:"nutrition",ja:"栄養",ex:"",exJa:""}]},
+  {id:"s177",title:"Stage 177",theme:"中学校標準名詞36",emoji:"📝",words:[{en:"animal feed",ja:"飼料",ex:"",exJa:""}, {en:"protein",ja:"タンパク質",ex:"",exJa:""}, {en:"corn",ja:"トウモロコシ",ex:"",exJa:""}, {en:"solution",ja:"解決策",ex:"",exJa:""}, {en:"soy meat",ja:"大豆肉",ex:"",exJa:""}, {en:"government",ja:"政府",ex:"",exJa:""}, {en:"confidence",ja:"自信",ex:"",exJa:""}, {en:"effort",ja:"努力",ex:"",exJa:""}, {en:"proverb",ja:"ことわざ",ex:"",exJa:""}]},
+  {id:"s178",title:"Stage 178",theme:"中学校標準名詞37",emoji:"📝",words:[{en:"humor",ja:"ユーモア",ex:"",exJa:""}, {en:"finish",ja:"終わる",ex:"",exJa:""}]},
+  {id:"s179",title:"Stage 179",theme:"ハイレベル・学問1",emoji:"🎓",words:[{en:"acquire",ja:"を習得する/手に入れる",ex:"",exJa:""}, {en:"academic",ja:"学術的な",ex:"",exJa:""}, {en:"analysis",ja:"分析",ex:"",exJa:""}, {en:"analyze",ja:"を分析する",ex:"",exJa:""}, {en:"assignment",ja:"課題/任務",ex:"",exJa:""}, {en:"curriculum",ja:"教育課程",ex:"",exJa:""}, {en:"discipline",ja:"学問分野/規律",ex:"",exJa:""}, {en:"elementary",ja:"初歩的な",ex:"",exJa:""}, {en:"evaluate",ja:"を評価する",ex:"",exJa:""}]},
+  {id:"s180",title:"Stage 180",theme:"ハイレベル・学問2",emoji:"🎓",words:[{en:"demonstrate",ja:"を証明する/実演する",ex:"",exJa:""}, {en:"definition",ja:"定義",ex:"",exJa:""}, {en:"define",ja:"を定義する",ex:"",exJa:""}, {en:"empirical",ja:"実証的な/実験に基づいた",ex:"",exJa:""}, {en:"hypothesis",ja:"仮説",ex:"",exJa:""}, {en:"identify",ja:"を特定する/確認する",ex:"",exJa:""}, {en:"methodology",ja:"研究方法",ex:"",exJa:""}, {en:"objective",ja:"客観的な/目的",ex:"",exJa:""}, {en:"statistics",ja:"統計/統計学",ex:"",exJa:""}]},
+  {id:"s181",title:"Stage 181",theme:"ハイレベル・学問3",emoji:"🎓",words:[{en:"theoretical",ja:"理論的な",ex:"",exJa:""}, {en:"abstract",ja:"抽象的な",ex:"",exJa:""}, {en:"evidence",ja:"証拠",ex:"",exJa:""}, {en:"verify",ja:"を検証する/確かめる",ex:"",exJa:""}, {en:"cite",ja:"を引用する",ex:"",exJa:""}, {en:"plagiarism",ja:"盗用/流用",ex:"",exJa:""}, {en:"critique",ja:"批評/批判",ex:"",exJa:""}, {en:"logic",ja:"論理",ex:"",exJa:""}, {en:"reasoning",ja:"推論/論拠",ex:"",exJa:""}]},
+  {id:"s182",title:"Stage 182",theme:"ハイレベル・ビジネス1",emoji:"💼",words:[{en:"infrastructure",ja:"社会基盤/インフラ",ex:"",exJa:""}, {en:"innovation",ja:"技術革新",ex:"",exJa:""}, {en:"implement",ja:"を実行する/実施する",ex:"",exJa:""}, {en:"negotiate",ja:"交渉する",ex:"",exJa:""}, {en:"priority",ja:"優先事項",ex:"",exJa:""}, {en:"sustainable",ja:"持続可能な",ex:"",exJa:""}, {en:"corporation",ja:"株式会社/法人",ex:"",exJa:""}, {en:"budget",ja:"予算",ex:"",exJa:""}, {en:"administration",ja:"管理/行政",ex:"",exJa:""}]},
+  {id:"s183",title:"Stage 183",theme:"ハイレベル・ビジネス2",emoji:"💼",words:[{en:"alternative",ja:"代わりの/選択肢",ex:"",exJa:""}, {en:"applicant",ja:"応募者",ex:"",exJa:""}, {en:"capacity",ja:"能力/収容人数",ex:"",exJa:""}, {en:"collaboration",ja:"協力/共同作業",ex:"",exJa:""}, {en:"commercial",ja:"商業的な",ex:"",exJa:""}, {en:"commitment",ja:"約束/献身",ex:"",exJa:""}, {en:"conference",ja:"会議",ex:"",exJa:""}, {en:"consumer",ja:"消費者",ex:"",exJa:""}, {en:"contract",ja:"契約",ex:"",exJa:""}]},
+  {id:"s184",title:"Stage 184",theme:"ハイレベル・ビジネス3",emoji:"💼",words:[{en:"efficiency",ja:"効率",ex:"",exJa:""}, {en:"executive",ja:"役員/経営責任者",ex:"",exJa:""}, {en:"expansion",ja:"拡大/拡張",ex:"",exJa:""}, {en:"finance",ja:"財政/資金調達",ex:"",exJa:""}, {en:"inventory",ja:"在庫",ex:"",exJa:""}, {en:"investment",ja:"投資",ex:"",exJa:""}, {en:"marketing",ja:"市場調査/販売戦略",ex:"",exJa:""}, {en:"merger",ja:"合併",ex:"",exJa:""}, {en:"personnel",ja:"全職員/人事部",ex:"",exJa:""}]},
+  {id:"s185",title:"Stage 185",theme:"ハイレベル・ビジネス4",emoji:"💼",words:[{en:"profit",ja:"利益",ex:"",exJa:""}, {en:"promotion",ja:"昇進/促進",ex:"",exJa:""}, {en:"quarter",ja:"四半期/4分の1",ex:"",exJa:""}, {en:"recruitment",ja:"採用/募集",ex:"",exJa:""}, {en:"resignation",ja:"辞職/辞任",ex:"",exJa:""}, {en:"revenue",ja:"収益/歳入",ex:"",exJa:""}, {en:"strategy",ja:"戦略",ex:"",exJa:""}, {en:"subsidiary",ja:"子会社",ex:"",exJa:""}, {en:"transaction",ja:"取引",ex:"",exJa:""}]},
+  {id:"s186",title:"Stage 186",theme:"ハイレベル・自然科学1",emoji:"🔬",words:[{en:"environment",ja:"環境",ex:"",exJa:""}, {en:"evolution",ja:"進化",ex:"",exJa:""}, {en:"extinct",ja:"絶滅した",ex:"",exJa:""}, {en:"habitat",ja:"生息地",ex:"",exJa:""}, {en:"organism",ja:"生物/有機体",ex:"",exJa:""}, {en:"phenomenon",ja:"現象",ex:"",exJa:""}, {en:"species",ja:"（生物の）種",ex:"",exJa:""}, {en:"sustain",ja:"を維持する/支える",ex:"",exJa:""}, {en:"toxic",ja:"有毒な",ex:"",exJa:""}]},
+  {id:"s187",title:"Stage 187",theme:"ハイレベル・自然科学2",emoji:"🔬",words:[{en:"climate",ja:"気候",ex:"",exJa:""}, {en:"conservation",ja:"保護/保存",ex:"",exJa:""}, {en:"ecology",ja:"生態学",ex:"",exJa:""}, {en:"emission",ja:"（ガスの）排出",ex:"",exJa:""}, {en:"fossil",ja:"化石",ex:"",exJa:""}, {en:"genetics",ja:"遺伝学",ex:"",exJa:""}, {en:"molecule",ja:"分子",ex:"",exJa:""}, {en:"radiation",ja:"放射線/放射",ex:"",exJa:""}, {en:"renewable",ja:"再生可能な",ex:"",exJa:""}]},
+  {id:"s188",title:"Stage 188",theme:"ハイレベル・自然科学3",emoji:"🔬",words:[{en:"ecosystem",ja:"生態系",ex:"",exJa:""}, {en:"biodiversity",ja:"生物多様性",ex:"",exJa:""}, {en:"atmosphere",ja:"大気/雰囲気",ex:"",exJa:""}, {en:"element",ja:"要素/元素",ex:"",exJa:""}, {en:"laboratory",ja:"研究所/実習室",ex:"",exJa:""}, {en:"observation",ja:"観察/注目",ex:"",exJa:""}, {en:"reaction",ja:"反応",ex:"",exJa:""}, {en:"substance",ja:"物質/実体",ex:"",exJa:""}]},
+  {id:"s189",title:"Stage 189",theme:"ハイレベル・論理1",emoji:"🧩",words:[{en:"consequently",ja:"その結果として",ex:"",exJa:""}, {en:"furthermore",ja:"さらに",ex:"",exJa:""}, {en:"however",ja:"しかしながら",ex:"",exJa:""}, {en:"moreover",ja:"その上",ex:"",exJa:""}, {en:"nevertheless",ja:"それにもかかわらず",ex:"",exJa:""}, {en:"otherwise",ja:"さもなければ",ex:"",exJa:""}, {en:"therefore",ja:"したがって",ex:"",exJa:""}, {en:"thus",ja:"ゆえに",ex:"",exJa:""}, {en:"simultaneously",ja:"同時に",ex:"",exJa:""}]},
+  {id:"s190",title:"Stage 190",theme:"ハイレベル・論理2",emoji:"🧩",words:[{en:"alternatively",ja:"あるいは",ex:"",exJa:""}, {en:"accordingly",ja:"したがって",ex:"",exJa:""}, {en:"conversely",ja:"逆に",ex:"",exJa:""}, {en:"hence",ja:"それゆえに",ex:"",exJa:""}, {en:"namely",ja:"すなわち",ex:"",exJa:""}, {en:"nonetheless",ja:"それにもかかわらず",ex:"",exJa:""}, {en:"precisely",ja:"正確に",ex:"",exJa:""}, {en:"specifically",ja:"具体的に",ex:"",exJa:""}, {en:"subsequently",ja:"その後",ex:"",exJa:""}]},
+  {id:"s191",title:"Stage 191",theme:"ハイレベル・論理3",emoji:"🧩",words:[{en:"approximately",ja:"おおよそ",ex:"",exJa:""}, {en:"essentially",ja:"本質的に",ex:"",exJa:""}, {en:"eventually",ja:"結局は",ex:"",exJa:""}, {en:"inevitably",ja:"不可避的に",ex:"",exJa:""}, {en:"initially",ja:"当初は",ex:"",exJa:""}, {en:"mostly",ja:"主として",ex:"",exJa:""}, {en:"partially",ja:"部分的に",ex:"",exJa:""}, {en:"relatively",ja:"相対的に",ex:"",exJa:""}, {en:"virtually",ja:"実質的に",ex:"",exJa:""}]},
+  {id:"s192",title:"Stage 192",theme:"ハイレベル・抽象1",emoji:"💡",words:[{en:"aspect",ja:"側面",ex:"",exJa:""}, {en:"assumption",ja:"仮定",ex:"",exJa:""}, {en:"concept",ja:"概念",ex:"",exJa:""}, {en:"context",ja:"文脈",ex:"",exJa:""}, {en:"dimension",ja:"次元",ex:"",exJa:""}, {en:"implication",ja:"影響/暗示",ex:"",exJa:""}, {en:"interpretation",ja:"解釈",ex:"",exJa:""}, {en:"perspective",ja:"視点",ex:"",exJa:""}, {en:"theory",ja:"理論",ex:"",exJa:""}]},
+  {id:"s193",title:"Stage 193",theme:"ハイレベル・抽象2",emoji:"💡",words:[{en:"criteria",ja:"基準",ex:"",exJa:""}, {en:"diversity",ja:"多様性",ex:"",exJa:""}, {en:"integrity",ja:"誠実/完全性",ex:"",exJa:""}, {en:"potential",ja:"潜在能力",ex:"",exJa:""}, {en:"principle",ja:"原理",ex:"",exJa:""}, {en:"scarcity",ja:"不足",ex:"",exJa:""}, {en:"stability",ja:"安定性",ex:"",exJa:""}, {en:"transformation",ja:"変容",ex:"",exJa:""}, {en:"validity",ja:"妥当性",ex:"",exJa:""}]},
+  {id:"s194",title:"Stage 194",theme:"ハイレベル・動詞1",emoji:"🏃",words:[{en:"acknowledge",ja:"を認める",ex:"",exJa:""}, {en:"acquire",ja:"を獲得する",ex:"",exJa:""}, {en:"address",ja:"に取り組む",ex:"",exJa:""}, {en:"adjust",ja:"を調節する",ex:"",exJa:""}, {en:"affect",ja:"に影響を与える",ex:"",exJa:""}, {en:"allocate",ja:"を割り当てる",ex:"",exJa:""}, {en:"alter",ja:"を変える",ex:"",exJa:""}, {en:"anticipate",ja:"を予想する",ex:"",exJa:""}, {en:"approach",ja:"に取り組む",ex:"",exJa:""}]},
+  {id:"s195",title:"Stage 195",theme:"ハイレベル・動詞2",emoji:"🏃",words:[{en:"assert",ja:"を主張する",ex:"",exJa:""}, {en:"assess",ja:"を評価する",ex:"",exJa:""}, {en:"assume",ja:"を想定する",ex:"",exJa:""}, {en:"attain",ja:"を達成する",ex:"",exJa:""}, {en:"attribute",ja:"のせいにする",ex:"",exJa:""}, {en:"boost",ja:"を押し上げる",ex:"",exJa:""}, {en:"cease",ja:"をやめる",ex:"",exJa:""}, {en:"clarify",ja:"を明らかにする",ex:"",exJa:""}, {en:"combine",ja:"を組み合わせる",ex:"",exJa:""}]},
+  {id:"s196",title:"Stage 196",theme:"ハイレベル・動詞3",emoji:"🏃",words:[{en:"compel",ja:"を強いる",ex:"",exJa:""}, {en:"comprise",ja:"から成る",ex:"",exJa:""}, {en:"conclude",ja:"を結論づける",ex:"",exJa:""}, {en:"confirm",ja:"を確認する",ex:"",exJa:""}, {en:"confront",ja:"に直面する",ex:"",exJa:""}, {en:"constitute",ja:"を構成する",ex:"",exJa:""}, {en:"consume",ja:"を消費する",ex:"",exJa:""}, {en:"contemplate",ja:"を熟考する",ex:"",exJa:""}, {en:"convert",ja:"を転換する",ex:"",exJa:""}]},
+  {id:"s197",title:"Stage 197",theme:"ハイレベル・動詞4",emoji:"🏃",words:[{en:"convey",ja:"を伝える",ex:"",exJa:""}, {en:"coordinate",ja:"を調整する",ex:"",exJa:""}, {en:"cope",ja:"対処する",ex:"",exJa:""}, {en:"correspond",ja:"一致する",ex:"",exJa:""}, {en:"decline",ja:"断る/衰退する",ex:"",exJa:""}, {en:"dedicate",ja:"を捧げる",ex:"",exJa:""}, {en:"derive",ja:"を引き出す",ex:"",exJa:""}, {en:"detect",ja:"を見つける",ex:"",exJa:""}, {en:"determine",ja:"を決定する",ex:"",exJa:""}]},
+  {id:"s198",title:"Stage 198",theme:"ハイレベル・動詞5",emoji:"🏃",words:[{en:"devise",ja:"を考案する",ex:"",exJa:""}, {en:"diminish",ja:"を減少させる",ex:"",exJa:""}, {en:"discard",ja:"を捨てる",ex:"",exJa:""}, {en:"distinguish",ja:"を区別する",ex:"",exJa:""}, {en:"distribute",ja:"を分配する",ex:"",exJa:""}, {en:"dominate",ja:"を支配する",ex:"",exJa:""}, {en:"eliminate",ja:"を排除する",ex:"",exJa:""}, {en:"emerge",ja:"現れる",ex:"",exJa:""}, {en:"emphasize",ja:"を強調する",ex:"",exJa:""}]},
+  {id:"s199",title:"Stage 199",theme:"ハイレベル・動詞6",emoji:"🏃",words:[{en:"encounter",ja:"に遭遇する",ex:"",exJa:""}, {en:"endure",ja:"に耐える",ex:"",exJa:""}, {en:"enhance",ja:"を高める",ex:"",exJa:""}, {en:"ensure",ja:"を確実にする",ex:"",exJa:""}, {en:"establish",ja:"を確立する",ex:"",exJa:""}, {en:"estimate",ja:"を見積もる",ex:"",exJa:""}, {en:"exhibit",ja:"を示す/展示する",ex:"",exJa:""}, {en:"expand",ja:"を拡大する",ex:"",exJa:""}, {en:"exploit",ja:"を利用する",ex:"",exJa:""}]},
+  {id:"s200",title:"Stage 200",theme:"ハイレベル・動詞7",emoji:"🏃",words:[{en:"expose",ja:"をさらす",ex:"",exJa:""}, {en:"facilitate",ja:"を促進する",ex:"",exJa:""}, {en:"fluctuate",ja:"変動する",ex:"",exJa:""}, {en:"generate",ja:"を生み出す",ex:"",exJa:""}, {en:"guarantee",ja:"を保証する",ex:"",exJa:""}, {en:"illustrate",ja:"を説明する",ex:"",exJa:""}, {en:"imply",ja:"を暗に示す",ex:"",exJa:""}, {en:"impose",ja:"を課す",ex:"",exJa:""}, {en:"indicate",ja:"を指し示す",ex:"",exJa:""}]},
+  {id:"s201",title:"Stage 201",theme:"ハイレベル・動詞8",emoji:"🏃",words:[{en:"induce",ja:"を誘発する",ex:"",exJa:""}, {en:"inherit",ja:"を継承する",ex:"",exJa:""}, {en:"inhibit",ja:"を抑制する",ex:"",exJa:""}, {en:"inspect",ja:"を検査する",ex:"",exJa:""}, {en:"inspire",ja:"を奮起させる",ex:"",exJa:""}, {en:"install",ja:"を設置する",ex:"",exJa:""}, {en:"interpret",ja:"を解釈する",ex:"",exJa:""}, {en:"intervene",ja:"介入する",ex:"",exJa:""}, {en:"investigate",ja:"を調査する",ex:"",exJa:""}]},
+  {id:"s202",title:"Stage 202",theme:"ハイレベル・動詞9",emoji:"🏃",words:[{en:"justify",ja:"を正当化する",ex:"",exJa:""}, {en:"maintain",ja:"を維持する",ex:"",exJa:""}, {en:"manifest",ja:"を明らかにする",ex:"",exJa:""}, {en:"modify",ja:"を修正する",ex:"",exJa:""}, {en:"monitor",ja:"を監視する",ex:"",exJa:""}, {en:"motivate",ja:"に動機を与える",ex:"",exJa:""}, {en:"occupy",ja:"を占める",ex:"",exJa:""}, {en:"occur",ja:"起こる",ex:"",exJa:""}, {en:"oppose",ja:"に反対する",ex:"",exJa:""}]},
+  {id:"s203",title:"Stage 203",theme:"ハイレベル・動詞10",emoji:"🏃",words:[{en:"overcome",ja:"を克服する",ex:"",exJa:""}, {en:"participate",ja:"参加する",ex:"",exJa:""}, {en:"perceive",ja:"を認識する",ex:"",exJa:""}, {en:"persist",ja:"持続する",ex:"",exJa:""}, {en:"predict",ja:"を予測する",ex:"",exJa:""}, {en:"preserve",ja:"を保存する",ex:"",exJa:""}, {en:"proceed",ja:"進む",ex:"",exJa:""}, {en:"prohibit",ja:"を禁止する",ex:"",exJa:""}, {en:"pursue",ja:"を追求する",ex:"",exJa:""}]},
+  {id:"s204",title:"Stage 204",theme:"ハイレベル・動詞11",emoji:"🏃",words:[{en:"refine",ja:"を洗練させる",ex:"",exJa:""}, {en:"regulate",ja:"を規制する",ex:"",exJa:""}, {en:"reinforce",ja:"を強化する",ex:"",exJa:""}, {en:"reject",ja:"を拒絶する",ex:"",exJa:""}, {en:"release",ja:"を放出する",ex:"",exJa:""}, {en:"rely",ja:"頼る",ex:"",exJa:""}, {en:"replace",ja:"に取って代わる",ex:"",exJa:""}, {en:"require",ja:"を必要とする",ex:"",exJa:""}, {en:"resolve",ja:"を解決する",ex:"",exJa:""}]},
+  {id:"s205",title:"Stage 205",theme:"ハイレベル・動詞12",emoji:"🏃",words:[{en:"reveal",ja:"を明らかにする",ex:"",exJa:""}, {en:"shift",ja:"を変える",ex:"",exJa:""}, {en:"speculate",ja:"を推測する",ex:"",exJa:""}, {en:"stimulate",ja:"を刺激する",ex:"",exJa:""}, {en:"submit",ja:"を提出する",ex:"",exJa:""}, {en:"substitute",ja:"を代わりに用いる",ex:"",exJa:""}, {en:"summarize",ja:"を要約する",ex:"",exJa:""}, {en:"surpass",ja:"を上回る",ex:"",exJa:""}, {en:"transform",ja:"を変形させる",ex:"",exJa:""}]},
+  {id:"s206",title:"Stage 206",theme:"ハイレベル・動詞13",emoji:"🏃",words:[{en:"trigger",ja:"を引き起こす",ex:"",exJa:""}, {en:"undergo",ja:"を経験する",ex:"",exJa:""}, {en:"undertake",ja:"を引き受ける",ex:"",exJa:""}, {en:"utilize",ja:"を利用する",ex:"",exJa:""}, {en:"yield",ja:"を産出する",ex:"",exJa:""}]},
+  {id:"s207",title:"Stage 207",theme:"ハイレベル・熟語1",emoji:"💬",words:[{en:"comply with",ja:"に従う",ex:"",exJa:""}, {en:"account for",ja:"を説明する",ex:"",exJa:""}, {en:"attribute A to B",ja:"AをBのせいにする",ex:"",exJa:""}, {en:"carry out",ja:"を実行する",ex:"",exJa:""}, {en:"come up with",ja:"を思いつく",ex:"",exJa:""}, {en:"cope with",ja:"に対処する",ex:"",exJa:""}]},
+  {id:"s208",title:"Stage 208",theme:"ハイレベル・熟語2",emoji:"💬",words:[{en:"depend on",ja:"に依存する",ex:"",exJa:""}, {en:"derive from",ja:"に由来する",ex:"",exJa:""}, {en:"dispose of",ja:"を処分する",ex:"",exJa:""}, {en:"end up",ja:"結局～になる",ex:"",exJa:""}, {en:"fall short of",ja:"に達しない",ex:"",exJa:""}, {en:"figure out",ja:"を理解する",ex:"",exJa:""}]},
+  {id:"s209",title:"Stage 209",theme:"ハイレベル・熟語3",emoji:"💬",words:[{en:"focus on",ja:"に焦点を当てる",ex:"",exJa:""}, {en:"get rid of",ja:"を取り除く",ex:"",exJa:""}, {en:"go through",ja:"を経験する",ex:"",exJa:""}, {en:"in accordance with",ja:"に従って",ex:"",exJa:""}, {en:"keep up with",ja:"についていく",ex:"",exJa:""}, {en:"look into",ja:"を調査する",ex:"",exJa:""}]},
+  {id:"s210",title:"Stage 210",theme:"ハイレベル・熟語4",emoji:"💬",words:[{en:"make up for",ja:"を埋め合わせる",ex:"",exJa:""}, {en:"object to",ja:"に反対する",ex:"",exJa:""}, {en:"refer to",ja:"に言及する",ex:"",exJa:""}, {en:"rely on",ja:"に頼る",ex:"",exJa:""}, {en:"result in",ja:"という結果になる",ex:"",exJa:""}, {en:"take advantage of",ja:"を利用する",ex:"",exJa:""}]},
+  {id:"s211",title:"Stage 211",theme:"スーパーハイレベル・社会1",emoji:"🌍",words:[{en:"alleviate",ja:"を軽減する",ex:"",exJa:""}, {en:"advocate",ja:"を支持する",ex:"",exJa:""}, {en:"controversy",ja:"論争",ex:"",exJa:""}, {en:"deprivation",ja:"欠乏/剥奪",ex:"",exJa:""}, {en:"eradicate",ja:"を根絶する",ex:"",exJa:""}, {en:"exacerbate",ja:"を悪化させる",ex:"",exJa:""}, {en:"marginalized",ja:"無視された",ex:"",exJa:""}, {en:"poverty",ja:"貧困",ex:"",exJa:""}, {en:"reconciliation",ja:"和解",ex:"",exJa:""}]},
+  {id:"s212",title:"Stage 212",theme:"スーパーハイレベル・社会2",emoji:"🌍",words:[{en:"corruption",ja:"汚職/腐敗",ex:"",exJa:""}, {en:"discrimination",ja:"差別",ex:"",exJa:""}, {en:"inequality",ja:"不平等",ex:"",exJa:""}, {en:"justice",ja:"正義/司法",ex:"",exJa:""}, {en:"legislation",ja:"法律/立法",ex:"",exJa:""}, {en:"reform",ja:"改革",ex:"",exJa:""}, {en:"sanction",ja:"制裁/認可",ex:"",exJa:""}, {en:"welfare",ja:"福祉",ex:"",exJa:""}, {en:"ambiguous",ja:"曖昧な",ex:"",exJa:""}]},
+  {id:"s213",title:"Stage 213",theme:"スーパーハイレベル・思考1",emoji:"🧠",words:[{en:"arbitrary",ja:"恣意的な",ex:"",exJa:""}, {en:"autonomy",ja:"自治/自主性",ex:"",exJa:""}, {en:"cognitive",ja:"認知に関する",ex:"",exJa:""}, {en:"comprehensive",ja:"包括的な",ex:"",exJa:""}, {en:"ethical",ja:"倫理的な",ex:"",exJa:""}, {en:"integrity",ja:"誠実/完全性",ex:"",exJa:""}, {en:"perspective",ja:"視点/観点",ex:"",exJa:""}, {en:"synthesis",ja:"統合/合成",ex:"",exJa:""}, {en:"paradigm",ja:"理論的枠組み",ex:"",exJa:""}]},
+  {id:"s214",title:"Stage 214",theme:"スーパーハイレベル・思考2",emoji:"🧠",words:[{en:"rational",ja:"合理的な",ex:"",exJa:""}, {en:"subjective",ja:"主観的な",ex:"",exJa:""}, {en:"valid",ja:"妥当な/有効な",ex:"",exJa:""}, {en:"paradox",ja:"逆説",ex:"",exJa:""}, {en:"deduce",ja:"を推論する",ex:"",exJa:""}, {en:"infer",ja:"を推測する",ex:"",exJa:""}, {en:"accelerate",ja:"を加速させる",ex:"",exJa:""}, {en:"accumulate",ja:"を蓄積する",ex:"",exJa:""}, {en:"allocate",ja:"を割り当てる",ex:"",exJa:""}]},
+  {id:"s215",title:"Stage 215",theme:"スーパーハイレベル・ビジネス1",emoji:"💼",words:[{en:"amend",ja:"を修正する",ex:"",exJa:""}, {en:"authorize",ja:"を認可する",ex:"",exJa:""}, {en:"collaborate",ja:"共同で行う",ex:"",exJa:""}, {en:"compile",ja:"を編集する",ex:"",exJa:""}, {en:"consolidate",ja:"を合併する",ex:"",exJa:""}, {en:"audit",ja:"会計監査",ex:"",exJa:""}, {en:"bankruptcy",ja:"倒産/破産",ex:"",exJa:""}, {en:"compliance",ja:"法令遵守",ex:"",exJa:""}, {en:"deficit",ja:"赤字",ex:"",exJa:""}]},
+  {id:"s216",title:"Stage 216",theme:"スーパーハイレベル・ビジネス2",emoji:"💼",words:[{en:"dividend",ja:"配当",ex:"",exJa:""}, {en:"equity",ja:"純資産/公平",ex:"",exJa:""}, {en:"liability",ja:"負債/法的責任",ex:"",exJa:""}, {en:"monopoly",ja:"独占",ex:"",exJa:""}, {en:"stagnation",ja:"停滞",ex:"",exJa:""}, {en:"biodiversity",ja:"生物多様性",ex:"",exJa:""}, {en:"catalyst",ja:"触媒/きっかけ",ex:"",exJa:""}, {en:"contamination",ja:"汚染",ex:"",exJa:""}, {en:"diffusion",ja:"拡散",ex:"",exJa:""}]},
+  {id:"s217",title:"Stage 217",theme:"スーパーハイレベル・科学1",emoji:"⚗️",words:[{en:"equilibrium",ja:"均衡",ex:"",exJa:""}, {en:"fluctuation",ja:"変動",ex:"",exJa:""}, {en:"seismic",ja:"地震の",ex:"",exJa:""}, {en:"volatile",ja:"不安定な",ex:"",exJa:""}, {en:"anomalous",ja:"異例の",ex:"",exJa:""}, {en:"audacious",ja:"大胆な",ex:"",exJa:""}, {en:"benign",ja:"無害な",ex:"",exJa:""}, {en:"chronic",ja:"慢性の",ex:"",exJa:""}, {en:"coherent",ja:"筋の通った",ex:"",exJa:""}]},
+  {id:"s218",title:"Stage 218",theme:"スーパーハイレベル・形容詞1",emoji:"✨",words:[{en:"conspicuous",ja:"目立つ",ex:"",exJa:""}, {en:"drastic",ja:"劇的な",ex:"",exJa:""}, {en:"feasible",ja:"実行可能な",ex:"",exJa:""}, {en:"formidable",ja:"手強い",ex:"",exJa:""}, {en:"imminent",ja:"差し迫った",ex:"",exJa:""}, {en:"intrinsic",ja:"本質的な",ex:"",exJa:""}, {en:"lucrative",ja:"利益の上がる",ex:"",exJa:""}, {en:"obsolete",ja:"時代遅れの",ex:"",exJa:""}, {en:"pervasive",ja:"普及している",ex:"",exJa:""}]},
+  {id:"s219",title:"Stage 219",theme:"スーパーハイレベル・形容詞2",emoji:"✨",words:[{en:"redundant",ja:"余分な",ex:"",exJa:""}, {en:"stringent",ja:"厳格な",ex:"",exJa:""}, {en:"unprecedented",ja:"前例のない",ex:"",exJa:""}, {en:"adversely",ja:"不利に",ex:"",exJa:""}, {en:"drastically",ja:"劇的に",ex:"",exJa:""}, {en:"exclusively",ja:"独占的に",ex:"",exJa:""}, {en:"predominantly",ja:"主に",ex:"",exJa:""}, {en:"relentlessly",ja:"絶え間なく",ex:"",exJa:""}, {en:"exceptionally",ja:"例外的に",ex:"",exJa:""}]},
+  {id:"s220",title:"Stage 220",theme:"スーパーハイレベル・副詞1",emoji:"⚡",words:[{en:"primarily",ja:"主に",ex:"",exJa:""}, {en:"strictly",ja:"厳格に",ex:"",exJa:""}, {en:"thoroughly",ja:"徹底的に",ex:"",exJa:""}, {en:"utterly",ja:"完全に",ex:"",exJa:""}, {en:"vaguely",ja:"漠然と",ex:"",exJa:""}, {en:"profoundly",ja:"深く",ex:"",exJa:""}, {en:"abide by",ja:"に従う",ex:"",exJa:""}, {en:"adhere to",ja:"を固守する",ex:"",exJa:""}, {en:"allude to",ja:"をほのめかす",ex:"",exJa:""}]},
+  {id:"s221",title:"Stage 221",theme:"スーパーハイレベル・熟語1",emoji:"💬",words:[{en:"be contingent on",ja:"を条件とする",ex:"",exJa:""}, {en:"be entitled to",ja:"の権利がある",ex:"",exJa:""}, {en:"be prone to",ja:"の傾向がある",ex:"",exJa:""}, {en:"break through",ja:"を突破する",ex:"",exJa:""}, {en:"call for",ja:"を必要とする",ex:"",exJa:""}, {en:"coincide with",ja:"と同時に起こる",ex:"",exJa:""}, {en:"come into effect",ja:"施行される",ex:"",exJa:""}, {en:"deprive A of B",ja:"AからBを奪う",ex:"",exJa:""}, {en:"embark on",ja:"に着手する",ex:"",exJa:""}]},
+  {id:"s222",title:"Stage 222",theme:"スーパーハイレベル・熟語2",emoji:"💬",words:[{en:"in light of",ja:"を考慮して",ex:"",exJa:""}, {en:"pave the way for",ja:"の道を開く",ex:"",exJa:""}, {en:"preclude",ja:"を排除する",ex:"",exJa:""}, {en:"stem from",ja:"に由来する",ex:"",exJa:""}, {en:"strive for",ja:"を目指して努力する",ex:"",exJa:""}, {en:"take account of",ja:"を考慮する",ex:"",exJa:""}, {en:"under the auspices of",ja:"の援助を受けて",ex:"",exJa:""}, {en:"with respect to",ja:"に関して",ex:"",exJa:""}]},
+  {id:"s223",title:"Stage 223",theme:"スーパーハイレベル・語彙1",emoji:"📖",words:[{en:"advent",ja:"出現",ex:"",exJa:""}, {en:"aggregate",ja:"総計",ex:"",exJa:""}, {en:"ambivalence",ja:"相反する感情",ex:"",exJa:""}, {en:"analogy",ja:"類推",ex:"",exJa:""}, {en:"anomaly",ja:"例外",ex:"",exJa:""}, {en:"apparatus",ja:"装置",ex:"",exJa:""}, {en:"arbitration",ja:"仲裁",ex:"",exJa:""}, {en:"archetype",ja:"原型",ex:"",exJa:""}, {en:"asymmetry",ja:"非対称",ex:"",exJa:""}]},
+  {id:"s224",title:"Stage 224",theme:"スーパーハイレベル・語彙2",emoji:"📖",words:[{en:"backlash",ja:"反発",ex:"",exJa:""}, {en:"benchmark",ja:"基準",ex:"",exJa:""}, {en:"blueprint",ja:"設計図",ex:"",exJa:""}, {en:"bottleneck",ja:"障害",ex:"",exJa:""}, {en:"breach",ja:"違反",ex:"",exJa:""}, {en:"catalyst",ja:"触媒",ex:"",exJa:""}, {en:"clout",ja:"影響力",ex:"",exJa:""}, {en:"coalition",ja:"連合",ex:"",exJa:""}, {en:"cohesion",ja:"結合",ex:"",exJa:""}]},
+  {id:"s225",title:"Stage 225",theme:"スーパーハイレベル・語彙3",emoji:"📖",words:[{en:"compendium",ja:"概説",ex:"",exJa:""}, {en:"conundrum",ja:"難問",ex:"",exJa:""}, {en:"corollary",ja:"当然の結果",ex:"",exJa:""}, {en:"deadlock",ja:"膠着状態",ex:"",exJa:""}, {en:"dichotomy",ja:"二分法",ex:"",exJa:""}, {en:"discrepancy",ja:"不一致",ex:"",exJa:""}, {en:"divergence",ja:"相違",ex:"",exJa:""}, {en:"efficacy",ja:"効能",ex:"",exJa:""}, {en:"entity",ja:"実体",ex:"",exJa:""}]},
+  {id:"s226",title:"Stage 226",theme:"スーパーハイレベル・語彙4",emoji:"📖",words:[{en:"equilibrium",ja:"均衡",ex:"",exJa:""}, {en:"ethics",ja:"倫理",ex:"",exJa:""}, {en:"exodus",ja:"大量流出",ex:"",exJa:""}, {en:"facade",ja:"外観",ex:"",exJa:""}, {en:"fallacy",ja:"誤った考え",ex:"",exJa:""}, {en:"fiasco",ja:"大失敗",ex:"",exJa:""}, {en:"fluctuation",ja:"変動",ex:"",exJa:""}, {en:"friction",ja:"摩擦",ex:"",exJa:""}, {en:"frontier",ja:"辺境/最前線",ex:"",exJa:""}]},
+  {id:"s227",title:"Stage 227",theme:"スーパーハイレベル・語彙5",emoji:"📖",words:[{en:"genocide",ja:"集団殺害",ex:"",exJa:""}, {en:"hierarchy",ja:"階層制",ex:"",exJa:""}, {en:"homage",ja:"敬意",ex:"",exJa:""}, {en:"hygiene",ja:"衛生",ex:"",exJa:""}, {en:"illusion",ja:"幻影",ex:"",exJa:""}, {en:"impulse",ja:"衝動",ex:"",exJa:""}, {en:"incentive",ja:"動機",ex:"",exJa:""}, {en:"indemnity",ja:"補償",ex:"",exJa:""}, {en:"inertia",ja:"慣性",ex:"",exJa:""}]},
+  {id:"s228",title:"Stage 228",theme:"スーパーハイレベル・語彙6",emoji:"📖",words:[{en:"jargon",ja:"専門用語",ex:"",exJa:""}, {en:"latitude",ja:"緯度/自由",ex:"",exJa:""}, {en:"legacy",ja:"遺産",ex:"",exJa:""}, {en:"leverage",ja:"影響力",ex:"",exJa:""}, {en:"longevity",ja:"長寿",ex:"",exJa:""}, {en:"lucidity",ja:"明快さ",ex:"",exJa:""}, {en:"magnitude",ja:"大きさ",ex:"",exJa:""}, {en:"malice",ja:"悪意",ex:"",exJa:""}, {en:"mandate",ja:"権限",ex:"",exJa:""}]},
+  {id:"s229",title:"Stage 229",theme:"スーパーハイレベル・語彙7",emoji:"📖",words:[{en:"manifesto",ja:"宣言",ex:"",exJa:""}, {en:"mentality",ja:"心理状態",ex:"",exJa:""}, {en:"metaphor",ja:"隠喩",ex:"",exJa:""}, {en:"milestone",ja:"画期的な出来事",ex:"",exJa:""}, {en:"minority",ja:"少数派",ex:"",exJa:""}, {en:"momentum",ja:"勢い",ex:"",exJa:""}, {en:"morbidity",ja:"罹患率",ex:"",exJa:""}, {en:"narcissism",ja:"自己愛",ex:"",exJa:""}, {en:"negotiation",ja:"交渉",ex:"",exJa:""}]},
+  {id:"s230",title:"Stage 230",theme:"スーパーハイレベル・語彙8",emoji:"📖",words:[{en:"notion",ja:"概念",ex:"",exJa:""}, {en:"nuance",ja:"微妙な違い",ex:"",exJa:""}, {en:"obstacle",ja:"障害",ex:"",exJa:""}, {en:"omission",ja:"省略",ex:"",exJa:""}, {en:"outset",ja:"最初",ex:"",exJa:""}, {en:"oversight",ja:"見落とし/監視",ex:"",exJa:""}, {en:"paradigm",ja:"理論的枠組み",ex:"",exJa:""}, {en:"patriotism",ja:"愛国心",ex:"",exJa:""}, {en:"pedagogy",ja:"教育学",ex:"",exJa:""}]},
+  {id:"s231",title:"Stage 231",theme:"スーパーハイレベル・語彙9",emoji:"📖",words:[{en:"periphery",ja:"周辺",ex:"",exJa:""}, {en:"perjury",ja:"偽証",ex:"",exJa:""}, {en:"perspective",ja:"視点",ex:"",exJa:""}, {en:"pioneer",ja:"先駆者",ex:"",exJa:""}, {en:"plateau",ja:"高原/停滞期",ex:"",exJa:""}, {en:"precedence",ja:"優先",ex:"",exJa:""}, {en:"prejudice",ja:"偏見",ex:"",exJa:""}, {en:"premise",ja:"前提",ex:"",exJa:""}, {en:"prestige",ja:"名声",ex:"",exJa:""}]},
+  {id:"s232",title:"Stage 232",theme:"スーパーハイレベル・語彙10",emoji:"📖",words:[{en:"pretext",ja:"口実",ex:"",exJa:""}, {en:"priority",ja:"優先",ex:"",exJa:""}, {en:"protocol",ja:"外交儀礼",ex:"",exJa:""}, {en:"proximity",ja:"近接",ex:"",exJa:""}, {en:"pseudonym",ja:"ペンネーム",ex:"",exJa:""}, {en:"quorum",ja:"定足数",ex:"",exJa:""}, {en:"quota",ja:"割り当て",ex:"",exJa:""}, {en:"radiance",ja:"輝き",ex:"",exJa:""}, {en:"radical",ja:"急進派",ex:"",exJa:""}]},
+  {id:"s233",title:"Stage 233",theme:"スーパーハイレベル・語彙11",emoji:"📖",words:[{en:"realism",ja:"現実主義",ex:"",exJa:""}, {en:"recession",ja:"景気後退",ex:"",exJa:""}, {en:"reciprocity",ja:"相互互恵",ex:"",exJa:""}, {en:"redundancy",ja:"余剰",ex:"",exJa:""}, {en:"refinery",ja:"精錬所",ex:"",exJa:""}, {en:"regime",ja:"政権",ex:"",exJa:""}, {en:"renaissance",ja:"再生",ex:"",exJa:""}, {en:"repertoire",ja:"上演目録",ex:"",exJa:""}, {en:"republic",ja:"共和国",ex:"",exJa:""}]},
+  {id:"s234",title:"Stage 234",theme:"スーパーハイレベル・語彙12",emoji:"📖",words:[{en:"resilience",ja:"回復力",ex:"",exJa:""}, {en:"resonance",ja:"共鳴",ex:"",exJa:""}, {en:"retention",ja:"保持",ex:"",exJa:""}, {en:"retrospect",ja:"回顧",ex:"",exJa:""}, {en:"revelation",ja:"啓示/暴露",ex:"",exJa:""}, {en:"rhetoric",ja:"修辞学",ex:"",exJa:""}, {en:"sanction",ja:"制裁",ex:"",exJa:""}, {en:"saturability",ja:"飽和性",ex:"",exJa:""}, {en:"scarcity",ja:"欠乏",ex:"",exJa:""}]},
+  {id:"s235",title:"Stage 235",theme:"スーパーハイレベル・語彙13",emoji:"📖",words:[{en:"scrutiny",ja:"精密な調査",ex:"",exJa:""}, {en:"sectarianism",ja:"宗派心",ex:"",exJa:""}, {en:"secularism",ja:"世俗主義",ex:"",exJa:""}, {en:"sediment",ja:"堆積物",ex:"",exJa:""}, {en:"serenity",ja:"平穏",ex:"",exJa:""}, {en:"silhouette",ja:"影絵",ex:"",exJa:""}, {en:"skepticism",ja:"懐疑心",ex:"",exJa:""}, {en:"solitude",ja:"孤独",ex:"",exJa:""}, {en:"sovereignty",ja:"主権",ex:"",exJa:""}]},
+  {id:"s236",title:"Stage 236",theme:"スーパーハイレベル・語彙14",emoji:"📖",words:[{en:"spectrum",ja:"範囲",ex:"",exJa:""}, {en:"stagnation",ja:"停滞",ex:"",exJa:""}, {en:"standardization",ja:"標準化",ex:"",exJa:""}, {en:"stature",ja:"身長/声望",ex:"",exJa:""}, {en:"status",ja:"地位",ex:"",exJa:""}]},
+];
+
+const ALL_WORDS = STAGES.flatMap(s => s.words);
+
+// ══════════════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════════════
+const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+
+const speak = (text) => {
+  if (!window.speechSynthesis) return;
+  const doSpeak = () => {
+    try {
+      window.speechSynthesis.cancel();
+      setTimeout(() => {
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = "en-US";
+        u.rate = 0.82;
+        const voices = window.speechSynthesis.getVoices();
+        const enVoice = voices.find(v => v.lang === "en-US") ||
+                        voices.find(v => v.lang.startsWith("en"));
+        if (enVoice) u.voice = enVoice;
+        window.speechSynthesis.speak(u);
+      }, 80);
+    } catch (_) {}
+  };
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length === 0) {
+    window.speechSynthesis.onvoiceschanged = () => {
+      window.speechSynthesis.onvoiceschanged = null;
+      doSpeak();
+    };
+  } else {
+    doSpeak();
+  }
+};
+
+const fmtTime = (ms) => {
+  const s = ms / 1000;
+  const m = Math.floor(s / 60);
+  const sec = (s % 60).toFixed(1);
+  return m > 0 ? `${m}分${String(Math.floor(s % 60)).padStart(2,"0")}.${Math.floor((ms%1000)/100)}秒` : `${sec}秒`;
+};
+
+const calcWPM = (chars, ms) => (ms > 500 ? Math.round((chars / 5) / (ms / 60000)) : 0);
+
+const SKEY = "speedEigo_v3";
+const loadDB = () => { try { return JSON.parse(localStorage.getItem(SKEY)) || {}; } catch { return {}; } };
+const saveDB = d => { try { localStorage.setItem(SKEY, JSON.stringify(d)); } catch(_){} };
+
+// Specific contextual hints for common ambiguous forms
+const WORD_HINTS = {
+  am:   "主語がIの時（現在）", is:   "主語がhe/she/itの時（現在）",
+  are:  "主語がyou/we/theyの時（現在）",
+  was:  "主語がI/he/she/itの時（過去）", were: "主語がyou/we/theyの時（過去）",
+  do:   "主語がI/you/we/theyの時", does: "主語がhe/she/itの時",
+  did:  "doの過去形", done: "doの過去分詞",
+  have: "主語がI/you/we/theyの時", has:  "主語がhe/she/itの時",
+  had:  "haveの過去形",
+  go:   "原形", goes: "主語がhe/she/itの時", went: "goの過去形", gone: "goの過去分詞",
+  make: "原形", made: "makeの過去形・過去分詞",
+  take: "原形", took: "takeの過去形", taken: "takeの過去分詞",
+  get:  "原形", got:  "getの過去形",
+  see:  "原形", saw:  "seeの過去形", seen: "seeの過去分詞",
+  come: "原形", came: "comeの過去形",
+  give: "原形", gave: "giveの過去形", given: "giveの過去分詞",
+  know: "原形", knew: "knowの過去形", known: "knowの過去分詞",
+  speak:"原形", spoke:"speakの過去形", spoken:"speakの過去分詞",
+  write:"原形", wrote:"writeの過去形", written:"writeの過去分詞",
+};
+
+const mkQs = (words, mode) => {
+  // Detect duplicate meanings within this stage
+  const jaCount = {};
+  words.forEach(w => { jaCount[w.ja] = (jaCount[w.ja] || 0) + 1; });
+
+  const getHint = (w) => {
+    if (WORD_HINTS[w.en]) return WORD_HINTS[w.en];
+    if (jaCount[w.ja] > 1) return `頭文字は「${w.en[0].toUpperCase()}」`;
+    return null;
+  };
+
+  const ordered = shuffle([...words]);
+  return ordered.map(w => {
+    const hint = getHint(w);
+    if (mode === 1) {
+      const wrong = shuffle(words.filter(x => x.en !== w.en)).slice(0,3).map(x => x.ja);
+      return { ...w, hint, display:w.en, correct:w.ja, choices:shuffle([w.ja,...wrong]), qtype:"choice" };
+    } else if (mode === 2) {
+      const wrong = shuffle(words.filter(x => x.en !== w.en)).slice(0,3).map(x => x.en);
+      return { ...w, hint, display:w.ja, correct:w.en, choices:shuffle([w.en,...wrong]), qtype:"choice" };
+    } else {
+      return { ...w, hint, display:w.ja, correct:w.en, qtype:"typing" };
+    }
+  });
+};
+
+// ══════════════════════════════════════════════════════════════════
+// CSS
+// ══════════════════════════════════════════════════════════════════
+const css = `
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#070714;--surf:#10102a;--surf2:#18183a;--bord:rgba(255,255,255,0.07);
+  --txt:#e8e8ff;--muted:rgba(232,232,255,0.42);
+  --cyan:#00e5ff;--orange:#ff6b35;--success:#34d399;--danger:#f87171;--warn:#fbbf24;
+}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:'Noto Sans JP',sans-serif;-webkit-tap-highlight-color:transparent}
+.app{
+  min-height:100svh;background:var(--bg);
+  background-image:
+    radial-gradient(ellipse 60% 40% at 15% 15%,rgba(0,229,255,.07) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 50% at 85% 80%,rgba(255,107,53,.06) 0%,transparent 60%),
+    repeating-linear-gradient(0deg,transparent,transparent 48px,rgba(255,255,255,.012) 48px,rgba(255,255,255,.012) 49px),
+    repeating-linear-gradient(90deg,transparent,transparent 48px,rgba(255,255,255,.012) 48px,rgba(255,255,255,.012) 49px);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  padding:16px 12px 40px;
+}
+.card{
+  background:var(--surf);border:1px solid var(--bord);border-radius:22px;
+  padding:26px 22px;width:100%;max-width:460px;
+  box-shadow:0 0 80px rgba(0,229,255,.05),0 24px 64px rgba(0,0,0,.55);
+  position:relative;overflow:hidden;
+}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--cyan) 40%,var(--orange) 60%,transparent)}
+.logo{font-family:'Dela Gothic One',sans-serif;font-size:clamp(20px,6vw,30px);
+  color:var(--cyan);text-shadow:0 0 24px rgba(0,229,255,.5);text-align:center;letter-spacing:2px}
+.sub{font-size:11px;color:var(--muted);text-align:center;letter-spacing:4px;margin:4px 0 26px}
+.sec-title{font-family:'Dela Gothic One',sans-serif;font-size:17px;color:var(--txt);text-align:center;margin-bottom:18px}
+.pin-input{width:100%;background:var(--surf2);border:2px solid var(--bord);border-radius:14px;
+  padding:18px;color:var(--txt);font-size:30px;font-family:'BIZ UDGothic',monospace;font-weight:900;
+  letter-spacing:10px;text-align:center;outline:none;transition:.2s;margin-bottom:18px}
+.pin-input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,229,255,.15)}
+.btn{display:block;width:100%;padding:14px;border:none;border-radius:12px;
+  font-family:'Dela Gothic One',sans-serif;font-size:15px;letter-spacing:1px;
+  cursor:pointer;transition:transform .12s,box-shadow .2s,opacity .2s}
+.btn:active{transform:scale(.96)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn-cyan{background:linear-gradient(135deg,var(--cyan),#007acc);color:#000;box-shadow:0 4px 18px rgba(0,229,255,.3)}
+.btn-cyan:hover:not(:disabled){box-shadow:0 6px 26px rgba(0,229,255,.5)}
+.btn-ghost{background:var(--surf2);border:1px solid var(--bord);color:var(--txt)}
+.btn-ghost:hover{border-color:rgba(255,255,255,.2)}
+.btn-sm{padding:8px 14px;font-size:12px;border-radius:9px;display:inline-block;width:auto}
+.stage-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.stage-card{background:var(--surf2);border:2px solid var(--bord);border-radius:13px;
+  padding:13px 10px;cursor:pointer;transition:transform .15s,box-shadow .2s;text-align:center;position:relative}
+.stage-card:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,0,0,.4)}
+.stage-emoji{font-size:20px;margin-bottom:3px}
+.stage-num{font-family:'BIZ UDGothic',monospace;font-size:9px;color:var(--muted);margin-bottom:2px}
+.stage-theme{font-size:10px;font-weight:700;margin-bottom:3px;line-height:1.3;color:var(--text)}
+.stage-lv{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700;background:rgba(255,255,255,.06)}
+.mode-dots{display:flex;gap:3px;justify-content:center;margin-top:7px}
+.mode-dot{width:7px;height:7px;border-radius:50%;background:var(--surf);border:1px solid rgba(255,255,255,.14);transition:.2s}
+.mode-dot.on{background:var(--success);border-color:var(--success)}
+.clear-badge{position:absolute;top:7px;right:8px;font-size:13px}
+.word-card{background:var(--surf2);border:1px solid var(--bord);border-radius:16px;padding:22px 18px;margin-bottom:14px;text-align:center}
+.word-en{font-family:'BIZ UDGothic',monospace;font-size:clamp(26px,8vw,42px);font-weight:900;
+  color:var(--cyan);text-shadow:0 0 20px rgba(0,229,255,.35);letter-spacing:2px;margin-bottom:4px}
+.word-ja{font-size:20px;font-weight:900;color:var(--txt);margin-bottom:14px}
+.word-ex{font-size:13px;color:rgba(232,232,255,.65);background:rgba(0,0,0,.22);
+  border-radius:10px;padding:9px 12px;line-height:1.7;text-align:left}
+.word-ex-en{color:var(--warn);font-weight:700;display:block;margin-bottom:2px}
+.word-ex-ja{color:var(--muted);font-size:12px;display:block}
+.study-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px}
+.nav-count{font-family:'BIZ UDGothic',monospace;font-size:12px;color:var(--muted)}
+.audio-btn{background:var(--surf2);border:1px solid var(--bord);border-radius:50%;
+  width:36px;height:36px;cursor:pointer;font-size:17px;transition:.15s;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;color:var(--cyan)}
+.audio-btn:hover{border-color:var(--cyan);box-shadow:0 0 10px rgba(0,229,255,.3)}
+.mode-card{background:var(--surf2);border:2px solid var(--bord);border-radius:15px;
+  padding:16px 14px;margin-bottom:10px;cursor:pointer;transition:transform .12s,border-color .15s;
+  display:flex;align-items:center;gap:12px}
+.mode-card:hover{transform:translateX(4px);border-color:rgba(255,255,255,.2)}
+.mode-card.cm{border-color:rgba(52,211,153,.4)}
+.mode-num{font-family:'BIZ UDGothic',monospace;font-size:20px;font-weight:900;width:38px;text-align:center;flex-shrink:0}
+.mode-title{font-weight:700;font-size:14px;margin-bottom:2px}
+.mode-desc{font-size:11px;color:var(--muted)}
+.mode-aud{font-size:11px;color:var(--cyan);margin-top:3px}
+.mode-cl{font-size:11px;color:var(--success);margin-top:3px;font-weight:700}
+.q-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.q-prog{font-family:'BIZ UDGothic',monospace;font-size:11px;color:var(--muted)}
+.q-timer{font-family:'BIZ UDGothic',monospace;font-size:19px;color:var(--warn)}
+.pb-wrap{height:5px;background:var(--surf2);border-radius:3px;overflow:hidden;margin-bottom:14px}
+.pb{height:100%;border-radius:3px;transition:width .3s}
+.dots-row{display:flex;gap:3px;justify-content:center;margin-bottom:14px}
+.qdot{width:8px;height:8px;border-radius:50%;background:var(--surf2);border:1px solid var(--bord);transition:.2s}
+.qdot.ok{background:var(--success);border-color:var(--success)}
+.qdot.ng{background:var(--danger);border-color:var(--danger)}
+.qdot.cur{background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 8px rgba(0,229,255,.6)}
+.disp-en{font-family:'BIZ UDGothic',monospace;font-size:clamp(22px,7vw,40px);font-weight:900;
+  color:var(--cyan);text-shadow:0 0 24px rgba(0,229,255,.4);text-align:center;
+  margin:10px 0 18px;letter-spacing:2px;line-height:1.2}
+.disp-ja{font-size:clamp(20px,6vw,32px);font-weight:900;color:var(--txt);text-align:center;margin:10px 0 18px}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:14px}
+.choice{background:var(--surf2);border:2px solid var(--bord);border-radius:11px;
+  padding:15px 8px;font-size:14px;font-weight:700;color:var(--txt);
+  cursor:pointer;transition:.15s;text-align:center;font-family:'Noto Sans JP',sans-serif}
+.choice:hover:not(:disabled){border-color:var(--cyan);transform:scale(1.02)}
+.choice.correct{background:rgba(52,211,153,.2);border-color:var(--success);color:var(--success)}
+.choice.wrong{background:rgba(248,113,113,.18);border-color:var(--danger);color:var(--danger)}
+.choice:disabled{cursor:default}
+.type-area{display:flex;flex-direction:column;gap:9px;margin-bottom:14px}
+.type-input{background:var(--surf2);border:2px solid var(--bord);border-radius:12px;
+  padding:15px;color:var(--txt);font-size:22px;font-family:'BIZ UDGothic',monospace;font-weight:700;
+  text-align:center;letter-spacing:3px;outline:none;transition:.2s;width:100%}
+.type-input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,229,255,.15)}
+.type-input.c-ok{border-color:var(--success);color:var(--success)}
+.type-input.c-ng{border-color:var(--danger);color:var(--danger)}
+.reveal{text-align:center;padding:10px;background:rgba(0,0,0,.22);border-radius:10px;margin-top:4px}
+.reveal-lbl{font-size:10px;color:var(--muted);letter-spacing:2px;margin-bottom:4px}
+.reveal-word{font-family:'BIZ UDGothic',monospace;font-size:20px;font-weight:900;color:var(--cyan)}
+.aud-row{display:flex;justify-content:center;align-items:center;gap:10px;margin-bottom:8px}
+.score-big{font-family:'BIZ UDGothic',monospace;font-size:clamp(46px,13vw,68px);font-weight:900;line-height:1}
+.score-den{font-size:.38em;color:var(--muted)}
+.res-meta{font-size:12px;color:var(--muted);letter-spacing:2px;margin-top:5px}
+.res-time{font-family:'BIZ UDGothic',monospace;font-size:19px;color:var(--warn);margin-top:8px}
+.res-wpm{font-family:'BIZ UDGothic',monospace;font-size:15px;color:var(--cyan);margin-top:5px}
+.cl-announce{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.4);border-radius:11px;
+  padding:9px 14px;text-align:center;color:var(--success);font-weight:700;font-size:13px;margin:10px 0}
+.rev-item{background:var(--surf2);border-radius:9px;padding:9px 12px;margin-bottom:6px;
+  display:flex;align-items:center;gap:9px;font-size:12px}
+.rev-en{font-family:'BIZ UDGothic',monospace;font-weight:700;color:var(--cyan);min-width:80px;font-size:11px}
+.rev-ja{font-weight:700;flex:1}
+.rev-ok{color:var(--success);font-size:15px;margin-left:auto}
+.rev-ng{color:var(--danger);font-size:10px;margin-left:auto;text-align:right;line-height:1.4}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:16px}
+.stat-box{background:var(--surf2);border-radius:10px;padding:11px 7px;text-align:center}
+.stat-val{font-family:'BIZ UDGothic',monospace;font-size:17px;color:var(--cyan)}
+.stat-lbl{font-size:9px;color:var(--muted);margin-top:3px;letter-spacing:1px}
+.hist-item{background:var(--surf2);border-left:3px solid var(--cyan);border-radius:9px;
+  padding:10px 12px;margin-bottom:7px}
+.hist-meta{font-size:10px;color:var(--muted);margin-bottom:4px}
+.hist-row{display:flex;align-items:center;gap:10px}
+.hist-score{font-family:'BIZ UDGothic',monospace;font-size:14px}
+.hist-time{color:var(--warn);font-size:11px}
+.hist-wpm{color:var(--cyan);font-size:11px}
+.divider{height:1px;background:var(--bord);margin:16px 0}
+.back-btn{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;
+  padding:4px 0;margin-bottom:12px;font-family:'Noto Sans JP',sans-serif;transition:.15s;
+  display:flex;align-items:center;gap:5px}
+.back-btn:hover{color:var(--txt)}
+.scroll{max-height:320px;overflow-y:auto;padding-right:3px}
+.scroll::-webkit-scrollbar{width:3px}
+.scroll::-webkit-scrollbar-track{background:transparent}
+.scroll::-webkit-scrollbar-thumb{background:var(--bord);border-radius:2px}
+.no-data{text-align:center;color:var(--muted);padding:32px 0;font-size:13px}
+.user-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.user-id{font-family:'BIZ UDGothic',monospace;font-size:11px;color:var(--cyan)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.anim{animation:fadeUp .28s ease both}
+`;
+
+// ══════════════════════════════════════════════════════════════════
+// APP
+// ══════════════════════════════════════════════════════════════════
+function App() {
+  const [screen, setScreen] = useState("login");
+  const [inputId, setInputId] = useState("");
+  const [sid, setSid] = useState("");
+  const [curStage, setCurStage] = useState(null);
+  const [studyIdx, setStudyIdx] = useState(0);
+  const [mode, setMode] = useState(null);
+  const [qs, setQs] = useState([]);
+  const [qi, setQi] = useState(0);
+  const [ans, setAns] = useState([]);
+  const [chosen, setChosen] = useState(null);
+  const [typed, setTyped] = useState("");
+  const [typedAll, setTypedAll] = useState([]);
+  const [submitted, setSubmitted] = useState(false);
+  const [t0, setT0] = useState(null);
+  const [elapsed, setElapsed] = useState(0);
+  const [db, setDb] = useState(loadDB);
+  const tRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const udata = db[sid] || { challenges: [], cleared: {} };
+  const persist = (next) => {
+    const nd = { ...db, [sid]: next };
+    setDb(nd); saveDB(nd);
+  };
+
+  // Live timer
+  useEffect(() => {
+    if (screen === "challenge" && t0) {
+      tRef.current = setInterval(() => setElapsed(Date.now() - t0), 100);
+      return () => clearInterval(tRef.current);
+    }
+  }, [screen, t0]);
+
+  // Auto-speak mode 1 & 3 on question change
+  useEffect(() => {
+    if (screen === "challenge" && (mode === 1 || mode === 3) && qs[qi]) speak(qs[qi].en);
+  }, [screen, qi, mode, qs]);
+
+  // Focus typing input
+  useEffect(() => {
+    if (screen === "challenge" && mode === 3 && !submitted) inputRef.current?.focus();
+  }, [screen, qi, submitted, mode]);
+
+  const login = () => { if (/^\d{4}$/.test(inputId)) { setSid(inputId); setScreen("stages"); } };
+  const goStudy = (s) => { setCurStage(s); setStudyIdx(0); setScreen("study"); };
+  const goMenu = () => setScreen("menuSelect");
+
+  const startMode = (m) => {
+    const questions = mkQs(curStage.words, m);
+    setMode(m); setQs(questions); setQi(0); setAns([]); setChosen(null);
+    setTyped(""); setTypedAll([]); setSubmitted(false);
+    setT0(Date.now()); setElapsed(0);
+    setScreen("challenge");
+  };
+
+  const onChoice = (c) => {
+    if (chosen) return;
+    const q = qs[qi];
+    const ok = c === q.correct;
+    setChosen(c);
+    const newA = [...ans, { en:q.en, ja:q.ja, correct:q.correct, chosen:c, ok }];
+    setTimeout(() => {
+      if (qi + 1 >= qs.length) finish(newA, null);
+      else { setAns(newA); setQi(qi + 1); setChosen(null); }
+    }, 750);
+  };
+
+  const onTypingSubmit = () => {
+    if (submitted) return;
+    const q = qs[qi];
+    const ok = typed.trim().toLowerCase() === q.correct.toLowerCase();
+    setSubmitted(true);
+    const nt = [...typedAll, typed.trim()];
+    setTypedAll(nt);
+    const newA = [...ans, { en:q.en, ja:q.ja, correct:q.correct, chosen:typed.trim(), ok }];
+    setTimeout(() => {
+      if (qi + 1 >= qs.length) finish(newA, nt);
+      else { setAns(newA); setQi(qi + 1); setTyped(""); setSubmitted(false); }
+    }, 1300);
+  };
+
+  const finish = (finalAns, ta) => {
+    clearInterval(tRef.current);
+    const time = Date.now() - t0;
+    const score = finalAns.filter(a => a.ok).length;
+    const total = curStage.words.length;
+    let wpm = null;
+    if (mode === 3 && ta) {
+      const chars = ta.reduce((s, t) => s + t.length, 0);
+      wpm = calcWPM(chars, time);
+    }
+    const nc = { ...udata.cleared };
+    if (!nc[curStage.id]) nc[curStage.id] = {};
+    if (score === total) nc[curStage.id][`m${mode}`] = true;
+    const rec = { stageId:curStage.id, stageTheme:curStage.theme, mode, score, total, time, wpm, date:new Date().toLocaleString("ja-JP") };
+    persist({ challenges:[rec,...udata.challenges].slice(0,100), cleared:nc });
+    setAns(finalAns); setElapsed(time);
+    setScreen("results");
+  };
+
+  const isClear = (id) => { const c = udata.cleared[id]; return !!(c && c.m1 && c.m2 && c.m3); };
+  const modeCleared = (id, m) => !!(udata.cleared[id]?.[`m${m}`]);
+  const totalCleared = STAGES.filter(s => isClear(s.id)).length;
+  const score = ans.filter(a => a.ok).length;
+  const scoreColor = score >= 8 ? "var(--success)" : score >= 5 ? "var(--warn)" : "var(--danger)";
+
+  return (
+    <>
+      <style>{css}</style>
+      <div className="app">
+
+        {/* ── LOGIN ─────────────────────────────────────────────── */}
+        {screen === "login" && (
+          <div className="card anim" style={{marginTop:64}}>
+            <div className="logo">SPEED英単語</div>
+            <div className="sub">スピード英単語チャレンジ</div>
+            <div className="sec-title">生徒番号でログイン</div>
+            <input className="pin-input" type="number" placeholder="0000" maxLength={4}
+              value={inputId} onChange={e => setInputId(e.target.value.slice(0,4))}
+              onKeyDown={e => e.key==="Enter" && login()} />
+            <button className="btn btn-cyan" onClick={login} disabled={!/^\d{4}$/.test(inputId)}>
+              スタート ⚡
+            </button>
+            <p style={{textAlign:"center",marginTop:12,fontSize:11,color:"var(--muted)"}}>
+              ※ 4桁の生徒番号を入力してください
+            </p>
+          </div>
+        )}
+
+        {/* ── STAGES ────────────────────────────────────────────── */}
+        {screen === "stages" && (
+          <div className="card anim" style={{marginTop:16}}>
+            <div className="user-row">
+              <div>
+                <div className="user-id">ID: {sid}</div>
+                <div className="logo" style={{fontSize:17,textAlign:"left"}}>SPEED英単語</div>
+              </div>
+              <button className="btn btn-ghost btn-sm"
+                onClick={()=>{ setSid(""); setInputId(""); setScreen("login"); }}>
+                ログアウト
+              </button>
+            </div>
+            <div className="sec-title">ステージを選ぼう！</div>
+            <div className="stage-grid">
+              {STAGES.map(s => {
+                const cl = isClear(s.id);
+                return (
+                  <div key={s.id} className={`stage-card${cl?" cleared":""}`}
+                    style={{borderColor: cl ? "rgba(52,211,153,.45)" : "rgba(255,255,255,.07)"}}
+                    onClick={() => goStudy(s)}>
+                    {cl && <span className="clear-badge">✅</span>}
+                    <div className="stage-emoji">{s.emoji}</div>
+                    <div className="stage-num">{s.title}</div>
+                    <div className="stage-theme">{s.theme}</div>
+                    <div className="mode-dots">
+                      {[1,2,3].map(m => (
+                        <div key={m} className={`mode-dot${modeCleared(s.id,m)?" on":""}`} />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="divider" />
+            <button className="btn btn-ghost" onClick={() => setScreen("history")}>
+              📊 学習記録を見る
+            </button>
+          </div>
+        )}
+
+        {/* ── STUDY ─────────────────────────────────────────────── */}
+        {screen === "study" && curStage && (
+          <div className="card anim">
+            <button className="back-btn" onClick={() => setScreen("stages")}>← ステージ選択に戻る</button>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+              <div>
+                <div style={{fontFamily:"'BIZ UDGothic', monospace",fontSize:10,color:"var(--muted)"}}>STAGE {curStage.id}</div>
+                <div style={{fontFamily:"'Dela Gothic One',sans-serif",fontSize:15,color:"var(--cyan)"}}>{curStage.theme}</div>
+              </div>
+              <div style={{fontFamily:"'BIZ UDGothic', monospace",fontSize:11,color:"var(--muted)"}}>{curStage.words.length}単語</div>
+            </div>
+
+            <div style={{maxHeight:"54vh",overflowY:"auto",paddingRight:4,marginBottom:14}}>
+              {curStage.words.map((w, i) => (
+                <div key={i} style={{
+                  background:"var(--surface2)",border:"1px solid var(--border)",
+                  borderRadius:13,padding:"12px 14px",marginBottom:8,
+                  borderLeft:"3px solid var(--cyan)",
+                }}>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                    <span style={{fontFamily:"'BIZ UDGothic', monospace",fontSize:11,color:"var(--muted)",minWidth:18}}>{i+1}.</span>
+                    <span style={{fontFamily:"'BIZ UDGothic', monospace",fontSize:17,fontWeight:900,color:"var(--cyan)",letterSpacing:1}}>{w.en}</span>
+                    <button className="audio-btn" style={{width:28,height:28,fontSize:13,marginLeft:2}} onClick={()=>speak(w.en)}>🔊</button>
+                    <span style={{fontSize:15,fontWeight:900,color:"var(--text)",marginLeft:4}}>{w.ja}</span>
+                  </div>
+                  {w.ex && (
+                    <div style={{background:"var(--surface3)",borderRadius:8,padding:"8px 10px",marginLeft:26}}>
+                      <div style={{fontSize:12,color:"var(--text)",fontStyle:"italic",fontWeight:700,marginBottom:2}}>{w.ex}</div>
+                      <div style={{fontSize:11,color:"var(--muted)"}}>{w.exJa}</div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <button className="btn btn-cyan" onClick={goMenu}>チャレンジ開始 🎮</button>
+          </div>
+        )}
+
+        {/* ── MENU SELECT ───────────────────────────────────────── */}
+        {screen === "menuSelect" && curStage && (
+          <div className="card anim">
+            <button className="back-btn" onClick={() => setScreen("study")}>← 学習に戻る</button>
+            <div style={{textAlign:"center",marginBottom:4}}>
+              <div style={{fontFamily:"'BIZ UDGothic', monospace",fontSize:10,color:"var(--muted)"}}>STAGE {curStage.id}</div>
+              <div style={{fontFamily:"'Dela Gothic One',sans-serif",fontSize:16,color:"var(--cyan)"}}>{curStage.theme}</div>
+            </div>
+            <div className="sub" style={{marginBottom:18}}>学習メニューを選ぼう</div>
+            {[
+              {m:1, icon:"🇬🇧", title:"英語→日本語　意味選択", desc:"英単語を見て正しい日本語を選ぶ", aud:"🔊 英単語の音声が流れます"},
+              {m:2, icon:"🇯🇵", title:"日本語→英語　単語選択", desc:"日本語を見て正しい英単語を選ぶ", aud:null},
+              {m:3, icon:"⌨️",  title:"日本語→英語　タイピング", desc:"日本語を見て英単語を入力する", aud:"🔊 正解時に英単語の音声が流れます"},
+            ].map(({m,icon,title,desc,aud}) => {
+              const cl = modeCleared(curStage.id, m);
+              return (
+                <div key={m} className={`mode-card${cl?" cm":""}`} onClick={() => startMode(m)}>
+                  <div className="mode-num" style={{color: cl ? "var(--success)" : "var(--cyan)"}}>{icon}</div>
+                  <div style={{flex:1}}>
+                    <div className="mode-title">{title}</div>
+                    <div className="mode-desc">{desc}</div>
+                    {aud && <div className="mode-aud">{aud}</div>}
+                    {cl && <div className="mode-cl">✅ クリア済み</div>}
+                  </div>
+                  <span style={{color:"var(--muted)",fontSize:17}}>›</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ── CHALLENGE ─────────────────────────────────────────── */}
+        {screen === "challenge" && qs.length > 0 && (() => {
+          const q = qs[qi];
+          const mColors = {1:"var(--cyan)",2:"var(--orange)",3:"var(--warn)"};
+          const mLabels = {1:"英→日 選択",2:"日→英 選択",3:"日→英 タイピング"};
+          const isTyping = mode === 3;
+          const typedOk = typed.trim().toLowerCase() === q.correct.toLowerCase();
+          return (
+            <div className="card anim">
+              <div className="q-header">
+                <div>
+                  <div style={{fontSize:9,color:"var(--muted)",letterSpacing:2}}>S{curStage?.id} ─ {mLabels[mode]}</div>
+                  <div className="q-prog">Q {qi+1} / {qs.length}</div>
+                </div>
+                <div className="q-timer">{fmtTime(elapsed)}</div>
+              </div>
+              <div className="pb-wrap">
+                <div className="pb" style={{width:`${(qi/qs.length)*100}%`,background:mColors[mode]}} />
+              </div>
+              <div className="dots-row">
+                {qs.map((_,i) => {
+                  let cls = "qdot";
+                  if (i < ans.length) cls += ans[i].ok ? " ok" : " ng";
+                  else if (i === qi) cls += " cur";
+                  return <div key={i} className={cls} />;
+                })}
+              </div>
+
+              {/* MODE 1 */}
+              {mode === 1 && (
+                <>
+                  <div className="aud-row">
+                    <div className="disp-en">{q.en}</div>
+                    <button className="audio-btn" onClick={()=>speak(q.en)}>🔊</button>
+                  </div>
+                  <div style={{textAlign:"center",fontSize:11,color:"var(--muted)",letterSpacing:2,marginBottom:12}}>
+                    日本語の意味は？
+                  </div>
+                  <div className="choices">
+                    {q.choices.map((c,i) => {
+                      let cls = "choice";
+                      if (chosen !== null) {
+                        if (c === q.correct) cls += " correct";
+                        else if (c === chosen) cls += " wrong";
+                      }
+                      return <button key={i} className={cls} onClick={()=>onChoice(c)} disabled={chosen!==null}>{c}</button>;
+                    })}
+                  </div>
+                </>
+              )}
+
+              {/* MODE 2 */}
+              {mode === 2 && (
+                <>
+                  <div className="disp-ja">{q.ja}</div>
+                  {q.hint && (
+                    <div style={{textAlign:"center",fontSize:12,color:"var(--warn)",marginBottom:4,letterSpacing:0.5}}>
+                      💡 ヒント：{q.hint}
+                    </div>
+                  )}
+                  <div style={{textAlign:"center",fontSize:11,color:"var(--muted)",letterSpacing:2,marginBottom:12}}>
+                    英単語はどれ？
+                  </div>
+                  <div className="choices">
+                    {q.choices.map((c,i) => {
+                      let cls = "choice";
+                      if (chosen !== null) {
+                        if (c === q.correct) cls += " correct";
+                        else if (c === chosen) cls += " wrong";
+                      }
+                      return (
+                        <button key={i} className={cls} onClick={()=>onChoice(c)} disabled={chosen!==null}
+                          style={{fontFamily:"'BIZ UDGothic', monospace",fontSize:12}}>
+                          {c}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+
+              {/* MODE 3 */}
+              {mode === 3 && (
+                <>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:4}}>
+                    <div className="disp-ja" style={{marginBottom:0}}>{q.ja}</div>
+                    <button className="audio-btn" onClick={()=>speak(q.en)}>🔊</button>
+                  </div>
+                  {q.hint && (
+                    <div style={{textAlign:"center",fontSize:12,color:"var(--warn)",marginBottom:4,letterSpacing:0.5}}>
+                      💡 ヒント：{q.hint}
+                    </div>
+                  )}
+                  <div style={{textAlign:"center",fontSize:11,color:"var(--muted)",letterSpacing:2,marginBottom:10}}>
+                    英単語を入力しよう
+                  </div>
+                  <div className="type-area">
+                    <input ref={inputRef}
+                      className={`type-input${submitted ? (typedOk?" c-ok":" c-ng") : ""}`}
+                      value={typed}
+                      onChange={e => !submitted && setTyped(e.target.value)}
+                      onKeyDown={e => e.key==="Enter" && !submitted && typed.trim() && onTypingSubmit()}
+                      placeholder="英単語を入力…"
+                      disabled={submitted}
+                      autoComplete="off" autoCapitalize="none" spellCheck="false"
+                    />
+                    {!submitted ? (
+                      <button className="btn btn-cyan" onClick={onTypingSubmit} disabled={!typed.trim()}>
+                        決定 ↵
+                      </button>
+                    ) : (
+                      <div className="reveal">
+                        <div className="reveal-lbl">正解の英単語</div>
+                        <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
+                          <div className="reveal-word">{q.correct}</div>
+                          <button className="audio-btn" onClick={()=>speak(q.en)}>🔊</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* ── RESULTS ───────────────────────────────────────────── */}
+        {screen === "results" && (
+          <div className="card anim">
+            <div style={{textAlign:"center",marginBottom:4}}>
+              <div style={{fontFamily:"'Dela Gothic One',sans-serif",fontSize:12,color:"var(--muted)",letterSpacing:4}}>RESULT</div>
+              <div style={{fontSize:11,color:"var(--muted)",marginTop:2}}>
+                STAGE {curStage?.id} {curStage?.theme} ─ モード{mode}
+              </div>
+            </div>
+            <div style={{textAlign:"center",margin:"14px 0"}}>
+              <div className="score-big" style={{color:scoreColor}}>
+                {score}<span className="score-den">/{curStage?.words?.length||9}</span>
+              </div>
+              <div className="res-meta">正解率 {curStage?.words?.length ? Math.round(score/curStage.words.length*100) : 0}% ({score}/{curStage?.words?.length||9}問)</div>
+              <div style={{fontSize:22,letterSpacing:5,margin:"6px 0"}}>
+                {(()=>{const t=curStage?.words?.length||9;return score===t?"⭐⭐⭐":score>=Math.ceil(t*0.8)?"⭐⭐":score>=Math.ceil(t*0.6)?"⭐":"";})()}
+              </div>
+              <div className="res-time">⏱ {fmtTime(elapsed)}</div>
+              {mode===3 && udata.challenges[0]?.wpm != null && (
+                <div className="res-wpm">⌨️ {udata.challenges[0].wpm} WPM</div>
+              )}
+            </div>
+            {score === (curStage?.words?.length||9) && (
+              <div className="cl-announce">
+                ✅ モード{mode} クリア！
+                {modeCleared(curStage?.id,1) && modeCleared(curStage?.id,2) && modeCleared(curStage?.id,3) && (
+                  <div style={{marginTop:3,fontSize:15}}>🏆 ステージ{curStage?.id} 完全クリア！</div>
+                )}
+              </div>
+            )}
+            <div className="divider" />
+            <div style={{fontFamily:"'Dela Gothic One',sans-serif",fontSize:13,marginBottom:8}}>見直しリスト</div>
+            <div className="scroll" style={{marginBottom:12}}>
+              {ans.map((a,i) => (
+                <div key={i} className="rev-item">
+                  <span className="rev-en">{a.en}</span>
+                  <span className="rev-ja">{a.ja}</span>
+                  {a.ok
+                    ? <span className="rev-ok">✓</span>
+                    : <span className="rev-ng">✗ → <span style={{color:"var(--success)",fontFamily:"'BIZ UDGothic', monospace",fontSize:10}}>{a.correct}</span></span>
+                  }
+                </div>
+              ))}
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7,marginBottom:7}}>
+              <button className="btn btn-ghost" onClick={()=>startMode(mode)}>🔄 もう一度</button>
+              <button className="btn btn-ghost" onClick={()=>setScreen("menuSelect")}>📋 メニューへ</button>
+            </div>
+            <button className="btn btn-cyan" onClick={()=>setScreen("stages")}>🏠 ステージ選択</button>
+          </div>
+        )}
+
+        {/* ── HISTORY ───────────────────────────────────────────── */}
+        {screen === "history" && (
+          <div className="card anim">
+            <button className="back-btn" onClick={()=>setScreen("stages")}>← もどる</button>
+            <div className="logo" style={{fontSize:17,marginBottom:4}}>📊 学習記録</div>
+            <div className="sub">ID: {sid}</div>
+
+            <div className="stat-grid">
+              <div className="stat-box">
+                <div className="stat-val">{udata.challenges.length}</div>
+                <div className="stat-lbl">チャレンジ数</div>
+              </div>
+              <div className="stat-box">
+                <div className="stat-val" style={{color:"var(--success)"}}>{totalCleared}</div>
+                <div className="stat-lbl">クリア S数</div>
+              </div>
+              <div className="stat-box">
+                <div className="stat-val">
+                  {(() => {
+                    const t = udata.challenges.filter(c => c.wpm != null);
+                    return t.length > 0 ? Math.round(t.reduce((s,c)=>s+c.wpm,0)/t.length) : "--";
+                  })()}
+                </div>
+                <div className="stat-lbl">平均 WPM</div>
+              </div>
+            </div>
+
+            {/* stage map */}
+            <div style={{fontSize:12,color:"var(--muted)",marginBottom:7,fontWeight:700}}>ステージ達成状況</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:14}}>
+              {STAGES.map(s => (
+                <div key={s.id} style={{
+                  background:"var(--surf2)",borderRadius:8,padding:"7px 4px",textAlign:"center",
+                  border:`1px solid ${isClear(s.id)?"rgba(52,211,153,.4)":"var(--bord)"}`
+                }}>
+                  <div style={{fontFamily:"'BIZ UDGothic', monospace",fontSize:9,color:"var(--muted)"}}>S{s.id}</div>
+                  {isClear(s.id)
+                    ? <div style={{fontSize:14,marginTop:2}}>⭐</div>
+                    : <div style={{display:"flex",gap:2,justifyContent:"center",marginTop:4}}>
+                        {[1,2,3].map(m=>(
+                          <div key={m} style={{width:5,height:5,borderRadius:"50%",
+                            background:modeCleared(s.id,m)?"var(--success)":"var(--surf)",
+                            border:"1px solid rgba(255,255,255,.14)"}} />
+                        ))}
+                      </div>
+                  }
+                </div>
+              ))}
+            </div>
+
+            <div className="divider" />
+            <div style={{fontSize:12,color:"var(--muted)",marginBottom:8,fontWeight:700}}>最近のチャレンジ</div>
+            {udata.challenges.length === 0
+              ? <div className="no-data">まだ記録がありません。<br/>チャレンジしてみよう！</div>
+              : (
+                <div className="scroll">
+                  {udata.challenges.slice(0,30).map((r,i) => {
+                    const rc = r.score >= 8 ? "var(--success)" : r.score >= 5 ? "var(--warn)" : "var(--danger)";
+                    const mLabel = ["","英→日","日→英","タイピング"][r.mode] || "";
+                    const stg = STAGES.find(s=>s.id===r.stageId);
+                    return (
+                      <div key={i} className="hist-item" style={{borderLeftColor:stg?.col||"var(--cyan)"}}>
+                        <div className="hist-meta">{r.date} ｜ S{r.stageId} {r.stageTheme} [{mLabel}]</div>
+                        <div className="hist-row">
+                          <span className="hist-score" style={{color:rc}}>{r.score}/9</span>
+                          <span className="hist-time">⏱ {fmtTime(r.time)}</span>
+                          {r.wpm != null && <span className="hist-wpm">⌨️ {r.wpm}WPM</span>}
+                          <span style={{marginLeft:"auto",fontSize:13}}>
+                            {(()=>{const t=r.total||9;return r.score===t?"⭐⭐⭐":r.score>=Math.ceil(t*0.8)?"⭐⭐":r.score>=Math.ceil(t*0.6)?"⭐":""})()}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            }
+          </div>
+        )}
+
+      </div>
+    </>
+  );
+}
+
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(App));
+</script>
+</body>
+</html>
