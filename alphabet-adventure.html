@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ABC Adventure</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Hiragino Sans,sans-serif;background:#eef2ff}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:9999px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+/* ===== ICONS ===== */
+const Svg = ({size=20,color="currentColor",fill="none",stroke=color,sw=2,children,...p}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={stroke} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round" {...p}>{children}</svg>
+);
+const BookOpen = ({size=20,color="currentColor"}) => <Svg size={size} color={color}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></Svg>;
+const Keyboard = ({size=20,color="currentColor"}) => <Svg size={size} color={color}><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M7 16h10"/></Svg>;
+const Mic = ({size=20,color="currentColor"}) => <Svg size={size} color={color}><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></Svg>;
+const ChevronLeft = ({size=20,color="currentColor"}) => <Svg size={size} color={color}><polyline points="15 18 9 12 15 6"/></Svg>;
+const Play = ({size=20,color="currentColor",fill="currentColor"}) => <Svg size={size} color={color} fill={fill}><polygon points="5 3 19 12 5 21 5 3"/></Svg>;
+const RotateCcw = ({size=20,color="currentColor"}) => <Svg size={size} color={color}><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.51L1 10"/></Svg>;
+const CheckCircle2 = ({size=20,color="currentColor"}) => <Svg size={size} color={color}><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></Svg>;
+const Volume2 = ({size=20,color="currentColor"}) => <Svg size={size} color={color}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></Svg>;
+const Star = ({size=20,color="currentColor",fill="none"}) => <Svg size={size} color={color} fill={fill}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></Svg>;
+const Trophy = ({size=20,color="currentColor",fill="none"}) => <Svg size={size} color={color} fill={fill}><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></Svg>;
+const AlertCircle = ({size=20,color="currentColor"}) => <Svg size={size} color={color}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></Svg>;
+
+/* ===== DATA ===== */
+const ALPHABETS = [
+  {letter:'A',phonics:'「ア」と「エ」の間のような音。口を横に広げて。',words:[{word:'apple',translation:'りんご'},{word:'ant',translation:'あり'},{word:'alligator',translation:'わに'}]},
+  {letter:'B',phonics:'唇を閉じてから、勢いよく「ブッ」と出す。',words:[{word:'ball',translation:'ボール'},{word:'bear',translation:'くま'},{word:'banana',translation:'バナナ'}]},
+  {letter:'C',phonics:'喉の奥から「クッ」と息を出す。',words:[{word:'cat',translation:'ねこ'},{word:'car',translation:'くるま'},{word:'cup',translation:'コップ'}]},
+  {letter:'D',phonics:'上の歯の付け根に舌をつけて「ドゥ」とはじく。',words:[{word:'dog',translation:'いぬ'},{word:'duck',translation:'あひる'},{word:'desk',translation:'つくえ'}]},
+  {letter:'E',phonics:'日本語の「え」より少し口を横に引く。',words:[{word:'egg',translation:'たまご'},{word:'elephant',translation:'ぞう'},{word:'elbow',translation:'ひじ'}]},
+  {letter:'F',phonics:'上の歯を下唇に軽く当てて、隙間から「フッ」と息を出す。',words:[{word:'fish',translation:'さかな'},{word:'fan',translation:'うちわ'},{word:'frog',translation:'かえる'}]},
+  {letter:'G',phonics:'喉の奥で「グッ」と止めて出す。',words:[{word:'gorilla',translation:'ごりら'},{word:'girl',translation:'おんなのこ'},{word:'grape',translation:'ぶどう'}]},
+  {letter:'H',phonics:'口をぽかんと開けて、喉の奥から「ハッ」と息を出す。',words:[{word:'hat',translation:'ぼうし'},{word:'horse',translation:'うま'},{word:'hippo',translation:'かば'}]},
+  {letter:'I',phonics:'日本語の「い」よりもリラックスし、少し「え」に近い音を出す。',words:[{word:'ink',translation:'いんく'},{word:'igloo',translation:'かまくら'},{word:'iguana',translation:'いぐあな'}]},
+  {letter:'J',phonics:'口を突き出して「ヂュッ」と強く出す。',words:[{word:'jam',translation:'じゃむ'},{word:'jet',translation:'じぇっと'},{word:'juice',translation:'じゅうす'}]},
+  {letter:'K',phonics:'Cと同じで、喉の奥から「クッ」と息を出す。',words:[{word:'king',translation:'おうさま'},{word:'kite',translation:'たこ'},{word:'kangaroo',translation:'かんがるー'}]},
+  {letter:'L',phonics:'上の歯の付け根に舌先を押し当て「ルー」と音を出す。',words:[{word:'lion',translation:'らいおん'},{word:'lemon',translation:'れもん'},{word:'lamp',translation:'らんぷ'}]},
+  {letter:'M',phonics:'唇を閉じて、鼻から音を出してから「んーむっ」という。',words:[{word:'monkey',translation:'さる'},{word:'moon',translation:'つき'},{word:'mouse',translation:'ねずみ'}]},
+  {letter:'N',phonics:'舌を上の歯の付け根につけて、鼻から「んーぬっ」という。',words:[{word:'nose',translation:'はな'},{word:'notebook',translation:'のーと'},{word:'net',translation:'あみ'}]},
+  {letter:'O',phonics:'口を大きく丸く開けて「ア」に近い「オ」と言う。',words:[{word:'octopus',translation:'たこ'},{word:'orange',translation:'おれんじ'},{word:'ostrich',translation:'だちょう'}]},
+  {letter:'P',phonics:'唇を閉じて、息を「プッ」とはじき出す。',words:[{word:'panda',translation:'ぱんだ'},{word:'pig',translation:'ぶた'},{word:'pen',translation:'ぺん'}]},
+  {letter:'Q',phonics:'「クッ」と短く音を出して、唇を丸めて「ワ」と言う準備をする。',words:[{word:'queen',translation:'じょおう'},{word:'quiz',translation:'くいず'},{word:'question',translation:'しつもん'}]},
+  {letter:'R',phonics:'舌先をどこにもつけず、口を丸めて「ゥル」と喉の奥で鳴らす。',words:[{word:'rabbit',translation:'うさぎ'},{word:'rocket',translation:'ろけっと'},{word:'ring',translation:'ゆびわ'}]},
+  {letter:'S',phonics:'歯を閉じて、その隙間から「スッ」と息を強く押し出す。',words:[{word:'sun',translation:'たいよう'},{word:'snake',translation:'へび'},{word:'socks',translation:'くつした'}]},
+  {letter:'T',phonics:'上の歯の付け根から、息を「トゥッ」とはじき出す。',words:[{word:'tiger',translation:'とら'},{word:'tree',translation:'き'},{word:'train',translation:'でんしゃ'}]},
+  {letter:'U',phonics:'口を軽く開けて、喉の奥から「ア」に近い短い音を出す。',words:[{word:'umbrella',translation:'かさ'},{word:'up',translation:'うえ'},{word:'under',translation:'した'}]},
+  {letter:'V',phonics:'上の歯を下唇に軽く当てて、喉を震わせて「ヴー」と出す。',words:[{word:'van',translation:'ばん'},{word:'violin',translation:'ばいおりん'},{word:'vest',translation:'べすと'}]},
+  {letter:'W',phonics:'口をすぼめて「ウ」から「ワ」に素早く変える。',words:[{word:'watch',translation:'うでどけい'},{word:'whale',translation:'くじら'},{word:'window',translation:'まど'}]},
+  {letter:'X',phonics:'「ク」と「ス」を素早くつなげて出す。',words:[{word:'box',translation:'はこ'},{word:'fox',translation:'きつね'},{word:'six',translation:'ろく'}]},
+  {letter:'Y',phonics:'「イ」から「イェ」のように喉の奥を鳴らす。',words:[{word:'yo-yo',translation:'よーよー'},{word:'yacht',translation:'よっと'},{word:'yellow',translation:'きいろ'}]},
+  {letter:'Z',phonics:'歯を閉じて、隙間から「ズー」と喉を震わせる。',words:[{word:'zebra',translation:'しまうま'},{word:'zoo',translation:'どうぶつえん'},{word:'zero',translation:'ぜろ'}]},
+];
+
+const SENTENCES = [
+  {id:1,english:"Hello, my name is Tanaka.",japanese:"こんにちは、私の名前は田中です。"},
+  {id:2,english:"I am ten years old.",japanese:"私は10歳です。"},
+  {id:3,english:"I live in Tokyo.",japanese:"私は東京に住んでいます。"},
+  {id:4,english:"I like soccer.",japanese:"私はサッカーが好きです。"},
+  {id:5,english:"My favorite color is blue.",japanese:"私の好きな色は青です。"},
+  {id:6,english:"I want to be a teacher.",japanese:"私は先生になりたいです。"},
+  {id:7,english:"I have a cat.",japanese:"私は猫を飼っています。"},
+  {id:8,english:"I am good at math.",japanese:"私は数学が得意です。"},
+  {id:9,english:"Nice to meet you.",japanese:"はじめまして。"},
+  {id:10,english:"Thank you for listening.",japanese:"聞いてくれてありがとう。"},
+];
+
+const TYPING = {
+  Animals:[{word:'cat',t:'ねこ'},{word:'dog',t:'いぬ'},{word:'lion',t:'らいおん'},{word:'tiger',t:'とら'},{word:'bear',t:'くま'},{word:'rabbit',t:'うさぎ'},{word:'elephant',t:'ぞう'},{word:'monkey',t:'さる'},{word:'bird',t:'とり'},{word:'fish',t:'さかな'}],
+  Fruits:[{word:'apple',t:'りんご'},{word:'banana',t:'ばなな'},{word:'orange',t:'おれんじ'},{word:'grape',t:'ぶどう'},{word:'melon',t:'めろん'},{word:'peach',t:'もも'},{word:'lemon',t:'れもん'},{word:'kiwi',t:'きうい'},{word:'cherry',t:'さくらんぼ'},{word:'pear',t:'なし'}],
+  Colors:[{word:'red',t:'あか'},{word:'blue',t:'あお'},{word:'yellow',t:'きいろ'},{word:'green',t:'みどり'},{word:'white',t:'しろ'},{word:'black',t:'くろ'},{word:'pink',t:'ぴんく'},{word:'orange',t:'おれんじ'},{word:'purple',t:'むらさき'},{word:'brown',t:'ちゃいろ'}],
+  School:[{word:'pen',t:'ぺん'},{word:'book',t:'ほん'},{word:'desk',t:'つくえ'},{word:'chair',t:'いす'},{word:'school',t:'がっこう'},{word:'pencil',t:'えんぴつ'},{word:'bag',t:'かばん'},{word:'teacher',t:'せんせい'},{word:'friend',t:'ともだち'},{word:'class',t:'くらす'}],
+  Body:[{word:'head',t:'あたま'},{word:'eye',t:'め'},{word:'nose',t:'はな'},{word:'mouth',t:'くち'},{word:'ear',t:'みみ'},{word:'hand',t:'て'},{word:'leg',t:'あし'},{word:'arm',t:'うで'},{word:'face',t:'かお'},{word:'finger',t:'ゆび'}],
+  Food:[{word:'rice',t:'ごはん'},{word:'bread',t:'ぱん'},{word:'milk',t:'ぎゅうにゅう'},{word:'water',t:'みず'},{word:'egg',t:'たまご'},{word:'cake',t:'けーき'},{word:'soup',t:'すーぷ'},{word:'meat',t:'にく'},{word:'fish',t:'さかな'},{word:'pizza',t:'ぴざ'}],
+  Nature:[{word:'sun',t:'たいよう'},{word:'moon',t:'つき'},{word:'star',t:'ほし'},{word:'sky',t:'そら'},{word:'sea',t:'うみ'},{word:'tree',t:'き'},{word:'flower',t:'はな'},{word:'river',t:'かわ'},{word:'rain',t:'あめ'},{word:'snow',t:'ゆき'}],
+  Vehicles:[{word:'car',t:'くるま'},{word:'bus',t:'ばす'},{word:'train',t:'でんしゃ'},{word:'plane',t:'ひこうき'},{word:'bike',t:'じてんしゃ'},{word:'ship',t:'ふね'},{word:'truck',t:'とらっく'},{word:'taxi',t:'たくしー'},{word:'rocket',t:'ろけっと'},{word:'boat',t:'ぼーと'}],
+  Clothes:[{word:'shirt',t:'しゃつ'},{word:'pants',t:'ずぼん'},{word:'shoes',t:'くつ'},{word:'hat',t:'ぼうし'},{word:'socks',t:'くつした'},{word:'coat',t:'こーと'},{word:'dress',t:'どれす'},{word:'skirt',t:'すかーと'},{word:'cap',t:'きゃっぷ'},{word:'belt',t:'べると'}],
+  Home:[{word:'house',t:'いえ'},{word:'room',t:'へや'},{word:'door',t:'どあ'},{word:'window',t:'まど'},{word:'bed',t:'べっど'},{word:'bath',t:'おふろ'},{word:'kitchen',t:'だいどころ'},{word:'garden',t:'にわ'},{word:'tv',t:'てれび'},{word:'clock',t:'とけい'}],
+};
+
+/* ===== SPEECH ===== */
+function speak(text) {
+  if (!('speechSynthesis' in window)) return;
+  const t = text.length === 1 ? text.toLowerCase() : text;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(t);
+  u.lang = 'en-US'; u.rate = 0.85;
+  window.speechSynthesis.speak(u);
+}
+
+/* ===== ALPHABET VIEW ===== */
+function AlphabetView({ prog, onListen }) {
+  const [sel, setSel] = useState(null);
+  const isDone = a => a.words.every(w => (prog[a.letter]?.[w.word]||0) >= 3);
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',height:'100%',gap:'1.25rem'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:'0.5rem'}}>
+        <h3 style={{fontSize:'1.4rem',fontWeight:900,color:'#059669'}}>アルファベット がくしゅう</h3>
+        <span style={{background:'#ecfdf5',color:'#059669',fontWeight:700,padding:'0.4rem 1rem',borderRadius:'9999px',border:'2px solid #d1fae5',fontSize:'0.8rem'}}>単語を３回ずつ聞いてリピートしよう</span>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'repeat(13,1fr)',gap:'6px'}}>
+        {ALPHABETS.map(a => {
+          const done = isDone(a), active = sel?.letter===a.letter;
+          return (
+            <button key={a.letter} onClick={() => { setSel(a); speak(a.letter); }} style={{
+              aspectRatio:'1',borderRadius:'12px',display:'flex',alignItems:'center',justifyContent:'center',
+              fontSize:'1.1rem',fontWeight:900,border:`3px solid ${active?'#059669':'transparent'}`,
+              background:active?'#10b981':'#fff',color:active?'#fff':'#10b981',cursor:'pointer',
+              position:'relative',transition:'transform 0.1s',boxShadow:'0 1px 3px rgba(0,0,0,0.07)'
+            }} onMouseEnter={e=>e.currentTarget.style.transform='scale(1.12)'} onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
+              {a.letter}
+              {done && <span style={{position:'absolute',top:-5,right:-5,background:'#facc15',borderRadius:'9999px',border:'2px solid #fff',lineHeight:0,padding:'1px'}}><CheckCircle2 size={9} color="#fff"/></span>}
+            </button>
+          );
+        })}
+      </div>
+
+      <div style={{flex:1,background:'#f8fafc',borderRadius:'1.75rem',padding:'1.5rem',border:'3px solid #e2e8f0',overflow:'auto',minHeight:0}}>
+        {sel ? (
+          <div style={{display:'flex',gap:'2rem',flexWrap:'wrap'}}>
+            <div style={{flex:'0 0 auto',display:'flex',flexDirection:'column',alignItems:'center',minWidth:'200px'}}>
+              <div style={{display:'flex',alignItems:'flex-end',gap:'0.75rem',marginBottom:'0.75rem'}}>
+                <span style={{fontSize:'6rem',fontWeight:900,color:'#10b981',lineHeight:1}}>{sel.letter}</span>
+                <span style={{fontSize:'3.5rem',fontWeight:900,color:'#a7f3d0',lineHeight:1,paddingBottom:'0.25rem'}}>{sel.letter.toLowerCase()}</span>
+              </div>
+              <button onClick={()=>speak(sel.letter)} style={{display:'flex',alignItems:'center',gap:'6px',background:'#10b981',color:'#fff',padding:'0.5rem 1.25rem',borderRadius:'9999px',fontWeight:900,fontSize:'0.9rem',border:'none',cursor:'pointer',boxShadow:'0 4px 12px rgba(16,185,129,0.3)',marginBottom:'1rem'}}>
+                <Volume2 size={16}/> はつおん を きく
+              </button>
+              <div style={{background:'#fff',padding:'1rem',borderRadius:'1rem',border:'2px solid #e2e8f0',width:'100%'}}>
+                <p style={{color:'#059669',fontWeight:900,fontSize:'0.8rem',marginBottom:'4px',display:'flex',alignItems:'center',gap:'4px'}}><Star size={12} fill="#059669" color="#059669"/> フォニックスのポイント</p>
+                <p style={{color:'#475569',fontSize:'0.8rem',lineHeight:1.7}}>{sel.phonics}</p>
+              </div>
+            </div>
+            <div style={{flex:1,minWidth:'220px'}}>
+              <p style={{color:'#94a3b8',fontWeight:700,fontSize:'0.65rem',textTransform:'uppercase',letterSpacing:'0.1em',marginBottom:'0.5rem'}}>Practice Words</p>
+              {sel.words.map((w,i) => {
+                const cnt = prog[sel.letter]?.[w.word]||0, done = cnt>=3;
+                return (
+                  <div key={i} style={{background:done?'#f0fdf4':'#fff',padding:'0.9rem 1rem',borderRadius:'1rem',border:`2px solid ${done?'#86efac':'#f1f5f9'}`,display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'0.6rem'}}>
+                    <div>
+                      {done && <p style={{color:'#22c55e',fontWeight:900,fontSize:'0.6rem',display:'flex',alignItems:'center',gap:'2px',marginBottom:'2px'}}><CheckCircle2 size={9}/>Completed</p>}
+                      <p style={{fontSize:'1.1rem',fontWeight:900,color:done?'#15803d':'#1e293b'}}>{w.word}</p>
+                      <p style={{color:'#94a3b8',fontSize:'0.75rem'}}>{w.translation}</p>
+                    </div>
+                    <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+                      <div style={{display:'flex',gap:'3px'}}>{[1,2,3].map(n=><div key={n} style={{width:'8px',height:'8px',borderRadius:'9999px',background:cnt>=n?'#10b981':'#e2e8f0'}}/>)}</div>
+                      <button onClick={()=>{speak(w.word);onListen(sel.letter,w.word);}} style={{padding:'0.5rem',borderRadius:'0.6rem',border:'none',cursor:'pointer',background:done?'#10b981':'#f1f5f9',color:done?'#fff':'#94a3b8'}}>
+                        <Volume2 size={15}/>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div style={{height:'100%',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',opacity:0.4,minHeight:'180px'}}>
+            <div style={{background:'#fff',padding:'2rem',borderRadius:'9999px',boxShadow:'0 4px 16px rgba(0,0,0,0.07)',marginBottom:'0.75rem'}}><Play size={40} color="#10b981"/></div>
+            <p style={{fontSize:'1.4rem',fontWeight:900,color:'#94a3b8'}}>アルファベット を えらんでね！</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ===== TYPING SESSION ===== */
+function TypingSession({ category, onFinish }) {
+  const words = TYPING[category];
+  const [idx, setIdx] = useState(0);
+  const [input, setInput] = useState('');
+  const [t0, setT0] = useState(null);
+  const [done, setDone] = useState(false);
+  const [result, setResult] = useState({});
+  const [mistakes, setMistakes] = useState(new Set());
+  const [flash, setFlash] = useState(false);
+  const [blink, setBlink] = useState(true);
+  const ref = useRef(null);
+  const cur = words[idx].word.toLowerCase();
+
+  useEffect(() => { ref.current?.focus(); if (!done) speak(words[idx].word); }, [idx, done]);
+  useEffect(() => { const t = setInterval(()=>setBlink(b=>!b),500); return ()=>clearInterval(t); }, []);
+
+  const onInput = e => {
+    const val = e.target.value;
+    if (!t0) setT0(Date.now());
+    if (val.length > input.length) {
+      const typed = val[val.length-1], exp = cur[val.length-1];
+      if (typed === exp) {
+        setInput(val);
+        if (val === cur) {
+          if (idx === words.length-1) {
+            const dur = (Date.now()-t0)/1000;
+            const chars = words.reduce((a,w)=>a+w.word.length,0);
+            const wpm = Math.round((chars/5)/(dur/60));
+            setResult({wpm,time:dur.toFixed(1),mistakes:Array.from(mistakes)});
+            setDone(true); onFinish(wpm,dur,mistakes.size);
+          } else { setTimeout(()=>{setIdx(i=>i+1);setInput('');},100); }
+        }
+      } else { setMistakes(p=>new Set(p).add(exp)); setFlash(true); setTimeout(()=>setFlash(false),350); }
+    } else { setInput(val); }
+  };
+
+  const hint = (ch) => {
+    if (!ch) return null;
+    const c = ch.toLowerCase();
+    if ('1qaz'.includes(c)) return {f:'L-Pinky',l:'左小指'};
+    if ('2wsx'.includes(c)) return {f:'L-Ring',l:'左薬指'};
+    if ('3edc'.includes(c)) return {f:'L-Middle',l:'左中指'};
+    if ('4rfv5tgb'.includes(c)) return {f:'L-Index',l:'左人差指'};
+    if ('6yhn7ujm'.includes(c)) return {f:'R-Index',l:'右人差指'};
+    if ('8ik,'.includes(c)) return {f:'R-Middle',l:'右中指'};
+    if ('9ol.'.includes(c)) return {f:'R-Ring',l:'右薬指'};
+    if ('0p;/-='.includes(c)) return {f:'R-Pinky',l:'右小指'};
+    return null;
+  };
+
+  const nc = cur[input.length];
+  const h = hint(nc);
+  const rows = [['Q','W','E','R','T','Y','U','I','O','P'],['A','S','D','F','G','H','J','K','L'],['Z','X','C','V','B','N','M'],['SPACE']];
+  const fingers = ['L-Pinky','L-Ring','L-Middle','L-Index','R-Index','R-Middle','R-Ring','R-Pinky'];
+
+  if (done) return (
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'2rem',height:'100%'}}>
+      <div style={{background:'#facc15',padding:'1.75rem',borderRadius:'9999px',marginBottom:'1.25rem',boxShadow:'0 8px 24px rgba(250,204,21,0.4)'}}>
+        <Star size={52} color="#fff" fill="#fff"/>
+      </div>
+      <h2 style={{fontSize:'2.5rem',fontWeight:900,color:'#1e293b',marginBottom:'1.75rem'}}>Wonderful!</h2>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1rem',marginBottom:'1.75rem',width:'100%',maxWidth:'300px'}}>
+        <div style={{background:'#fff7ed',padding:'1.25rem',borderRadius:'1.25rem',textAlign:'center',border:'3px solid #fed7aa'}}>
+          <p style={{color:'#94a3b8',fontWeight:700,fontSize:'0.75rem',marginBottom:'4px'}}>タイピング速度</p>
+          <p style={{fontSize:'2.25rem',fontWeight:900,color:'#ea580c'}}>{result.wpm}<span style={{fontSize:'0.9rem',color:'#fb923c'}}> WPM</span></p>
+        </div>
+        <div style={{background:'#eff6ff',padding:'1.25rem',borderRadius:'1.25rem',textAlign:'center',border:'3px solid #bfdbfe'}}>
+          <p style={{color:'#94a3b8',fontWeight:700,fontSize:'0.75rem',marginBottom:'4px'}}>タイム</p>
+          <p style={{fontSize:'2.25rem',fontWeight:900,color:'#2563eb'}}>{result.time}<span style={{fontSize:'0.9rem',color:'#60a5fa'}}> s</span></p>
+        </div>
+      </div>
+      {result.mistakes?.length > 0 && (
+        <div style={{background:'#fef2f2',padding:'1rem',borderRadius:'1.25rem',width:'100%',maxWidth:'300px',border:'3px solid #fecaca',marginBottom:'1.75rem'}}>
+          <div style={{display:'flex',alignItems:'center',gap:'6px',color:'#ef4444',fontWeight:900,marginBottom:'0.5rem',fontSize:'0.85rem'}}><AlertCircle size={15}/>にがてな もじ</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:'6px'}}>
+            {result.mistakes.map((m,i)=><span key={i} style={{background:'#fff',padding:'0.3rem 0.75rem',borderRadius:'0.6rem',fontSize:'1.1rem',fontWeight:900,color:'#334155',textTransform:'uppercase'}}>{m}</span>)}
+          </div>
+        </div>
+      )}
+      <button onClick={()=>{setIdx(0);setInput('');setDone(false);setT0(null);setMistakes(new Set());}} style={{background:'#1e293b',color:'#fff',padding:'0.875rem 2rem',borderRadius:'1.75rem',fontWeight:900,fontSize:'1.1rem',border:'none',cursor:'pointer',boxShadow:'0 4px 16px rgba(30,41,59,0.2)'}}>
+        もういっかい チャレンジ！
+      </button>
+    </div>
+  );
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',height:'100%',position:'relative'}}>
+      <div style={{width:'100%',maxWidth:'700px',display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1rem'}}>
+        <div style={{display:'flex',alignItems:'center',gap:'0.6rem'}}>
+          <div style={{background:'#f97316',padding:'0.5rem',borderRadius:'0.6rem'}}><Keyboard size={16} color="#fff"/></div>
+          <span style={{fontSize:'1.1rem',fontWeight:900,color:'#1e293b'}}>{category}</span>
+        </div>
+        <div style={{display:'flex',gap:'0.6rem',alignItems:'center'}}>
+          <button onClick={()=>speak(cur)} style={{padding:'0.5rem',background:'#fff',borderRadius:'0.6rem',border:'2px solid #f1f5f9',color:'#f97316',cursor:'pointer'}}><Volume2 size={16}/></button>
+          <span style={{background:'#f8fafc',padding:'0.3rem 0.75rem',borderRadius:'0.6rem',fontWeight:900,color:'#94a3b8',border:'2px solid #fff',fontSize:'0.8rem'}}>{idx+1}/{words.length}</span>
+        </div>
+      </div>
+
+      <div style={{display:'flex',flexDirection:'column',alignItems:'center',marginBottom:'1rem'}}>
+        <p style={{fontSize:'1.25rem',color:'#94a3b8',fontWeight:700,marginBottom:'0.5rem'}}>{words[idx].t}</p>
+        <div style={{position:'relative',display:'flex',fontSize:'4.5rem',fontWeight:900,letterSpacing:'0.06em'}}>
+          {cur.split('').map((ch,i)=><span key={i} style={{color:flash&&i===input.length?'#ef4444':i<input.length?'#1e293b':'#e2e8f0',transition:'color 0.1s'}}>{ch}</span>)}
+          <div style={{position:'absolute',bottom:'4px',left:`${input.length*0.62}em`,width:'3px',height:'52px',background:'#3b82f6',borderRadius:'2px',opacity:blink?1:0,transition:'opacity 0.15s'}}/>
+        </div>
+      </div>
+
+      <div style={{width:'100%',maxWidth:'700px',background:'#f8fafc',padding:'1.25rem',borderRadius:'1.75rem',border:'3px solid #e2e8f0'}}>
+        <div style={{display:'flex',flexDirection:'column',gap:'5px',marginBottom:'1rem'}}>
+          {rows.map((row,ri)=>(
+            <div key={ri} style={{display:'flex',justifyContent:'center',gap:'4px'}}>
+              {row.map(k=>{
+                const isNext = k==='SPACE'?nc===' ':k.toLowerCase()===nc?.toLowerCase();
+                return <div key={k} style={{height:'36px',display:'flex',alignItems:'center',justifyContent:'center',borderRadius:'8px',fontWeight:900,fontSize:'0.75rem',border:'2px solid',width:k==='SPACE'?'190px':'34px',transition:'all 0.1s',background:isNext?'#3b82f6':'#fff',color:isNext?'#fff':'#cbd5e1',borderColor:isNext?'#2563eb':'#e2e8f0',transform:isNext?'scale(1.12)':'scale(1)',boxShadow:isNext?'0 4px 10px rgba(59,130,246,0.35)':'none'}}>
+                  {k==='SPACE'?'SPACE':k.toLowerCase()}
+                </div>;
+              })}
+            </div>
+          ))}
+        </div>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'0 0.75rem'}}>
+          <div style={{display:'flex',gap:'0.5rem',alignItems:'center'}}>
+            <div style={{display:'flex',gap:'2px',alignItems:'flex-end'}}>
+              {['L-Pinky','L-Ring','L-Middle','L-Index'].map(f=><div key={f} style={{width:'22px',height:'30px',borderRadius:'10px 10px 0 0',borderTop:'3px solid',borderLeft:'2px solid',borderRight:'2px solid',background:h?.f===f?'#dbeafe':'#fff',borderColor:h?.f===f?'#60a5fa':'#e2e8f0'}}/>)}
+              <div style={{width:'28px',height:'22px',borderRadius:'0 10px 0 0',borderTop:'3px solid',borderRight:'3px solid',borderLeft:'2px solid',background:'#fff',borderColor:'#e2e8f0'}}/>
+            </div>
+            <span style={{fontSize:'0.7rem',fontWeight:900,color:h?.f?.startsWith('L')?'#3b82f6':'#cbd5e1',opacity:h?.f?.startsWith('L')?1:0.3}}>左手</span>
+          </div>
+          <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'3px'}}>
+            <div style={{background:'#fff',padding:'0.35rem 0.875rem',borderRadius:'9999px',border:'2px solid #bfdbfe',color:'#3b82f6',fontWeight:900,fontSize:'0.8rem',display:'flex',gap:'6px',alignItems:'center'}}>
+              <span style={{fontSize:'0.6rem',textTransform:'uppercase'}}>つぎ:</span>
+              <span>{nc||'完了'}</span>
+            </div>
+            <p style={{fontSize:'0.65rem',fontWeight:900,color:'#93c5fd',minHeight:'12px'}}>{h?`使う指: ${h.l}`:''}</p>
+          </div>
+          <div style={{display:'flex',gap:'0.5rem',alignItems:'center'}}>
+            <span style={{fontSize:'0.7rem',fontWeight:900,color:h?.f?.startsWith('R')?'#3b82f6':'#cbd5e1',opacity:h?.f?.startsWith('R')?1:0.3}}>右手</span>
+            <div style={{display:'flex',gap:'2px',alignItems:'flex-end'}}>
+              <div style={{width:'28px',height:'22px',borderRadius:'10px 0 0 0',borderTop:'3px solid',borderLeft:'3px solid',borderRight:'2px solid',background:'#fff',borderColor:'#e2e8f0'}}/>
+              {['R-Index','R-Middle','R-Ring','R-Pinky'].map(f=><div key={f} style={{width:'22px',height:'30px',borderRadius:'10px 10px 0 0',borderTop:'3px solid',borderLeft:'2px solid',borderRight:'2px solid',background:h?.f===f?'#dbeafe':'#fff',borderColor:h?.f===f?'#60a5fa':'#e2e8f0'}}/>)}
+            </div>
+          </div>
+        </div>
+      </div>
+      <input ref={ref} style={{opacity:0,position:'absolute',top:0,left:0,width:'1px',height:'1px'}} autoFocus value={input} onChange={onInput} autoComplete="off" autoCorrect="off" spellCheck="false"/>
+    </div>
+  );
+}
+
+/* ===== PRONUNCIATION LAB ===== */
+function PronounLab({ prog, onListen }) {
+  const [sel, setSel] = useState(null);
+  const [rec, setRec] = useState(false);
+  const [audio, setAudio] = useState(null);
+  const mr = useRef(null); const ch = useRef([]);
+
+  const toggle = async () => {
+    if (rec) { mr.current?.stop(); setRec(false); }
+    else {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+        const types = ['audio/webm','audio/ogg','audio/mp4','audio/wav'];
+        const mime = types.find(t=>MediaRecorder.isTypeSupported(t));
+        mr.current = new MediaRecorder(stream, mime?{mimeType:mime}:{});
+        mr.current.ondataavailable = e=>ch.current.push(e.data);
+        mr.current.onstop = ()=>{ setAudio(new Blob(ch.current,{type:mime||'audio/webm'})); ch.current=[]; };
+        mr.current.start(); setRec(true);
+      } catch(e) { alert('マイクへのアクセスを許可してください'); }
+    }
+  };
+
+  return (
+    <div style={{height:'100%',display:'flex',flexDirection:'column'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.25rem',flexWrap:'wrap',gap:'0.5rem'}}>
+        <h2 style={{fontSize:'1.4rem',fontWeight:900,color:'#4f46e5'}}>ハロー・ラボ</h2>
+        <span style={{background:'#eef2ff',color:'#4f46e5',fontWeight:700,padding:'0.4rem 1rem',borderRadius:'9999px',border:'2px solid #e0e7ff',fontSize:'0.8rem'}}>自己紹介に使える表現を覚えよう</span>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1.25rem',flex:1,overflow:'hidden'}}>
+        <div style={{display:'flex',flexDirection:'column',gap:'0.6rem',overflowY:'auto',paddingRight:'4px'}}>
+          <p style={{color:'#94a3b8',fontWeight:700,fontSize:'0.6rem',textTransform:'uppercase',letterSpacing:'0.1em'}}>Select a Sentence</p>
+          {SENTENCES.map(s=>{
+            const cnt=prog[s.id]||0, done=cnt>=3, active=sel?.id===s.id;
+            return (
+              <button key={s.id} onClick={()=>setSel(s)} style={{padding:'0.875rem 1rem',borderRadius:'1.25rem',border:`3px solid ${active?'#4f46e5':'#f1f5f9'}`,background:active?'#4f46e5':'#fff',color:active?'#fff':'#334155',textAlign:'left',cursor:'pointer',position:'relative',boxShadow:active?'0 6px 20px rgba(79,70,229,0.2)':'0 1px 3px rgba(0,0,0,0.05)'}}>
+                {done&&<span style={{position:'absolute',top:-7,right:-7,background:'#facc15',borderRadius:'9999px',padding:'3px',border:'2px solid #fff'}}><CheckCircle2 size={11} color="#fff"/></span>}
+                <div style={{display:'flex',alignItems:'center',gap:'6px',marginBottom:'3px'}}>
+                  <span style={{fontSize:'0.6rem',fontWeight:900,padding:'2px 7px',borderRadius:'9999px',background:active?'rgba(255,255,255,0.2)':'#eef2ff',color:active?'#fff':'#6366f1'}}>#{s.id}</span>
+                  <div style={{display:'flex',gap:'2px'}}>{[1,2,3].map(i=><div key={i} style={{width:'6px',height:'6px',borderRadius:'9999px',background:cnt>=i?(active?'#fff':'#6366f1'):(active?'rgba(255,255,255,0.3)':'#e2e8f0')}}/>)}</div>
+                </div>
+                <p style={{fontSize:'0.95rem',fontWeight:900,marginBottom:'2px'}}>{s.english}</p>
+                <p style={{fontSize:'0.75rem',fontWeight:500,color:active?'rgba(255,255,255,0.7)':'#94a3b8'}}>{s.japanese}</p>
+              </button>
+            );
+          })}
+        </div>
+        <div style={{background:'#eef2ff',borderRadius:'2rem',padding:'2rem',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',border:'3px solid #e0e7ff'}}>
+          {sel ? (
+            <div style={{display:'flex',flexDirection:'column',alignItems:'center',width:'100%'}}>
+              <div style={{textAlign:'center',marginBottom:'2rem'}}>
+                <h3 style={{fontSize:'1.5rem',fontWeight:900,color:'#1e293b',marginBottom:'0.5rem'}}>{sel.english}</h3>
+                <p style={{fontSize:'0.875rem',color:'#94a3b8'}}>"{sel.japanese}"</p>
+              </div>
+              <div style={{display:'flex',gap:'1.75rem',marginBottom:'1.5rem'}}>
+                <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'6px'}}>
+                  <button onClick={()=>{speak(sel.english);onListen(sel.id);}} style={{width:'70px',height:'70px',background:'#fff',borderRadius:'9999px',display:'flex',alignItems:'center',justifyContent:'center',border:'2px solid #e0e7ff',cursor:'pointer',color:'#4f46e5',boxShadow:'0 4px 12px rgba(79,70,229,0.12)'}}><Volume2 size={28}/></button>
+                  <span style={{fontSize:'0.65rem',fontWeight:900,color:'#6366f1',textTransform:'uppercase'}}>Listen</span>
+                </div>
+                <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'6px'}}>
+                  <button onClick={toggle} style={{width:'70px',height:'70px',borderRadius:'9999px',display:'flex',alignItems:'center',justifyContent:'center',border:'none',cursor:'pointer',background:rec?'#ef4444':'#4f46e5',boxShadow:rec?'0 4px 12px rgba(239,68,68,0.4)':'0 4px 12px rgba(79,70,229,0.35)'}}>
+                    {rec?<div style={{width:'20px',height:'20px',background:'#fff',borderRadius:'4px'}}/>:<Mic size={28} color="#fff"/>}
+                  </button>
+                  <span style={{fontSize:'0.65rem',fontWeight:900,color:'#6366f1',textTransform:'uppercase'}}>{rec?'Stop':'Record'}</span>
+                </div>
+              </div>
+              {audio && <button onClick={()=>new Audio(URL.createObjectURL(audio)).play()} style={{background:'#fff',padding:'0.75rem 1.75rem',borderRadius:'1.5rem',border:'3px solid #e0e7ff',color:'#4f46e5',fontWeight:900,display:'flex',alignItems:'center',gap:'0.5rem',cursor:'pointer',boxShadow:'0 4px 12px rgba(79,70,229,0.1)',fontSize:'0.85rem'}}>
+                <Play size={15} fill="#4f46e5" color="#4f46e5"/> さっきのはつおんをきく
+              </button>}
+            </div>
+          ) : (
+            <div style={{textAlign:'center',opacity:0.4}}>
+              <Mic size={60} color="#818cf8" style={{display:'block',margin:'0 auto 0.75rem'}}/>
+              <p style={{fontSize:'1.1rem',fontWeight:900,color:'#6366f1'}}>ぶんしょう を えらんでね！</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===== TYPING SELECTION ===== */
+function TypingSelect({ stats, onSelect }) {
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:'1.25rem'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:'0.5rem'}}>
+        <h3 style={{fontSize:'1.4rem',fontWeight:900,color:'#ea580c'}}>カテゴリーをえらぼう</h3>
+        <span style={{background:'#fff7ed',color:'#ea580c',fontWeight:700,padding:'0.4rem 1rem',borderRadius:'9999px',border:'2px solid #fed7aa',fontSize:'0.75rem'}}>ノーミスでタイピングして、トロフィーを集めよう。</span>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(170px,1fr))',gap:'0.875rem'}}>
+        {Object.keys(TYPING).map(cat=>{
+          const isGold = stats[cat]?.minMistakes===0;
+          return (
+            <button key={cat} onClick={()=>onSelect(cat)} style={{padding:'1.25rem',borderRadius:'1.75rem',border:`3px solid ${isGold?'#fbbf24':'#f1f5f9'}`,background:isGold?'#fffbeb':'#fff',display:'flex',alignItems:'center',justifyContent:'space-between',height:'112px',cursor:'pointer',position:'relative',overflow:'hidden',boxShadow:isGold?'0 4px 12px rgba(251,191,36,0.2)':'0 2px 8px rgba(0,0,0,0.05)',textAlign:'left',transition:'transform 0.15s'}} onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-4px)';}} onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)';}}>
+              <div>
+                <h3 style={{fontSize:'1.1rem',fontWeight:900,color:'#1e293b',marginBottom:'0.3rem'}}>{cat}</h3>
+                {stats[cat]?.bestWpm>0
+                  ? <div style={{display:'flex',alignItems:'center',gap:'3px',color:'#f97316',fontWeight:700,fontSize:'0.75rem'}}><Star size={11} fill="#f97316" color="#f97316"/>WPM: {stats[cat].bestWpm}</div>
+                  : <div style={{color:'#cbd5e1',fontWeight:700,fontSize:'0.65rem',textTransform:'uppercase'}}>No score yet</div>}
+                {isGold&&<div style={{color:'#d97706',fontWeight:900,fontSize:'0.6rem',textTransform:'uppercase'}}>Gold!</div>}
+              </div>
+              <div style={{padding:'0.75rem',borderRadius:'1rem',background:isGold?'#fbbf24':'#fff7ed'}}>
+                <Trophy size={22} color={isGold?'#fff':'#f97316'} fill={isGold?'#fff':'none'}/>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ===== MAIN APP ===== */
+function App() {
+  const [view, setView] = useState('login');
+  const [num, setNum] = useState('');
+  const [err, setErr] = useState('');
+  const [tStats, setTStats] = useState({});
+  const [aProg, setAProg] = useState({});
+  const [sProg, setSProg] = useState({});
+  const [cat, setCat] = useState(null);
+
+  useEffect(()=>{
+    try {
+      const a=localStorage.getItem('aa_typing'); if(a) setTStats(JSON.parse(a));
+      const b=localStorage.getItem('aa_alpha'); if(b) setAProg(JSON.parse(b));
+      const c=localStorage.getItem('aa_sent'); if(c) setSProg(JSON.parse(c));
+    } catch(e){}
+  },[]);
+
+  const login = () => { if(num.length===4){setView('menu');setErr('');}else setErr('4ケタ の ばんごう を いれてね'); };
+  const back = () => { if(view==='typing_game') setView('typing_select'); else setView('menu'); };
+
+  const finishTyping = (wpm,time,mc) => {
+    if(!cat) return;
+    const cur=tStats[cat]||{bestWpm:0,bestTime:9999,minMistakes:999};
+    const next={...tStats,[cat]:{bestWpm:Math.max(cur.bestWpm,wpm),bestTime:Math.min(cur.bestTime,time),minMistakes:Math.min(cur.minMistakes??999,mc)}};
+    setTStats(next); localStorage.setItem('aa_typing',JSON.stringify(next));
+  };
+  const listenAlpha = (letter,word) => {
+    const lp=aProg[letter]||{};
+    const next={...aProg,[letter]:{...lp,[word]:(lp[word]||0)+1}};
+    setAProg(next); localStorage.setItem('aa_alpha',JSON.stringify(next));
+  };
+  const listenSent = id => {
+    const next={...sProg,[id]:(sProg[id]||0)+1};
+    setSProg(next); localStorage.setItem('aa_sent',JSON.stringify(next));
+  };
+
+  const cats = Object.keys(TYPING);
+  const allAlpha = ALPHABETS.every(a=>a.words.every(w=>(aProg[a.letter]?.[w.word]||0)>=3));
+  const allSent = [1,2,3,4,5,6].every(id=>(sProg[id]||0)>=3);
+  const allTyping = cats.every(c=>tStats[c]?.minMistakes===0);
+  const allDone = allAlpha && allSent && allTyping;
+
+  const menu = [
+    {id:'alpha',title:'アルファベット',Icon:BookOpen,bg:'#10b981',sh:'rgba(16,185,129,0.3)',desc:'よみかた と フォニックス',done:allAlpha},
+    {id:'typing_select',title:'タイピング',Icon:Keyboard,bg:'#f97316',sh:'rgba(249,115,22,0.3)',desc:'キーボード れんしゅう',done:allTyping},
+    {id:'pronounce',title:'はつおん',Icon:Mic,bg:'#4f46e5',sh:'rgba(79,70,229,0.3)',desc:'きれいな はつおん',done:allSent},
+  ];
+
+  const isSubView = view !== 'login' && view !== 'menu';
+
+  return (
+    <div style={{minHeight:'100vh',background:'#eef2ff',fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",Hiragino Sans,sans-serif',color:'#1e293b',position:'relative',overflowX:'hidden'}}>
+      {/* Blobs */}
+      <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:0,overflow:'hidden'}}>
+        <div style={{position:'absolute',top:'5%',left:'5%',width:'300px',height:'300px',background:'#bfdbfe',borderRadius:'9999px',filter:'blur(80px)',opacity:0.25}}/>
+        <div style={{position:'absolute',bottom:'10%',right:'8%',width:'340px',height:'340px',background:'#fde68a',borderRadius:'9999px',filter:'blur(80px)',opacity:0.2}}/>
+        <div style={{position:'absolute',top:'45%',left:'35%',width:'260px',height:'260px',background:'#c4b5fd',borderRadius:'9999px',filter:'blur(80px)',opacity:0.15}}/>
+      </div>
+
+      {/* LOGIN */}
+      {view==='login' && (
+        <div style={{position:'relative',zIndex:1,display:'flex',alignItems:'center',justifyContent:'center',minHeight:'100vh',padding:'1.5rem'}}>
+          <div style={{background:'#fff',padding:'2.5rem',borderRadius:'3rem',boxShadow:'0 24px 64px rgba(0,0,0,0.12)',width:'100%',maxWidth:'400px',border:'6px solid #fff'}}>
+            <div style={{display:'flex',flexDirection:'column',alignItems:'center',marginBottom:'2rem'}}>
+              <div style={{background:'#3b82f6',padding:'1.5rem',borderRadius:'2rem',boxShadow:'0 8px 24px rgba(59,130,246,0.35)',marginBottom:'1.5rem',transition:'transform 0.3s',cursor:'default'}} onMouseEnter={e=>e.currentTarget.style.transform='rotate(0deg)'} onMouseLeave={e=>e.currentTarget.style.transform='rotate(-3deg)'} style2={{transform:'rotate(-3deg)'}}>
+                <BookOpen size={44} color="#fff"/>
+              </div>
+              <h1 style={{fontSize:'2rem',fontWeight:900,color:'#2563eb',marginBottom:'0.4rem',textTransform:'uppercase',letterSpacing:'-0.02em'}}>ABC Adventure</h1>
+              <p style={{color:'#94a3b8',fontWeight:700,fontSize:'0.9rem'}}>せいとばんごうをいれてね</p>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
+              <div>
+                <input type="text" maxLength={4} placeholder="0000" value={num}
+                  onChange={e=>setNum(e.target.value.replace(/\D/g,''))}
+                  onKeyDown={e=>e.key==='Enter'&&login()}
+                  style={{width:'100%',textAlign:'center',fontSize:'2.75rem',letterSpacing:'0.5em',fontWeight:900,padding:'1rem',background:'#f8fafc',border:'3px solid #e2e8f0',borderRadius:'1.25rem',outline:'none',boxSizing:'border-box',fontFamily:'inherit',transition:'border-color 0.2s'}}
+                  onFocus={e=>e.target.style.borderColor='#3b82f6'} onBlur={e=>e.target.style.borderColor='#e2e8f0'}
+                />
+                {err && <p style={{color:'#ef4444',fontWeight:700,marginTop:'0.5rem',textAlign:'center',fontSize:'0.875rem'}}>{err}</p>}
+              </div>
+              <button onClick={login} style={{width:'100%',background:'#3b82f6',color:'#fff',fontSize:'1.375rem',fontWeight:900,padding:'1.125rem',borderRadius:'1.75rem',border:'none',cursor:'pointer',boxShadow:'0 8px 24px rgba(59,130,246,0.35)',display:'flex',alignItems:'center',justifyContent:'center',gap:'0.6rem',transition:'background 0.15s'}} onMouseEnter={e=>e.currentTarget.style.background='#2563eb'} onMouseLeave={e=>e.currentTarget.style.background='#3b82f6'}>
+                <Play size={26}/> スタート！
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MENU */}
+      {view==='menu' && (
+        <div style={{position:'relative',zIndex:1,display:'flex',flexDirection:'column',minHeight:'100vh',maxWidth:'920px',margin:'0 auto',padding:'2rem'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'2.5rem'}}>
+            <div style={{background:'rgba(255,255,255,0.85)',backdropFilter:'blur(8px)',padding:'0.875rem 1.5rem',borderRadius:'1.5rem',boxShadow:'0 2px 12px rgba(0,0,0,0.07)',border:'2px solid rgba(255,255,255,0.9)'}}>
+              <h2 style={{fontSize:'1.6rem',fontWeight:900,color:'#1e293b',letterSpacing:'-0.02em'}}>Alphabet Adventure</h2>
+              <p style={{color:'#3b82f6',fontWeight:700,fontSize:'0.9rem'}}>Hello, No.{num}!</p>
+            </div>
+            <button onClick={()=>setView('login')} style={{padding:'0.875rem',background:'#fff',borderRadius:'1.25rem',boxShadow:'0 4px 16px rgba(0,0,0,0.08)',border:'2px solid #f1f5f9',color:'#94a3b8',cursor:'pointer',transition:'all 0.15s'}} onMouseEnter={e=>{e.currentTarget.style.color='#ef4444';e.currentTarget.style.transform='scale(1.1)';}} onMouseLeave={e=>{e.currentTarget.style.color='#94a3b8';e.currentTarget.style.transform='scale(1)';}}>
+              <RotateCcw size={24}/>
+            </button>
+          </div>
+          {allDone && (
+            <div style={{marginBottom:'2rem',background:'#facc15',padding:'1.75rem',borderRadius:'2.5rem',textAlign:'center',boxShadow:'0 8px 24px rgba(250,204,21,0.4)',border:'6px solid #fff'}}>
+              <h2 style={{fontSize:'1.75rem',fontWeight:900,color:'#fff',marginBottom:'4px'}}>Great Job! 🎉</h2>
+              <p style={{fontSize:'1.1rem',fontWeight:900,color:'#713f12'}}>これであなたも アルファベットマスターだ！</p>
+            </div>
+          )}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'1.75rem'}}>
+            {menu.map(item=>(
+              <button key={item.id} onClick={()=>setView(item.id)} style={{background:'#fff',padding:'2.25rem',borderRadius:'2.5rem',boxShadow:'0 8px 32px rgba(0,0,0,0.08)',border:'4px solid #fff',display:'flex',flexDirection:'column',alignItems:'center',cursor:'pointer',position:'relative',transition:'all 0.25s cubic-bezier(0.34,1.56,0.64,1)'}} onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-10px) scale(1.02)';e.currentTarget.style.boxShadow='0 20px 48px rgba(0,0,0,0.14)';}} onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0) scale(1)';e.currentTarget.style.boxShadow='0 8px 32px rgba(0,0,0,0.08)';}}>
+                {item.done && <div style={{position:'absolute',top:'-12px',right:'-12px',background:'#facc15',padding:'9px',borderRadius:'9999px',boxShadow:'0 4px 12px rgba(250,204,21,0.4)',border:'4px solid #fff',zIndex:2}}><CheckCircle2 size={20} color="#fff"/></div>}
+                <div style={{background:item.bg,padding:'1.75rem',borderRadius:'2rem',marginBottom:'1.25rem',boxShadow:`0 8px 24px ${item.sh}`}}>
+                  <item.Icon size={48} color="#fff"/>
+                </div>
+                <h3 style={{fontSize:'1.35rem',fontWeight:900,marginBottom:'0.5rem'}}>{item.title}</h3>
+                <p style={{color:'#94a3b8',fontWeight:700,textAlign:'center',fontSize:'0.85rem'}}>{item.desc}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* SUB VIEWS */}
+      {isSubView && (
+        <div style={{position:'relative',zIndex:1,display:'flex',flexDirection:'column',minHeight:'100vh',maxWidth:'1080px',margin:'0 auto',padding:'1.75rem'}}>
+          <div style={{marginBottom:'1.25rem'}}>
+            <button onClick={back} style={{display:'flex',alignItems:'center',gap:'0.4rem',fontSize:'0.95rem',fontWeight:900,color:'#64748b',background:'none',border:'none',cursor:'pointer',transition:'color 0.15s'}} onMouseEnter={e=>e.currentTarget.style.color='#3b82f6'} onMouseLeave={e=>e.currentTarget.style.color='#64748b'}>
+              <div style={{background:'#fff',padding:'0.5rem',borderRadius:'0.875rem',boxShadow:'0 2px 8px rgba(0,0,0,0.07)',border:'2px solid #f1f5f9'}}><ChevronLeft size={18}/></div>
+              もどる
+            </button>
+          </div>
+          <div style={{flex:1,background:'#fff',borderRadius:'3rem',boxShadow:'0 12px 48px rgba(0,0,0,0.1)',border:'6px solid #fff',padding:'2rem',overflow:'auto',display:'flex',flexDirection:'column'}}>
+            {view==='alpha' && <AlphabetView prog={aProg} onListen={listenAlpha}/>}
+            {view==='typing_select' && <TypingSelect stats={tStats} onSelect={c=>{setCat(c);setView('typing_game');}}/>}
+            {view==='typing_game' && cat && <TypingSession category={cat} onFinish={finishTyping}/>}
+            {view==='pronounce' && <PronounLab prog={sProg} onListen={listenSent}/>}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
