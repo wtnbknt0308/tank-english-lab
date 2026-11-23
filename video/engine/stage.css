@@ -85,3 +85,6 @@ body { font-family: 'NotoJP', sans-serif; color: var(--ink); }
 .anchor-label { position: absolute; left: 50%; top: 146px; transform: translateX(-50%); white-space: nowrap; text-align: center;
   font-size: 32px; font-weight: 900; color: var(--role); line-height: 1.15; }
 .anchor-label small { display: block; font-size: 26px; font-weight: 700; }
+
+.section-no { width: 150px; height: 150px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 90px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center; }
