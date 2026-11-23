@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>英文法ビデオ</title>
+<link rel="stylesheet" href="engine/stage.css">
+</head>
+<body>
+<div id="stage">
+  <div id="scene"></div>
+  <div id="chapter-tag"><span class="code"></span><span class="name"></span></div>
+  <div id="subtitle"></div>
+  <div id="progress"></div>
+</div>
+<script type="module">
+import { buildTimeline, sceneAt } from './engine/timeline.js';
+
+const q = new URLSearchParams(location.search);
+const chapterId = q.get('chapter') || 'lv1';
+const version = q.get('version') || 'full';
+const chapter = await import(`./chapters/${chapterId}.js`);
+
+await Promise.all([400, 700, 900].map((w) => document.fonts.load(`${w} 60px NotoJP`, 'あ漢字Aa')));
+await document.fonts.ready;
+
+const tl = buildTimeline(chapter.scenes, version);
+const root = document.getElementById('scene');
+const sub = document.getElementById('subtitle');
+const prog = document.getElementById('progress');
+document.querySelector('#chapter-tag .code').textContent = chapter.meta.code;
+document.querySelector('#chapter-tag .name').textContent = chapter.meta.title;
+
+let current = null, state = null;
+const ctx = { version };
+
+function narrationOf(scene) {
+  const n = scene.narration || [];
+  return Array.isArray(n) ? n : (n[version] || []);
+}
+
+function seek(t) {
+  const { scene, local } = sceneAt(tl, t);
+  if (scene !== current) {
+    root.innerHTML = '';
+    current = scene;
+    state = scene.setup ? scene.setup(root, ctx) : null;
+    document.getElementById('chapter-tag').style.display = scene.hideTag ? 'none' : '';
+  }
+  if (scene.render) scene.render(state, local, ctx);
+  let text = '';
+  for (const line of narrationOf(scene)) if (local >= line.t) text = line.text;
+  if (sub.innerHTML !== text) sub.innerHTML = text;
+  prog.style.width = (100 * t / tl.duration) + '%';
+}
+
+window.__duration = tl.duration;
+window.__seek = seek;
+window.__scenes = tl.items.map((i) => ({ id: i.scene.id, start: i.start, end: i.end }));
+seek(Number(q.get('t') || 0));
+window.__ready = true;
+
+// ブラウザで直接開いたときは再生する（書き出し時は ?render=1）
+if (!q.has('render') && !q.has('t')) {
+  const t0 = performance.now();
+  const loop = () => { const t = (performance.now() - t0) / 1000; seek(Math.min(t, tl.duration)); if (t < tl.duration) requestAnimationFrame(loop); };
+  requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>
