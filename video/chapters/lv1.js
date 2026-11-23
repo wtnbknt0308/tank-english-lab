@@ -61,7 +61,7 @@ const demo = anchorStory({
   jpOrder: [0, 1, 2, 3, 4],
   enOrder: [0, 4, 3, 2, 1],
   sentence: `${col('s', 'I')} ${col('v', 'study')} ${col('o', 'English')} ${col('m', 'at school every day')}.`,
-  T: { split: 3, glow: 6.5, color: 14, anchors: 0.8, move: 22, step: 1.3, drop: 30, flip: 32.5, done: 36.5, end: 42 },
+  T: { split: 3, glow: 6.5, color: 14, anchors: 0.8, move: 22, step: 1.3, flip: 30, done: 34, end: 40 },
   narration: [
     { t: 0, text: '「私は毎日学校で英語を勉強します。」この文を見てみましょう。' },
     { t: 3, text: '日本語の文は、このように<em>「文節」</em>に分けられます。' },
@@ -70,9 +70,8 @@ const demo = anchorStory({
     { t: 14, text: '役割ごとに色を付けます。<em>青＝主語</em>、<em>赤＝述部</em>、<em>緑＝目的語</em>、<em>灰色＝修飾語</em>。' },
     { t: 18, text: '下の枠は英語の順番。<em>だれが → どうする → 何を → どこで → いつ</em>。' },
     { t: 22, text: '主語から順番に、枠に当てはめていきます。' },
-    { t: 30, text: '英語には助詞がありません。代わりに<em>「位置」</em>が役割を決めます。' },
-    { t: 32.5, text: '日本語を英語に変えると……' },
-    { t: 36.5, text: '<em>I study English at school every day.</em>　正しい英文になりました！' },
+    { t: 30, text: '英語に変えると……英語には助詞がありません。<em>「位置」</em>が役割を決めます。' },
+    { t: 34, text: '<em>I study English at school every day.</em>　正しい英文になりました！' },
   ],
 });
 
@@ -143,14 +142,13 @@ const example2 = anchorStory({
   jpOrder: [0, 1, 2, 3],
   enOrder: [0, 3, 2, 1],
   sentence: `${col('s', 'I')} ${col('v', 'listen to')} ${col('o', 'music')} ${col('m', 'every day')}.`,
-  T: { split: 0.8, glow: 2, color: 4, anchors: 0.5, move: 7.5, step: 1.1, drop: 12.5, flip: 14, done: 18, end: 24 },
+  T: { split: 0.8, glow: 2, color: 4, anchors: 0.5, move: 7.5, step: 1.1, flip: 12.5, done: 16.5, end: 22 },
   narration: [
     { t: 0, text: '「私は毎日音楽を聞きます。」' },
     { t: 4, text: '役割ごとに色分けして……' },
     { t: 7.5, text: '主語から順番に、下の枠へ。' },
-    { t: 12.5, text: '助詞を消して、英語に変えます。' },
-    { t: 14.5, text: '「聞きます」は <em>listen to</em>。2語でも、まとめて1つの<em>「述部」</em>です。' },
-    { t: 18, text: '<em>I listen to music every day.</em>' },
+    { t: 12.5, text: '英語に変えます。「聞きます」は <em>listen to</em>。2語でも、まとめて1つの<em>「述部」</em>です。' },
+    { t: 16.5, text: '<em>I listen to music every day.</em>' },
   ],
 });
 
@@ -166,7 +164,7 @@ function practice(no, { jp, chunks, enOrder, sentence }) {
       { t: T.think0, text: 'どのカードがどの枠に入るかな？　動画を止めて考えてもOK。' },
       { t: T.color, text: 'ヒント：カードに色がつきました。同じ色の枠を探そう！' },
       { t: T.answer, text: '答え合わせ。主語から順番に、枠に入れていきます。' },
-      { t: T.drop, text: '助詞を消して、英語に変えると……' },
+      { t: T.flip, text: '英語に変えると……' },
       { t: T.done, text: sentence.replace(/<[^>]+>/g, '') },
     ],
   });
@@ -206,49 +204,51 @@ const p3 = practice(3, {
   sentence: `${col('s', 'I')} ${col('v', 'talk')} ${col('m', 'with my mother every night')}.`,
 });
 
-// ---- 疑問文 ----
+// ---- 疑問文：一般動詞の後ろにかくれていた do が、先頭へスライドしてくる ----
 const question = transformScene({
   id: 'question',
   heading: '疑問文にするには？<small>肯定文 → 疑問文</small>',
   chunks: [
-    { en: 'Do', role: 'x' },
+    { en: 'do', en2: 'Do', role: 'x' },
     { en: 'You', en2: 'you', role: 's' },
     { en: 'study', role: 'v' },
     { en: 'English', role: 'o' },
     { en: 'at school', role: 'm' },
     { en: 'every day.', en2: 'every day?', role: 'm' },
   ],
-  baseOrder: [1, 2, 3, 4, 5], newOrder: [0, 1, 2, 3, 4, 5], insert: 0, changeAlt: [1, 5],
-  note: { text: '質問の合図' },
-  T: { show: 0, insert: 4, alt: 6, note: 7.5, end: 16 },
+  baseOrder: [1, 2, 3, 4, 5], newOrder: [0, 1, 2, 3, 4, 5], insert: 0, behind: 2, changeAlt: [0, 1, 5],
+  peekNote: 'かくれている do', note: '質問の合図',
+  T: { show: 0, peek: 3.5, insert: 8, alt: 10, note: 11, end: 19 },
   narration: [
     { t: 0, text: '「あなたは毎日学校で英語を勉強します。」これを疑問文にします。' },
-    { t: 4, text: '文の先頭に <em>Do</em> を置きます。' },
-    { t: 7.5, text: '<em>Do</em> は「これから質問しますよ」という合図。最後は「?」に変わります。' },
-    { t: 12, text: '<em>Do you study English at school every day?</em>　後ろの語順はそのまま！' },
+    { t: 3.5, text: '実は、一般動詞 <em>study</em> の後ろには <em>do</em> がかくれています。' },
+    { t: 8, text: '疑問文では、かくれていた <em>do</em> が文の先頭に出てきます。' },
+    { t: 11, text: '<em>Do</em> は「これから質問しますよ」の合図。最後は「?」に変わります。' },
+    { t: 15, text: '<em>Do you study English at school every day?</em>　後ろの語順はそのまま！' },
   ],
 });
 
-// ---- 否定文 ----
+// ---- 否定文：かくれていた do が動詞の前に出て、not とくっつく ----
 const negative = transformScene({
   id: 'negative',
   heading: '否定文にするには？<small>肯定文 → 否定文</small>',
   chunks: [
     { en: 'I', role: 's' },
-    { en: "don't", role: 'x' },
+    { en: 'do', en2: "don't", role: 'x' },
     { en: 'study', role: 'v' },
     { en: 'English', role: 'o' },
     { en: 'at school', role: 'm' },
     { en: 'every day.', role: 'm' },
   ],
-  baseOrder: [0, 2, 3, 4, 5], newOrder: [0, 1, 2, 3, 4, 5], insert: 1,
-  note: { text: 'do not の短い形' },
-  T: { show: 0, insert: 4, alt: 6, note: 7.5, end: 16 },
+  baseOrder: [0, 2, 3, 4, 5], newOrder: [0, 1, 2, 3, 4, 5], insert: 1, behind: 2, changeAlt: [1],
+  peekNote: 'かくれている do', note: 'do + not = don\'t',
+  T: { show: 0, peek: 3.5, insert: 7, alt: 9.5, note: 9.5, end: 18 },
   narration: [
-    { t: 0, text: '今度は否定文。「私は毎日学校で英語を勉強しません。」' },
-    { t: 4, text: '主語と述部のあいだに <em>don\'t</em> を入れます。' },
-    { t: 7.5, text: '<em>don\'t</em> は do not の短い形。「〜しない」の合図です。' },
-    { t: 12, text: '<em>I don\'t study English at school every day.</em>　これも語順はそのまま！' },
+    { t: 0, text: '今度は否定文。「私は毎日学校で英語を勉強します。」' },
+    { t: 3.5, text: 'ここでも、<em>study</em> の後ろに <em>do</em> がかくれています。' },
+    { t: 7, text: '否定文では、<em>do</em> が study の前に出てきて……' },
+    { t: 9.5, text: '<em>not</em> とくっついて <em>don\'t</em>（do not）になります。「〜しない」の合図です。' },
+    { t: 14, text: '<em>I don\'t study English at school every day.</em>　これも語順はそのまま！' },
   ],
 });
 
@@ -257,34 +257,34 @@ const p4 = transformScene({
   id: 'practice4', versions: ['full'], practice: '練習 4',
   heading: '疑問文にしよう<small>「あなたは毎日ピアノをひきます。」</small>',
   chunks: [
-    { en: 'Do', role: 'x' }, { en: 'You', en2: 'you', role: 's' }, { en: 'play', role: 'v' },
+    { en: 'do', en2: 'Do', role: 'x' }, { en: 'You', en2: 'you', role: 's' }, { en: 'play', role: 'v' },
     { en: 'the piano', role: 'o' }, { en: 'every day.', en2: 'every day?', role: 'm' },
   ],
-  baseOrder: [1, 2, 3, 4], newOrder: [0, 1, 2, 3, 4], insert: 0, changeAlt: [1, 4],
-  note: { text: '質問の合図' },
-  T: { show: 0, insert: 4, alt: 6, note: 7, end: 12 },
+  baseOrder: [1, 2, 3, 4], newOrder: [0, 1, 2, 3, 4], insert: 0, behind: 2, changeAlt: [0, 1, 4],
+  peekNote: 'かくれている do', note: '質問の合図',
+  T: { show: 0, peek: 1, insert: 3, alt: 5, note: 6, end: 11 },
   narration: [
     { t: 0, text: '練習4　この文を疑問文にしよう。' },
-    { t: 2.5, text: '動画を止めて考えてもOK！' },
-    { t: 12, text: '答え：先頭に <em>Do</em>、最後は「?」。' },
-    { t: 15, text: '<em>Do you play the piano every day?</em>' },
+    { t: 1, text: '<em>play</em> の後ろにかくれている <em>do</em> は、どこへ出てくるかな？　動画を止めて考えてもOK！' },
+    { t: 11, text: '答え：<em>do</em> が先頭に出て <em>Do</em>、最後は「?」。' },
+    { t: 14, text: '<em>Do you play the piano every day?</em>' },
   ],
 });
 const p5 = transformScene({
   id: 'practice5', versions: ['full'], practice: '練習 5',
   heading: '否定文にしよう<small>「私たちは夕食の後にテレビを見ます。」</small>',
   chunks: [
-    { en: 'We', role: 's' }, { en: "don't", role: 'x' }, { en: 'watch', role: 'v' },
+    { en: 'We', role: 's' }, { en: 'do', en2: "don't", role: 'x' }, { en: 'watch', role: 'v' },
     { en: 'TV', role: 'o' }, { en: 'after dinner.', role: 'm' },
   ],
-  baseOrder: [0, 2, 3, 4], newOrder: [0, 1, 2, 3, 4], insert: 1,
-  note: { text: 'do not の短い形' },
-  T: { show: 0, insert: 4, alt: 6, note: 7, end: 12 },
+  baseOrder: [0, 2, 3, 4], newOrder: [0, 1, 2, 3, 4], insert: 1, behind: 2, changeAlt: [1],
+  peekNote: 'かくれている do', note: 'do + not = don\'t',
+  T: { show: 0, peek: 1, insert: 3, alt: 5, note: 5, end: 11 },
   narration: [
     { t: 0, text: '練習5　この文を否定文にしよう。' },
-    { t: 2.5, text: '動画を止めて考えてもOK！' },
-    { t: 12, text: '答え：主語と述部のあいだに <em>don\'t</em>。' },
-    { t: 15, text: '<em>We don\'t watch TV after dinner.</em>' },
+    { t: 1, text: '<em>watch</em> の後ろにかくれている <em>do</em> は、どこへ出てくるかな？　動画を止めて考えてもOK！' },
+    { t: 11, text: '答え：<em>do</em> が主語と述部のあいだに出て、<em>not</em> とくっつく。' },
+    { t: 14, text: '<em>We don\'t watch TV after dinner.</em>' },
   ],
 });
 
@@ -300,7 +300,7 @@ const summary = {
     const items = [
       `日本語は<b>助詞</b>で、英語は<b>位置</b>で役割が決まる`,
       `英語の順番：${col('s', '主語')} → ${col('v', '述部')} → ${col('o', '目的語')} → ${col('m', '修飾語（場所→時）')}`,
-      `疑問文は <b style="color:var(--x)">Do</b> を先頭に、否定文は <b style="color:var(--x)">don't</b> を述部の前に`,
+      `かくれていた <b style="color:var(--x)">do</b> が前に出ると、疑問文・否定文になる`,
     ].map((html, i) => {
       const el = h('div', 'box');
       el.style.left = '210px'; el.style.width = '1500px'; el.style.top = 290 + i * 170 + 'px';
