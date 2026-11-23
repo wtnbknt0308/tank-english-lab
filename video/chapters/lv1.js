@@ -1,6 +1,6 @@
 // 文法 Lv1　日本語と英語の違い：なぜあなたの英語は伝わらないのか
 import { h, ChunkRow, seg, ease, easeOutBack, fadeIn, ROLE } from '../engine/parts.js';
-import { titleScene, anchorStory, practiceTimes, transformScene } from '../engine/scenes.js';
+import { titleScene, anchorStory, practiceTimes } from '../engine/scenes.js';
 
 export const meta = { code: 'Lv1', title: '日本語と英語の違い　なぜあなたの英語は伝わらないのか' };
 
@@ -204,106 +204,21 @@ const p3 = practice(3, {
   sentence: `${col('s', 'I')} ${col('v', 'talk')} ${col('m', 'with my mother every night')}.`,
 });
 
-// ---- 疑問文：一般動詞の後ろにかくれていた do が、先頭へスライドしてくる ----
-const question = transformScene({
-  id: 'question',
-  heading: '疑問文にするには？<small>肯定文 → 疑問文</small>',
-  chunks: [
-    { en: 'do', en2: 'Do', role: 'x' },
-    { en: 'You', en2: 'you', role: 's' },
-    { en: 'study', role: 'v' },
-    { en: 'English', role: 'o' },
-    { en: 'at school', role: 'm' },
-    { en: 'every day.', en2: 'every day?', role: 'm' },
-  ],
-  baseOrder: [1, 2, 3, 4, 5], newOrder: [0, 1, 2, 3, 4, 5], insert: 0, behind: 2, changeAlt: [0, 1, 5],
-  peekNote: 'かくれている do', note: '質問の合図',
-  T: { show: 0, peek: 3.5, insert: 8, alt: 10, note: 11, end: 19 },
-  narration: [
-    { t: 0, text: '「あなたは毎日学校で英語を勉強します。」これを疑問文にします。' },
-    { t: 3.5, text: '実は、一般動詞 <em>study</em> の後ろには <em>do</em> がかくれています。' },
-    { t: 8, text: '疑問文では、かくれていた <em>do</em> が文の先頭に出てきます。' },
-    { t: 11, text: '<em>Do</em> は「これから質問しますよ」の合図。最後は「?」に変わります。' },
-    { t: 15, text: '<em>Do you study English at school every day?</em>　後ろの語順はそのまま！' },
-  ],
-});
-
-// ---- 否定文：かくれていた do が動詞の前に出て、not とくっつく ----
-const negative = transformScene({
-  id: 'negative',
-  heading: '否定文にするには？<small>肯定文 → 否定文</small>',
-  chunks: [
-    { en: 'I', role: 's' },
-    { en: 'do', en2: "don't", role: 'x' },
-    { en: 'study', role: 'v' },
-    { en: 'English', role: 'o' },
-    { en: 'at school', role: 'm' },
-    { en: 'every day.', role: 'm' },
-  ],
-  baseOrder: [0, 2, 3, 4, 5], newOrder: [0, 1, 2, 3, 4, 5], insert: 1, behind: 2, changeAlt: [1],
-  peekNote: 'かくれている do', note: 'do + not = don\'t',
-  T: { show: 0, peek: 3.5, insert: 7, alt: 9.5, note: 9.5, end: 18 },
-  narration: [
-    { t: 0, text: '今度は否定文。「私は毎日学校で英語を勉強します。」' },
-    { t: 3.5, text: 'ここでも、<em>study</em> の後ろに <em>do</em> がかくれています。' },
-    { t: 7, text: '否定文では、<em>do</em> が study の前に出てきて……' },
-    { t: 9.5, text: '<em>not</em> とくっついて <em>don\'t</em>（do not）になります。「〜しない」の合図です。' },
-    { t: 14, text: '<em>I don\'t study English at school every day.</em>　これも語順はそのまま！' },
-  ],
-});
-
-// ---- 書きかえ練習（詳しい版のみ） ----
-const p4 = transformScene({
-  id: 'practice4', versions: ['full'], practice: '練習 4',
-  heading: '疑問文にしよう<small>「あなたは毎日ピアノをひきます。」</small>',
-  chunks: [
-    { en: 'do', en2: 'Do', role: 'x' }, { en: 'You', en2: 'you', role: 's' }, { en: 'play', role: 'v' },
-    { en: 'the piano', role: 'o' }, { en: 'every day.', en2: 'every day?', role: 'm' },
-  ],
-  baseOrder: [1, 2, 3, 4], newOrder: [0, 1, 2, 3, 4], insert: 0, behind: 2, changeAlt: [0, 1, 4],
-  peekNote: 'かくれている do', note: '質問の合図',
-  T: { show: 0, peek: 1, insert: 3, alt: 5, note: 6, end: 11 },
-  narration: [
-    { t: 0, text: '練習4　この文を疑問文にしよう。' },
-    { t: 1, text: '<em>play</em> の後ろにかくれている <em>do</em> は、どこへ出てくるかな？　動画を止めて考えてもOK！' },
-    { t: 11, text: '答え：<em>do</em> が先頭に出て <em>Do</em>、最後は「?」。' },
-    { t: 14, text: '<em>Do you play the piano every day?</em>' },
-  ],
-});
-const p5 = transformScene({
-  id: 'practice5', versions: ['full'], practice: '練習 5',
-  heading: '否定文にしよう<small>「私たちは夕食の後にテレビを見ます。」</small>',
-  chunks: [
-    { en: 'We', role: 's' }, { en: 'do', en2: "don't", role: 'x' }, { en: 'watch', role: 'v' },
-    { en: 'TV', role: 'o' }, { en: 'after dinner.', role: 'm' },
-  ],
-  baseOrder: [0, 2, 3, 4], newOrder: [0, 1, 2, 3, 4], insert: 1, behind: 2, changeAlt: [1],
-  peekNote: 'かくれている do', note: 'do + not = don\'t',
-  T: { show: 0, peek: 1, insert: 3, alt: 5, note: 5, end: 11 },
-  narration: [
-    { t: 0, text: '練習5　この文を否定文にしよう。' },
-    { t: 1, text: '<em>watch</em> の後ろにかくれている <em>do</em> は、どこへ出てくるかな？　動画を止めて考えてもOK！' },
-    { t: 11, text: '答え：<em>do</em> が主語と述部のあいだに出て、<em>not</em> とくっつく。' },
-    { t: 14, text: '<em>We don\'t watch TV after dinner.</em>' },
-  ],
-});
-
 // ---- まとめ ----
 const summary = {
   id: 'summary', versions: BOTH, duration: { full: 15, digest: 11 },
   narration: [
     { t: 0, text: 'まとめ。英語は<em>「位置」</em>で役割が決まります。' },
-    { t: 4, text: '主語 → 述部 → 目的語 → 修飾語。この順番を守れば、あなたの英語は伝わります！' },
+    { t: 4, text: 'この順番を守れば、あなたの英語は伝わります！' },
   ],
   setup(root) {
     const head = h('div', 'heading'); head.textContent = 'まとめ'; root.appendChild(head);
     const items = [
       `日本語は<b>助詞</b>で、英語は<b>位置</b>で役割が決まる`,
       `英語の順番：${col('s', '主語')} → ${col('v', '述部')} → ${col('o', '目的語')} → ${col('m', '修飾語（場所→時）')}`,
-      `かくれていた <b style="color:var(--x)">do</b> が前に出ると、疑問文・否定文になる`,
     ].map((html, i) => {
       const el = h('div', 'box');
-      el.style.left = '210px'; el.style.width = '1500px'; el.style.top = 290 + i * 170 + 'px';
+      el.style.left = '210px'; el.style.width = '1500px'; el.style.top = 340 + i * 190 + 'px';
       el.style.padding = '30px 50px'; el.style.fontSize = '48px'; el.style.fontWeight = '700';
       el.innerHTML = `<span style="color:var(--accent);font-weight:900;margin-right:24px">${i + 1}</span>${html}`;
       root.appendChild(el);
@@ -323,5 +238,5 @@ export const scenes = [
     kicker: '文法 Lv1', main: '日本語と英語の違い', sub: 'なぜあなたの英語は伝わらないのか',
     narration: [{ t: 1, text: '文法レベル1。なぜあなたの英語は伝わらないのか。その秘密は「語順」にあります。' }],
   }),
-  hook, demo, rule, example2, p1, p2, p3, question, negative, p4, p5, summary,
+  hook, demo, rule, example2, p1, p2, p3, summary,
 ];
