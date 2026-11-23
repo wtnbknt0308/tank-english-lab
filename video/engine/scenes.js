@@ -77,8 +77,9 @@ export function reorderStory({ id, versions = BOTH, chunks, jpOrder, enOrder, se
         const pFlip = ease(seg(t, T.flip + rank * 0.35, T.flip + rank * 0.35 + 0.8));
         const l = mixLayouts(row, { xs: bc.map((v) => v.x), ws: bc.map((v) => v.w) }, D, pFlip)[i];
         // 並べ替えのとき、カードを持ち上げて動かす（動く距離が大きいほど高く）
-        const moved = Math.abs((B.xs[i] ?? 0) - (A.xs[i] ?? 0));
-        const lift = Math.sin(Math.PI * pReorder) * Math.min(160, 40 + moved * 0.25) * (rank % 2 ? -1 : 1);
+        // 右へ動くカードは上を、左へ動くカードは下を通る（すれ違いで重ならない）
+        const dx = (B.xs[i] ?? 0) - (A.xs[i] ?? 0);
+        const lift = Math.sin(Math.PI * pReorder) * (Math.abs(dx) < 5 ? 0 : Math.min(170, 70 + Math.abs(dx) * 0.2)) * Math.sign(dx);
         const hasP = !!c.p;
         const glow = hasP ? Math.min(seg(t, T.glow + 0.3 * jpOrder.indexOf(i), T.glow + 0.3 * jpOrder.indexOf(i) + 0.4), 1 - seg(t, T.color + 2, T.color + 3)) : 0;
         row.set(i, {
@@ -135,10 +136,10 @@ export function practiceReorder({ id, versions = ['full'], no, jp, chunks, shuff
       const L = mixLayouts(row, A, B, p);
       chunks.forEach((c, i) => {
         const appear = easeOutBack(seg(t, 0.8 + i * 0.15, 1.3 + i * 0.15));
-        const moved = Math.abs(B.xs[i] - A.xs[i]);
+        const dx = B.xs[i] - A.xs[i];
         row.set(i, {
           x: L[i].x, w: L[i].w, lang: 1, opacity: seg(t, 0.8 + i * 0.15, 1.1 + i * 0.15), scale: appear,
-          lift: Math.sin(Math.PI * p) * Math.min(150, 30 + moved * 0.2) * (i % 2 ? -1 : 1),
+          lift: Math.sin(Math.PI * p) * (Math.abs(dx) < 5 ? 0 : Math.min(150, 60 + Math.abs(dx) * 0.2)) * Math.sign(dx),
           colored: ease(seg(t, T1 + 1.6, T1 + 2.4)), label: ease(seg(t, T1 + 1.6, T1 + 2.4)),
         });
       });
