@@ -7,17 +7,17 @@ export const meta = { code: 'Lv2', title: '日本語と英語の違い　なぜ�
 const col = (role, text) => `<span style="color:${ROLE[role].color}">${text}</span>`;
 const BOTH = ['full', 'digest'];
 
-// ---- つかみ：疑問・否定は、日本語は「最後」、英語は「最初」でわかる ----
+// ---- つかみ：日本語は文末を変えるだけ、英語は言葉が「入れ替わる」 ----
 const hook = {
   id: 'hook', versions: BOTH, duration: 16,
   narration: [
-    { t: 0, text: '日本語では、疑問文か否定文かは、文の<em>最後</em>でわかります。' },
-    { t: 3.5, text: '「〜か」「〜ません」。最後まで聞かないと、わかりません。' },
-    { t: 7, text: '英語はちがいます。疑問・否定の合図は、文の<em>前の方</em>に出てきます。' },
-    { t: 11, text: '日本語のつもりで最後を待っていると、英語がわからなくなるのです。' },
+    { t: 0, text: '日本語の疑問文・否定文は、文の<em>最後</em>を「〜か」「〜ません」に変えるだけ。' },
+    { t: 3.5, text: '言葉の順番は、どこも変わりません。' },
+    { t: 7, text: '英語はちがいます。<em>do</em> が前に出てきて、言葉が<em>入れ替わります</em>。' },
+    { t: 11, text: '英語がわからなくなる原因は、<em>語順</em>（Lv1）と、この<em>英語式の入れ替え</em>です。' },
   ],
   setup(root) {
-    const head = h('div', 'heading'); head.innerHTML = '「疑問」「否定」は、どこでわかる？'; root.appendChild(head);
+    const head = h('div', 'heading'); head.innerHTML = '疑問文・否定文の作り方、日本語と英語でどうちがう？'; root.appendChild(head);
     const line = (top, html, size = 60) => {
       const e = h('div', 'sentence'); e.style.top = top + 'px'; e.style.fontSize = size + 'px'; e.innerHTML = html;
       root.appendChild(e); return e;
@@ -31,8 +31,8 @@ const hook = {
       const e = h('div', 'badge', text); e.style.left = '1440px'; e.style.top = top + 'px'; e.style.background = bg;
       root.appendChild(e); return e;
     };
-    const t1 = tag(330, '最後でわかる', 'var(--sub)');
-    const t2 = tag(620, '最初でわかる', 'var(--x)');
+    const t1 = tag(330, '最後を変えるだけ', 'var(--sub)');
+    const t2 = tag(620, '言葉が入れ替わる', 'var(--x)');
     return { head, jp1, jp2, en1, en2, t1, t2, jpHl: [...jp1.querySelectorAll('.hl'), ...jp2.querySelectorAll('.hl')], enHl: [...en1.querySelectorAll('.hl'), ...en2.querySelectorAll('.hl')] };
   },
   render(st, t) {
@@ -134,13 +134,13 @@ const p5 = transformScene({
 const summary = {
   id: 'summary', versions: BOTH, duration: { full: 14, digest: 10 },
   narration: [
-    { t: 0, text: 'まとめ。英語の疑問・否定は、<em>文の前の方</em>でわかります。' },
-    { t: 4, text: 'かくれていた do が前に出るだけ。後ろの語順はそのまま、と覚えておこう！' },
+    { t: 0, text: 'まとめ。英語がわからなくなる原因は、<em>語順</em>と<em>英語式の入れ替え</em>。' },
+    { t: 4, text: 'do が前に出て入れ替わる。このルールを知れば、もう迷わない！' },
   ],
   setup(root) {
     const head = h('div', 'heading'); head.textContent = 'まとめ'; root.appendChild(head);
     const items = [
-      `日本語は<b>最後</b>で、英語は<b>最初</b>で、疑問・否定がわかる`,
+      `わからなくなる原因は、<b>語順</b>（Lv1）と<b>英語式の入れ替え</b>`,
       `一般動詞の後ろには <b style="color:var(--x)">do</b> がかくれている`,
       `疑問文は <b style="color:var(--x)">Do</b> が先頭に、否定文は <b style="color:var(--x)">don't</b> が述部の前に`,
     ].map((html, i) => {
@@ -163,7 +163,7 @@ const summary = {
 export const scenes = [
   titleScene({
     kicker: '文法 Lv2', main: '日本語と英語の違い', sub: 'なぜあなたは英語がわからなくなるのか',
-    narration: [{ t: 1, text: '文法レベル2。なぜあなたは英語がわからなくなるのか。カギは「合図」の位置です。' }],
+    narration: [{ t: 1, text: 'なぜ英語がわからなくなるのか。カギは英語式の「入れ替え」です。' }],
   }),
   hook, question, negative, p4, p5, summary,
 ];
