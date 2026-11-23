@@ -1,6 +1,6 @@
 // 文法 Lv1　日本語と英語の違い：なぜあなたの英語は伝わらないのか
 import { h, ChunkRow, seg, ease, easeOutBack, fadeIn, ROLE } from '../engine/parts.js';
-import { titleScene, reorderStory, practiceReorder, transformScene } from '../engine/scenes.js';
+import { titleScene, anchorStory, practiceTimes, transformScene } from '../engine/scenes.js';
 
 export const meta = { code: 'Lv1', title: '日本語と英語の違い　なぜあなたの英語は伝わらないのか' };
 
@@ -48,31 +48,31 @@ const hook = {
   },
 };
 
-// ---- 中心のアニメーション：分解 → 色分け → 並べ替え → 助詞が消える → 英語に ----
-const demo = reorderStory({
+// ---- 中心のアニメーション：分解 → 色分け → 下の枠へ1枚ずつ → 助詞が消える → 英語に ----
+const demo = anchorStory({
   id: 'demo',
   chunks: [
     { jp: '私', p: 'は', en: 'I', role: 's' },
-    { jp: '毎日', p: '', en: 'every day', role: 'm' },
-    { jp: '学校', p: 'で', en: 'at school', role: 'm' },
+    { jp: '毎日', p: '', en: 'every day', role: 'm', q: 'いつ' },
+    { jp: '学校', p: 'で', en: 'at school', role: 'm', q: 'どこで' },
     { jp: '英語', p: 'を', en: 'English', role: 'o' },
     { jp: '勉強します', p: '', en: 'study', role: 'v' },
   ],
   jpOrder: [0, 1, 2, 3, 4],
   enOrder: [0, 4, 3, 2, 1],
   sentence: `${col('s', 'I')} ${col('v', 'study')} ${col('o', 'English')} ${col('m', 'at school every day')}.`,
-  T: { split: 3, glow: 6.5, color: 14, reorder: 21, drop: 29, flip: 33.5, done: 37.5, end: 43 },
+  T: { split: 3, glow: 6.5, color: 14, anchors: 0.8, move: 22, step: 1.3, drop: 30, flip: 32.5, done: 36.5, end: 42 },
   narration: [
     { t: 0, text: '「私は毎日学校で英語を勉強します。」この文を見てみましょう。' },
     { t: 3, text: '日本語の文は、このように<em>「文節」</em>に分けられます。' },
     { t: 6.5, text: '注目してほしいのは<em>「は」「で」「を」</em>。これは<em>「助詞」</em>です。' },
     { t: 10, text: '日本語では、助詞が「だれが」「どこで」「何を」を決めています。' },
     { t: 14, text: '役割ごとに色を付けます。<em>青＝主語</em>、<em>赤＝述部</em>、<em>緑＝目的語</em>、<em>灰色＝修飾語</em>。' },
-    { t: 21, text: 'では、英語の順番に並べかえてみましょう。' },
-    { t: 25, text: '主語 → 述部 → 目的語 → 修飾語。これが英語の順番です。' },
-    { t: 29, text: '英語には助詞がありません。代わりに<em>「位置」</em>が役割を決めます。' },
-    { t: 33.5, text: '日本語を英語に変えると……' },
-    { t: 37.5, text: '<em>I study English at school every day.</em>　正しい英文になりました！' },
+    { t: 18, text: '下の枠は英語の順番。<em>だれが → どうする → 何を → どこで → いつ</em>。' },
+    { t: 22, text: '主語から順番に、枠に当てはめていきます。' },
+    { t: 30, text: '英語には助詞がありません。代わりに<em>「位置」</em>が役割を決めます。' },
+    { t: 32.5, text: '日本語を英語に変えると……' },
+    { t: 36.5, text: '<em>I study English at school every day.</em>　正しい英文になりました！' },
   ],
 });
 
@@ -131,52 +131,78 @@ const rule = {
 };
 
 // ---- 例2：2語の述部（listen to） ----
-const example2 = reorderStory({
+const example2 = anchorStory({
   id: 'example2', versions: ['full'],
   heading: 'もう1つやってみよう',
   chunks: [
     { jp: '私', p: 'は', en: 'I', role: 's' },
-    { jp: '毎日', p: '', en: 'every day', role: 'm' },
+    { jp: '毎日', p: '', en: 'every day', role: 'm', q: 'いつ' },
     { jp: '音楽', p: 'を', en: 'music', role: 'o' },
     { jp: '聞きます', p: '', en: 'listen to', role: 'v' },
   ],
   jpOrder: [0, 1, 2, 3],
   enOrder: [0, 3, 2, 1],
   sentence: `${col('s', 'I')} ${col('v', 'listen to')} ${col('o', 'music')} ${col('m', 'every day')}.`,
-  T: { split: 1, glow: 2.5, color: 5, reorder: 8.5, drop: 12, flip: 14, done: 18, end: 24 },
+  T: { split: 0.8, glow: 2, color: 4, anchors: 0.5, move: 7.5, step: 1.1, drop: 12.5, flip: 14, done: 18, end: 24 },
   narration: [
     { t: 0, text: '「私は毎日音楽を聞きます。」' },
-    { t: 5, text: '役割ごとに色分けして……' },
-    { t: 8.5, text: '英語の順番に並べかえ。' },
-    { t: 12, text: '助詞を消して、英語に変えます。' },
+    { t: 4, text: '役割ごとに色分けして……' },
+    { t: 7.5, text: '主語から順番に、下の枠へ。' },
+    { t: 12.5, text: '助詞を消して、英語に変えます。' },
     { t: 14.5, text: '「聞きます」は <em>listen to</em>。2語でも、まとめて1つの<em>「述部」</em>です。' },
     { t: 18, text: '<em>I listen to music every day.</em>' },
   ],
 });
 
-// ---- 練習（詳しい版のみ） ----
-const p1 = practiceReorder({
-  id: 'practice1', no: 1,
+// ---- 練習（詳しい版のみ）：上の日本語を、下の枠に当てはめる ----
+function practice(no, { jp, chunks, enOrder, sentence }) {
+  const T = practiceTimes(chunks.length);
+  return anchorStory({
+    id: `practice${no}`, versions: ['full'], practice: { no, think: 10 },
+    heading: '英語の順番の枠に当てはめよう',
+    chunks, jpOrder: chunks.map((_, i) => i), enOrder, sentence, T,
+    narration: [
+      { t: 0, text: `練習${no}　「${jp}」` },
+      { t: T.think0, text: 'どのカードがどの枠に入るかな？　動画を止めて考えてもOK。' },
+      { t: T.color, text: 'ヒント：カードに色がつきました。同じ色の枠を探そう！' },
+      { t: T.answer, text: '答え合わせ。主語から順番に、枠に入れていきます。' },
+      { t: T.drop, text: '助詞を消して、英語に変えると……' },
+      { t: T.done, text: sentence.replace(/<[^>]+>/g, '') },
+    ],
+  });
+}
+const p1 = practice(1, {
   jp: '私たちは毎週日曜日に公園でサッカーをします。',
   chunks: [
-    { en: 'We', role: 's' }, { en: 'play', role: 'v' }, { en: 'soccer', role: 'o' },
-    { en: 'in the park', role: 'm' }, { en: 'every Sunday', role: 'm' },
+    { jp: '私たち', p: 'は', en: 'We', role: 's' },
+    { jp: '毎週日曜日', p: 'に', en: 'every Sunday', role: 'm', q: 'いつ' },
+    { jp: '公園', p: 'で', en: 'in the park', role: 'm', q: 'どこで' },
+    { jp: 'サッカー', p: 'を', en: 'soccer', role: 'o' },
+    { jp: 'します', p: '', en: 'play', role: 'v' },
   ],
-  shuffled: [3, 0, 4, 2, 1], enOrder: [0, 1, 2, 3, 4],
+  enOrder: [0, 4, 3, 2, 1],
   sentence: `${col('s', 'We')} ${col('v', 'play')} ${col('o', 'soccer')} ${col('m', 'in the park every Sunday')}.`,
 });
-const p2 = practiceReorder({
-  id: 'practice2', no: 2,
+const p2 = practice(2, {
   jp: '私は夕食の後にテレビを見ます。',
-  chunks: [{ en: 'I', role: 's' }, { en: 'watch', role: 'v' }, { en: 'TV', role: 'o' }, { en: 'after dinner', role: 'm' }],
-  shuffled: [3, 1, 0, 2], enOrder: [0, 1, 2, 3],
+  chunks: [
+    { jp: '私', p: 'は', en: 'I', role: 's' },
+    { jp: '夕食の後', p: 'に', en: 'after dinner', role: 'm', q: 'いつ' },
+    { jp: 'テレビ', p: 'を', en: 'TV', role: 'o' },
+    { jp: '見ます', p: '', en: 'watch', role: 'v' },
+  ],
+  enOrder: [0, 3, 2, 1],
   sentence: `${col('s', 'I')} ${col('v', 'watch')} ${col('o', 'TV')} ${col('m', 'after dinner')}.`,
 });
-const p3 = practiceReorder({
-  id: 'practice3', no: 3,
+const p3 = practice(3, {
   jp: '私は毎晩母と話します。',
-  chunks: [{ en: 'I', role: 's' }, { en: 'talk', role: 'v' }, { en: 'with my mother', role: 'm' }, { en: 'every night', role: 'm' }],
-  shuffled: [2, 3, 1, 0], enOrder: [0, 1, 2, 3],
+  chunks: [
+    { jp: '私', p: 'は', en: 'I', role: 's' },
+    { jp: '毎晩', p: '', en: 'every night', role: 'm', q: 'いつ' },
+    { jp: '母', p: 'と', en: 'with my mother', role: 'm', q: 'だれと' },
+    { jp: '話します', p: '', en: 'talk', role: 'v' },
+  ],
+  enOrder: [0, 3, 2, 1],
   sentence: `${col('s', 'I')} ${col('v', 'talk')} ${col('m', 'with my mother every night')}.`,
 });
 

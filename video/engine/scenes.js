@@ -24,131 +24,109 @@ export function titleScene({ id = 'title', versions = BOTH, duration = 6, kicker
   };
 }
 
-/** 文の上に出す日本語（練習問題など） */
-function promptLine(root, text, top = 230, size = 64) {
-  const el = h('div', 'sentence');
-  el.style.top = top + 'px';
-  el.style.fontSize = size + 'px';
-  el.innerHTML = text;
-  root.appendChild(el);
-  return el;
-}
-
-
+/** 役割ごとの「問い」。修飾語は chunk.q で指定（どこで・いつ・だれと） */
+const ROLE_Q = { s: 'だれが', v: 'どうする', o: '何を', m: '', c: '' };
 
 /**
- * 日本語 → 英語の語順に並べ替える実演。
- * chunks: [{jp,p,en,role}], jpOrder / enOrder: 並び順（chunks の番号）
- * T: 各段階の開始時刻（秒）
- *   split 文節に分ける / glow 助詞を光らせる / color 役割の色 / reorder 並べ替え
- *   drop 助詞を消す / flip 英語に変える / done 完成した英文 / end 場面の長さ
+ * 日本語の文節カード（上の行）を、英語の順番の枠（下の行）に1枚ずつ当てはめる。
+ * 上の行のカードは元の場所に残す。
+ *   chunks: [{jp,p,en,role,q}]、jpOrder / enOrder: 並び順（chunks の番号）
+ *   T: split 文節に分ける / glow 助詞を光らせる / color 色付け / anchors 枠を出す
+ *      move 1枚目が動き出す / step 次のカードまでの間隔 / drop 助詞を消す / flip 英語に / done 完成文 / end
+ *   practice: { no, think } を渡すと練習問題（カウントダウンつき）になる
  */
-export function reorderStory({ id, versions = BOTH, chunks, jpOrder, enOrder, sentence, T, narration, heading }) {
+export function anchorStory({ id, versions = BOTH, chunks, jpOrder, enOrder, sentence, T, narration, heading, practice }) {
+  const Y_TOP = 250, Y_BOT = 530;
   return {
     id, versions, duration: T.end, narration,
     setup(root) {
-      const head = heading ? h('div', 'heading') : null;
-      if (head) { head.innerHTML = heading; root.appendChild(head); }
-      const row = new ChunkRow(root, chunks, { y: 380 });
-      const ans = h('div', 'sentence');
-      ans.style.top = '700px'; ans.style.fontSize = '76px';
-      ans.innerHTML = sentence;
-      const ok = h('div', 'mark ok', '✓');
-      ok.style.left = '1640px'; ok.style.top = '640px';
-      root.append(ans, ok);
-      return { row, ans, ok, head };
-    },
-    render({ row, ans, ok, head }, t) {
-      if (head) fadeIn(head, t, 0, 0.5);
-      const pSplit = ease(seg(t, T.split, T.split + 1.2));
-      const pReorder = ease(seg(t, T.reorder, T.reorder + 2.4));
-      const pDrop = ease(seg(t, T.drop, T.drop + 1.2));
-      // 分ける前はカードの余白なし・すき間なしで、ふつうの1文に見せる
-      const wA = row.w.jp.map((w) => w - row.pad * (1 - pSplit));
-      const A = { xs: layoutPositions(wA, jpOrder, mix(0, row.gap, pSplit), STAGE_W), ws: wA, mode: 'jp' };
-      const B = { xs: row.positions(enOrder, 'jp'), mode: 'jp' };
-      const C = { xs: row.positions(enOrder, 'jpNoP'), mode: 'jpNoP' };
-      const D = { xs: row.positions(enOrder, 'en'), mode: 'en' };
-      const ab = mixLayouts(row, A, B, pReorder);
-      const bc = mixLayouts(row, { xs: ab.map((l) => l.x), ws: ab.map((l) => l.w) }, C, pDrop);
-      chunks.forEach((c, i) => {
-        // 英語へは少しずつずらして切り替える
-        const rank = enOrder.indexOf(i);
-        const pFlip = ease(seg(t, T.flip + rank * 0.35, T.flip + rank * 0.35 + 0.8));
-        const l = mixLayouts(row, { xs: bc.map((v) => v.x), ws: bc.map((v) => v.w) }, D, pFlip)[i];
-        // 並べ替えのとき、カードを持ち上げて動かす（動く距離が大きいほど高く）
-        // 右へ動くカードは上を、左へ動くカードは下を通る（すれ違いで重ならない）
-        const dx = (B.xs[i] ?? 0) - (A.xs[i] ?? 0);
-        const lift = Math.sin(Math.PI * pReorder) * (Math.abs(dx) < 5 ? 0 : Math.min(170, 70 + Math.abs(dx) * 0.2)) * Math.sign(dx);
-        const hasP = !!c.p;
-        const glow = hasP ? Math.min(seg(t, T.glow + 0.3 * jpOrder.indexOf(i), T.glow + 0.3 * jpOrder.indexOf(i) + 0.4), 1 - seg(t, T.color + 2, T.color + 3)) : 0;
-        row.set(i, {
-          x: l.x, w: l.w,
-          frame: pSplit,
-          lift,
-          glow,
-          colored: ease(seg(t, T.color + 0.25 * jpOrder.indexOf(i), T.color + 0.25 * jpOrder.indexOf(i) + 0.6)),
-          label: ease(seg(t, T.color + 0.25 * jpOrder.indexOf(i), T.color + 0.25 * jpOrder.indexOf(i) + 0.6)),
-          particle: 1 - pDrop,
-          lang: pFlip,
-          scale: 1 + 0.08 * Math.sin(Math.PI * seg(t, T.flip + rank * 0.35, T.flip + rank * 0.35 + 0.8)),
-        });
+      let head = null, badge = null, cd = null;
+      if (heading) { head = h('div', 'heading'); head.style.top = '120px'; head.style.fontSize = '50px'; head.innerHTML = heading; root.appendChild(head); }
+      if (practice) {
+        badge = h('div', 'badge', `練習 ${practice.no}`);
+        badge.style.left = '64px'; badge.style.top = '110px'; badge.style.background = 'var(--accent)';
+        root.appendChild(badge);
+        cd = new Countdown(root, practice.think, { x: 110, y: 845, size: 150 });
+      }
+      // 下の行：英語の順番の枠（アンカー）
+      const anchorLayer = h('div'); root.appendChild(anchorLayer);
+      // 枠の列が画面からはみ出す場合は、文字を小さくして作り直す
+      const GAP = 30, MAX_W = 1800;
+      let fontSize = 60, top, bot, slotW;
+      for (;;) {
+        top = new ChunkRow(root, chunks, { y: Y_TOP, fontSize });
+        slotW = chunks.map((_, i) => Math.max(top.w.jp[i], top.w.en[i]));
+        const total = slotW.reduce((a, b) => a + b, 0) + GAP * (chunks.length - 1);
+        if (total <= MAX_W || fontSize <= 40) break;
+        top.cards.forEach((k) => k.card.remove());
+        fontSize = Math.max(40, Math.floor(fontSize * (MAX_W - GAP * (chunks.length - 1)) / (total - GAP * (chunks.length - 1))));
+      }
+      bot = new ChunkRow(root, chunks, { y: Y_BOT, fontSize });
+      const slotX = layoutPositions(slotW, enOrder, GAP, STAGE_W);
+      const anchors = chunks.map((c, i) => {
+        const a = h('div', 'anchor');
+        a.style.left = slotX[i] + 'px'; a.style.top = Y_BOT + 'px'; a.style.width = slotW[i] + 'px';
+        a.style.setProperty('--role', ROLE[c.role].color);
+        const lab = h('div', 'anchor-label');
+        lab.innerHTML = `${ROLE[c.role].name}<small>${c.q ?? ROLE_Q[c.role]}</small>`;
+        a.appendChild(lab);
+        anchorLayer.appendChild(a);
+        return a;
       });
+      const ans = h('div', 'sentence'); ans.style.top = '790px'; ans.style.fontSize = '66px'; ans.innerHTML = sentence;
+      const ok = h('div', 'mark ok', '✓'); ok.style.left = '1700px'; ok.style.top = '730px'; ok.style.fontSize = '120px';
+      root.append(ans, ok);
+      return { head, badge, cd, top, bot, slotW, slotX, anchors, ans, ok };
+    },
+    render({ head, badge, cd, top, bot, slotW, slotX, anchors, ans, ok }, t) {
+      if (head) fadeIn(head, t, 0, 0.5);
+      if (badge) fadeIn(badge, t, 0, 0.4);
+      const pSplit = ease(seg(t, T.split, T.split + 1.2));
+      const pDrop = ease(seg(t, T.drop, T.drop + 1.0));
+      // 分ける前はカードの余白なし・すき間なしで、ふつうの1文に見せる
+      const wA = top.w.jp.map((w) => w - top.pad * (1 - pSplit));
+      const xA = layoutPositions(wA, jpOrder, mix(0, top.gap, pSplit), STAGE_W);
+      chunks.forEach((c, i) => {
+        const jr = jpOrder.indexOf(i), er = enOrder.indexOf(i);
+        const pColor = ease(seg(t, T.color + 0.25 * jr, T.color + 0.25 * jr + 0.6));
+        const glow = c.p ? Math.min(seg(t, T.glow + 0.3 * jr, T.glow + 0.3 * jr + 0.4), 1 - seg(t, T.color + 2, T.color + 3)) : 0;
+        const ms = T.move + er * T.step;          // このカードが動き出す時刻
+        const pMove = ease(seg(t, ms, ms + 1.0));
+        // 上の行（元の場所）：動いたあとも少し薄くして残す
+        top.set(i, {
+          x: xA[i], w: wA[i], frame: pSplit, glow, colored: pColor, label: pColor,
+          opacity: (practice ? seg(t, 0.4 + jr * 0.12, 0.8 + jr * 0.12) : 1) * (1 - 0.5 * seg(t, ms, ms + 0.4)),
+        });
+        // 下の行：上のカードの写しが枠へ飛んでいく
+        const pFlip = ease(seg(t, T.flip + er * 0.35, T.flip + er * 0.35 + 0.8));
+        const wB = mix(mix(top.w.jp[i], top.w.jpNoP[i], pDrop), top.w.en[i], pFlip);
+        const xB = slotX[i] + (slotW[i] - wB) / 2;
+        // まず下へ抜けてから横へ動く（上の行のカードの上を横切らない）
+        const raw = seg(t, ms, ms + 1.0);
+        const pDown = 1 - Math.pow(1 - raw, 3);
+        bot.set(i, {
+          x: mix(xA[i], xB, pMove), y: mix(Y_TOP, Y_BOT, pDown), w: mix(wA[i], wB, pMove),
+          scale: 1 + 0.1 * Math.sin(Math.PI * pMove) + 0.08 * Math.sin(Math.PI * seg(t, T.flip + er * 0.35, T.flip + er * 0.35 + 0.8)),
+          opacity: t >= ms ? 1 : 0, colored: 1, particle: 1 - pDrop, lang: pFlip,
+        });
+        const pa = ease(seg(t, T.anchors + er * 0.15, T.anchors + er * 0.15 + 0.5));
+        anchors[i].style.opacity = pa;
+        anchors[i].style.transform = `translateY(${(1 - pa) * 20}px)`;
+      });
+      if (cd) cd.set(t - T.think0, Math.min(seg(t, T.think0 - 0.4, T.think0), 1 - seg(t, T.think0 + practice.think, T.think0 + practice.think + 0.5)));
       fadeIn(ans, t, T.done, 0.6);
-      const pOk = easeOutBack(seg(t, T.done + 0.6, T.done + 1.1));
       ok.style.opacity = seg(t, T.done + 0.6, T.done + 0.8);
-      ok.style.transform = `scale(${pOk})`;
+      ok.style.transform = `scale(${easeOutBack(seg(t, T.done + 0.6, T.done + 1.1))})`;
     },
   };
 }
 
-/**
- * 練習問題：日本語を見て、英語のカードを並べる。
- * shuffled: 最初に見せる並び（chunks の番号）、enOrder: 正解
- */
-export function practiceReorder({ id, versions = ['full'], no, jp, chunks, shuffled, enOrder, sentence, think = 8 }) {
-  const T0 = 2.5, T1 = T0 + think, end = T1 + 6.5;
-  return {
-    id, versions, duration: end,
-    narration: [
-      { t: 0, text: `練習${no}　日本語に合うように、英語のカードを並べかえよう。` },
-      { t: T0, text: '動画を止めて考えてもOK！　ノートに書いてみよう。' },
-      { t: T1, text: '答え合わせ。主語 → 述部 → 目的語 → 修飾語 の順番だね。' },
-      { t: T1 + 3.2, text: sentence.replace(/<[^>]+>/g, '') },
-    ],
-    setup(root, ctx) {
-      const badge = h('div', 'badge', `練習 ${no}`);
-      badge.style.left = '64px'; badge.style.top = '110px'; badge.style.background = 'var(--accent)';
-      const q = promptLine(root, jp, 200, 66);
-      const row = new ChunkRow(root, chunks, { y: 430 });
-      const cd = new Countdown(root, think);
-      const ans = h('div', 'sentence'); ans.style.top = '720px'; ans.style.fontSize = '72px'; ans.innerHTML = sentence;
-      const ok = h('div', 'mark ok', '✓'); ok.style.left = '1640px'; ok.style.top = '660px';
-      root.append(badge, ans, ok);
-      return { badge, q, row, cd, ans, ok };
-    },
-    render({ badge, q, row, cd, ans, ok }, t) {
-      fadeIn(badge, t, 0, 0.4);
-      fadeIn(q, t, 0.2, 0.6);
-      const A = { xs: row.positions(shuffled, 'en'), mode: 'en' };
-      const B = { xs: row.positions(enOrder, 'en'), mode: 'en' };
-      const p = ease(seg(t, T1, T1 + 2));
-      const L = mixLayouts(row, A, B, p);
-      chunks.forEach((c, i) => {
-        const appear = easeOutBack(seg(t, 0.8 + i * 0.15, 1.3 + i * 0.15));
-        const dx = B.xs[i] - A.xs[i];
-        row.set(i, {
-          x: L[i].x, w: L[i].w, lang: 1, opacity: seg(t, 0.8 + i * 0.15, 1.1 + i * 0.15), scale: appear,
-          lift: Math.sin(Math.PI * p) * (Math.abs(dx) < 5 ? 0 : Math.min(150, 60 + Math.abs(dx) * 0.2)) * Math.sign(dx),
-          colored: ease(seg(t, T1 + 1.6, T1 + 2.4)), label: ease(seg(t, T1 + 1.6, T1 + 2.4)),
-        });
-      });
-      cd.set(t - T0, Math.min(seg(t, T0 - 0.4, T0), 1 - seg(t, T1, T1 + 0.5)));
-      fadeIn(ans, t, T1 + 3, 0.6);
-      ok.style.opacity = seg(t, T1 + 3.4, T1 + 3.6);
-      ok.style.transform = `scale(${easeOutBack(seg(t, T1 + 3.4, T1 + 3.9))})`;
-    },
-  };
+/** 練習問題の時刻表を作る（考える時間 think 秒、3秒後に色のヒント） */
+export function practiceTimes(n, think = 10) {
+  const think0 = 2.5, T1 = think0 + think;
+  const move = T1 + 0.6, step = 1.0;
+  const drop = move + n * step + 0.4, flip = drop + 1.2, done = flip + n * 0.35 + 1;
+  return { split: -2, glow: 999, anchors: 0.8, think0, color: think0 + 3, answer: T1, move, step, drop, flip, done, end: done + 4.5 };
 }
 
 /**
