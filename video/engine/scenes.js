@@ -140,7 +140,9 @@ export function practiceTimes(n, think = 10) {
  *   rows: ['肯定文', '疑問文']、jp: ['日本語訳1', '日本語訳2']
  *   T: show 1行目 / copy 2行目が出る / peek のぞく / insert 移動 / alt 文字の変化 / note 説明 / end
  */
-export function transformScene({ id, versions = BOTH, heading, chunks, baseOrder, newOrder, insert, behind, changeAlt = [], T, narration, peekNote, note, practice, think = 7, rows = ['肯定文', '疑問文'], jp = ['', ''], toc }) {
+export function transformScene({ id, versions = BOTH, heading, chunks, baseOrder, newOrder, insert = null, behind, changeAlt = [], T, narration, peekNote, note, noteAt, practice, think = 7, rows = ['肯定文', '疑問文'], jp = ['', ''], toc }) {
+  // insert が null のときは、カードは動かず形だけが変わる（play → played など）。noteAt: 吹き出しを出すカード
+  if (noteAt == null) noteAt = insert;
   const enter = baseOrder.includes(insert) ? 'move' : behind != null ? 'hidden' : 'drop';
   T = { copy: T.show + 1.2, peek: T.show + 1.2, ...T };
   const shift = practice ? think + 1 : 0; // 練習のときは考える時間を入れる
@@ -162,8 +164,14 @@ export function transformScene({ id, versions = BOTH, heading, chunks, baseOrder
         A = r1.positions(baseOrder, 'en').map((x) => (x == null ? null : x + CX));
         w2 = r2.w.en2;
         B = A.slice();
-        if (newOrder.indexOf(insert) === 0) {
+        if (insert != null && newOrder.indexOf(insert) === 0) {
           B[insert] = A[newOrder[1]] - GAP - w2[insert];
+          // do / did が出てくる型は、主語から後ろを詰めて並べ直す（played → play で幅が変わるため）。
+          // be動詞・助動詞が動く型は、もとの場所を空欄として残すので並べ直さない。
+          if (!baseOrder.includes(insert)) {
+            let x = A[newOrder[1]];
+            newOrder.slice(1).forEach((i) => { B[i] = x; x += w2[i] + GAP; });
+          }
         } else {
           let x = A[newOrder[0]];
           newOrder.forEach((i) => { B[i] = x; x += w2[i] + GAP; });
@@ -180,7 +188,7 @@ export function transformScene({ id, versions = BOTH, heading, chunks, baseOrder
       if (Rr > 1890) dx = 1890 - Rr;
       if (L + dx < 250) dx = 250 - L;
       for (let i = 0; i < A.length; i++) { if (A[i] != null) A[i] += dx; if (B[i] != null) B[i] += dx; }
-      slot.style.left = A[insert] + 'px'; slot.style.width = r1.w.en[insert] + 'px';
+      if (insert != null) { slot.style.left = A[insert] + 'px'; slot.style.width = r1.w.en[insert] + 'px'; }
       const lab = (y, text, bg) => { const e = h('div', 'badge', text); e.style.left = '48px'; e.style.top = y + 38 + 'px'; e.style.background = bg; e.style.fontSize = '36px'; root.appendChild(e); return e; };
       const l1 = lab(Y1, rows[0], 'var(--sub)'), l2 = lab(Y2, rows[1], 'var(--x)');
       const jpLine = (y, text) => { const e = h('div', 'sentence'); e.style.top = y + 198 + 'px'; e.style.left = CX * 2 + 'px'; e.style.fontSize = '32px'; e.style.color = 'var(--sub)'; e.style.fontWeight = '700'; e.textContent = text ? `「${text}」` : ''; root.appendChild(e); return e; };
@@ -239,7 +247,7 @@ export function transformScene({ id, versions = BOTH, heading, chunks, baseOrder
       };
       if (peekNote && enter === 'hidden') place(peekEl, hideX + r2.w.en[insert] + 14, Y2 - PEEK + 8, Math.min(ease(seg(t, TT.peek + 1.5, TT.peek + 2)), 1 - seg(t, TT.insert - 0.2, TT.insert + 0.2)), false);
       else peekEl.style.opacity = 0;
-      if (note) place(noteEl, B[insert] + r2.w.en2[insert] / 2, Y2 - 70, ease(seg(t, TT.note, TT.note + 0.5)));
+      if (note && noteAt != null) place(noteEl, B[noteAt] + r2.w.en2[noteAt] / 2, Y2 - 70, ease(seg(t, TT.note, TT.note + 0.5)));
       else noteEl.style.opacity = 0;
       if (cd) {
         const c0 = TT.peek + 2;
