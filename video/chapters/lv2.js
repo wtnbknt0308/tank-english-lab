@@ -4,18 +4,28 @@ import { titleScene, sectionScene, transformScene, fillBlankScene, answerScene }
 
 export const meta = { code: 'Lv2', title: '日本語と英語の違い　なぜあなたは英語がわからなくなるのか' };
 // 英語式の言葉の入れ替えと、文型（一般動詞の文・be動詞の文）の切り替え
+// 右上の目次。scene.toc で今の項目（と表のマス）を光らせる
+meta.toc = [
+  { key: '1', label: '一般動詞の文とbe動詞の文' },
+  { key: '2', label: '練習　be動詞？一般動詞？' },
+  { key: '3', label: '疑問文・答え方・否定文', grid: {
+    rows: [{ key: 'gen', label: '一般動詞' }, { key: 'be', label: 'be動詞' }],
+    cols: [{ key: 'q', label: '疑問文' }, { key: 'a', label: '答え方' }, { key: 'n', label: '否定文' }],
+  } },
+  { key: '4', label: '練習　書きかえ・答え方' },
+];
 
 const col = (role, text) => `<span style="color:${ROLE[role].color}">${text}</span>`;
 const BOTH = ['full', 'digest'];
 
-// ---- つかみ：日本語は文末を変えるだけ、英語は言葉が「入れ替わる」 ----
+// ---- つかみ：日本語は文末を変えるだけ、英語は do や be動詞が移動する ----
 const hook = {
   id: 'hook', versions: BOTH, duration: 16,
   narration: [
     { t: 0, text: '日本語の疑問文・否定文は、文の<em>最後</em>を「〜か」「〜ません」に変えるだけ。' },
     { t: 3.5, text: '言葉の順番は、どこも変わりません。' },
-    { t: 7, text: '英語はちがいます。<em>do</em> が前に出てきて、言葉が<em>入れ替わります</em>。' },
-    { t: 11, text: '英語がわからなくなる原因は、<em>語順</em>（Lv1）と、この<em>英語式の入れ替え</em>です。' },
+    { t: 7, text: '英語はちがいます。<em>do</em> や be動詞が、文の前へ<em>移動</em>します。' },
+    { t: 11, text: '英語がわからなくなる原因は、<em>語順</em>（Lv1）と、この<em>英語式の言葉の動き方</em>です。' },
   ],
   setup(root) {
     const head = h('div', 'heading'); head.innerHTML = '疑問文・否定文の作り方、日本語と英語でどうちがう？'; root.appendChild(head);
@@ -33,7 +43,7 @@ const hook = {
       root.appendChild(e); return e;
     };
     const t1 = tag(330, '最後を変えるだけ', 'var(--sub)');
-    const t2 = tag(620, '言葉が入れ替わる', 'var(--x)');
+    const t2 = tag(620, '言葉が移動する', 'var(--x)');
     return { head, jp1, jp2, en1, en2, t1, t2, jpHl: [...jp1.querySelectorAll('.hl'), ...jp2.querySelectorAll('.hl')], enHl: [...en1.querySelectorAll('.hl'), ...en2.querySelectorAll('.hl')] };
   },
   render(st, t) {
@@ -49,12 +59,12 @@ const hook = {
 
 // ======== 1 一般動詞の文と be動詞の文 ========
 const sec1 = sectionScene({
-  id: 'sec1', no: 1, title: '一般動詞の文と be動詞の文', sub: '意味と使い方をくらべよう',
+  id: 'sec1', toc: '1', no: 1, title: '一般動詞の文と be動詞の文', sub: '意味と使い方をくらべよう',
   narration: [{ t: 0.5, text: '1つ目のポイント。一般動詞の文と、be動詞の文をくらべます。' }],
 });
 
 const compare = {
-  id: 'compare', versions: BOTH, duration: 24,
+  id: 'compare', toc: '1', versions: BOTH, duration: 24,
   narration: [
     { t: 0, text: '英語の文には、大きく2つのタイプがあります。' },
     { t: 2.5, text: '1つ目は <em>be動詞</em> の文。<em>I am a student.</em>「私は生徒です。」' },
@@ -65,18 +75,18 @@ const compare = {
   ],
   setup(root) {
     const mkRow = (y, chunks) => new ChunkRow(root, chunks, { y });
-    const r1 = mkRow(250, [
+    const r1 = mkRow(300, [
       { en: 'I', role: 's' }, { en: 'am', role: 'v', label: 'be動詞' }, { en: 'a student.', role: 'c' },
     ]);
-    const r2 = mkRow(590, [
+    const r2 = mkRow(630, [
       { en: 'I', role: 's' }, { en: 'play', role: 'v', label: '一般動詞' }, { en: 'tennis.', role: 'o' },
     ]);
     const line = (top, html) => { const e = h('div', 'sentence'); e.style.top = top + 'px'; e.style.fontSize = '44px'; e.style.color = 'var(--sub)'; e.innerHTML = html; root.appendChild(e); return e; };
-    const j1 = line(445, '「私は生徒です。」'), j2 = line(785, '「私はテニスをします。」');
+    const j1 = line(495, '「私は生徒です。」'), j2 = line(825, '「私はテニスをします。」');
     const tag = (top, text, bg) => { const e = h('div', 'badge', text); e.style.left = '80px'; e.style.top = top + 'px'; e.style.background = bg; e.style.fontSize = '38px'; root.appendChild(e); return e; };
-    const t1 = tag(282, 'be動詞の文', ROLE.c.color), t2 = tag(622, '一般動詞の文', ROLE.v.color);
-    const note = (top, text) => { const e = h('div', 'badge', text); e.style.left = '1350px'; e.style.top = top + 'px'; e.style.background = 'var(--x)'; e.style.fontSize = '38px'; root.appendChild(e); return e; };
-    const n1 = note(282, 'I ＝ a student'), n2 = note(622, '動作を表す');
+    const t1 = tag(332, 'be動詞の文', ROLE.c.color), t2 = tag(662, '一般動詞の文', ROLE.v.color);
+    const note = (top, text) => { const e = h('div', 'badge', text); e.style.left = '1280px'; e.style.top = top + 'px'; e.style.background = 'var(--x)'; e.style.fontSize = '38px'; root.appendChild(e); return e; };
+    const n1 = note(332, 'I ＝ a student'), n2 = note(662, '動作を表す');
     return { r1, r2, j1, j2, t1, t2, n1, n2 };
   },
   render(st, t) {
@@ -92,7 +102,7 @@ const compare = {
 };
 
 const beTable = {
-  id: 'be-table', versions: BOTH, duration: 13,
+  id: 'be-table', toc: '1', versions: BOTH, duration: 13,
   narration: [
     { t: 0, text: 'be動詞は、主語によって形が変わります。' },
     { t: 3, text: '<em>I</em> のときは <em>am</em>。<em>you</em> や、2人以上のときは <em>are</em>。' },
@@ -116,7 +126,7 @@ const beTable = {
 };
 
 const mistake = {
-  id: 'mistake', versions: ['full'], duration: 12,
+  id: 'mistake', toc: '1', versions: ['full'], duration: 12,
   narration: [
     { t: 0, text: 'よくあるまちがい。<em>I am play tennis.</em>' },
     { t: 3.5, text: 'be動詞の am と、一般動詞の play。述部の動詞が2つになっています。' },
@@ -145,34 +155,35 @@ const mistake = {
 };
 
 // ======== 2 練習問題 ========
-const sec2 = sectionScene({ id: 'sec2', versions: ['full'], no: 2, title: '練習問題', sub: 'be動詞？ それとも一般動詞？',
+const sec2 = sectionScene({ id: 'sec2', toc: '2', versions: ['full'], no: 2, title: '練習問題', sub: 'be動詞？ それとも一般動詞？',
   narration: [{ t: 0.5, text: '練習問題。be動詞と一般動詞、どちらが入るかな？' }] });
 const f1 = fillBlankScene({
-  id: 'fill1', no: 1, jp: '私は中学生です。',
+  id: 'fill1', toc: '2', no: 1, jp: '私は中学生です。',
   chunks: [{ en: 'I', role: 's' }, { en: 'am', role: 'v', label: 'be動詞' }, { en: 'a junior high school student.', role: 'c' }],
   blank: 1, options: ['am', 'are', 'play'],
   why: '「〜です」で、I ＝ 中学生。主語が I なので <em>am</em>。',
 });
 const f2 = fillBlankScene({
-  id: 'fill2', no: 2, jp: '私たちは毎日サッカーをします。',
+  id: 'fill2', toc: '2', no: 2, jp: '私たちは毎日サッカーをします。',
   chunks: [{ en: 'We', role: 's' }, { en: 'play', role: 'v', label: '一般動詞' }, { en: 'soccer', role: 'o' }, { en: 'every day.', role: 'm' }],
   blank: 1, options: ['are', 'play', 'is'],
   why: '「サッカーをする」は動作なので、一般動詞の <em>play</em>。',
 });
 const f3 = fillBlankScene({
-  id: 'fill3', no: 3, jp: 'あなたはとても親切です。',
+  id: 'fill3', toc: '2', no: 3, jp: 'あなたはとても親切です。',
   chunks: [{ en: 'You', role: 's' }, { en: 'are', role: 'v', label: 'be動詞' }, { en: 'very kind.', role: 'c' }],
   blank: 1, options: ['am', 'are', 'like'],
   why: '「〜です」で、you ＝ 親切。主語が you なので <em>are</em>。',
 });
 
 // ======== 3 肯定・否定・疑問の作り方と答え方 ========
-const sec3 = sectionScene({ id: 'sec3', no: 3, title: '否定文・疑問文の作り方と答え方', sub: '一般動詞の文 → be動詞の文',
+const sec3 = sectionScene({ id: 'sec3', toc: '3', no: 3, title: '否定文・疑問文の作り方と答え方', sub: '一般動詞の文 → be動詞の文',
   narration: [{ t: 0.5, text: '3つ目のポイント。否定文・疑問文の作り方と、答え方です。' }] });
 
 // ---- 疑問文：一般動詞の後ろにかくれていた do が、先頭へスライドしてくる ----
 const question = transformScene({
-  id: 'question',
+  id: 'question', toc: { item: '3', row: 'gen', col: 'q' },
+  rows: ['肯定文', '疑問文'], jp: ['あなたは毎日学校で英語を勉強します。', 'あなたは毎日学校で英語を勉強しますか？'],
   heading: '一般動詞の疑問文<small>肯定文 → 疑問文</small>',
   chunks: [
     { en: 'do', en2: 'Do', role: 'x' },
@@ -184,7 +195,7 @@ const question = transformScene({
   ],
   baseOrder: [1, 2, 3, 4, 5], newOrder: [0, 1, 2, 3, 4, 5], insert: 0, behind: 2, changeAlt: [0, 1, 5],
   peekNote: 'かくれている do', note: '質問の合図',
-  T: { show: 0, peek: 3.5, insert: 8, alt: 10, note: 11, end: 19 },
+  T: { show: 0, copy: 1.5, peek: 2.5, insert: 8, alt: 10, note: 11, end: 19 },
   narration: [
     { t: 0, text: '「あなたは毎日学校で英語を勉強します。」これを疑問文にします。' },
     { t: 3.5, text: '実は、一般動詞 <em>study</em> の後ろには <em>do</em> がかくれています。' },
@@ -196,7 +207,8 @@ const question = transformScene({
 
 // ---- 否定文：かくれていた do が動詞の前に出て、not とくっつく ----
 const negative = transformScene({
-  id: 'negative',
+  id: 'negative', toc: { item: '3', row: 'gen', col: 'n' },
+  rows: ['肯定文', '否定文'], jp: ['私は毎日学校で英語を勉強します。', '私は毎日学校で英語を勉強しません。'],
   heading: '一般動詞の否定文<small>肯定文 → 否定文</small>',
   chunks: [
     { en: 'I', role: 's' },
@@ -208,7 +220,7 @@ const negative = transformScene({
   ],
   baseOrder: [0, 2, 3, 4, 5], newOrder: [0, 1, 2, 3, 4, 5], insert: 1, behind: 2, changeAlt: [1],
   peekNote: 'かくれている do', note: 'do + not = don\'t',
-  T: { show: 0, peek: 3.5, insert: 7, alt: 9.5, note: 9.5, end: 18 },
+  T: { show: 0, copy: 1.5, peek: 2.5, insert: 7, alt: 9.5, note: 9.5, end: 18 },
   narration: [
     { t: 0, text: '今度は否定文。「私は毎日学校で英語を勉強します。」' },
     { t: 3.5, text: 'ここでも、<em>study</em> の後ろに <em>do</em> がかくれています。' },
@@ -219,7 +231,7 @@ const negative = transformScene({
 });
 
 const genAnswer = answerScene({
-  id: 'gen-answer', heading: '答え方（一般動詞の文）',
+  id: 'gen-answer', toc: { item: '3', row: 'gen', col: 'a' }, heading: '答え方（一般動詞の文）',
   lines: [
     { html: '<span class="hl">Do</span> you study English?', t: 0.3 },
     { html: 'Yes, I <span class="hl">do</span>.', tag: 'はい', color: ROLE.o.color, t: 3 },
@@ -234,9 +246,10 @@ const genAnswer = answerScene({
   ],
 });
 
-// ---- be動詞の疑問文：be動詞そのものが主語と入れ替わる ----
+// ---- be動詞の疑問文：be動詞だけが先頭へ移動し、もとの場所は空欄になる（主語は動かない） ----
 const beQuestion = transformScene({
-  id: 'be-question',
+  id: 'be-question', toc: { item: '3', row: 'be', col: 'q' },
+  rows: ['肯定文', '疑問文'], jp: ['あなたは生徒です。', 'あなたは生徒ですか？'],
   heading: 'be動詞の疑問文<small>肯定文 → 疑問文</small>',
   chunks: [
     { en: 'You', en2: 'you', role: 's' },
@@ -244,17 +257,18 @@ const beQuestion = transformScene({
     { en: 'a student.', en2: 'a student?', role: 'c' },
   ],
   baseOrder: [0, 1, 2], newOrder: [1, 0, 2], insert: 1, changeAlt: [0, 1, 2],
-  note: '主語と入れ替わる',
-  T: { show: 0, insert: 7, alt: 9, note: 9.5, end: 17 },
+  note: 'be動詞だけが先頭へ',
+  T: { show: 0, copy: 1.5, insert: 7, alt: 9, note: 9.5, end: 18 },
   narration: [
     { t: 0, text: '次は be動詞の文。「あなたは生徒です。」<em>You are a student.</em>' },
     { t: 3.5, text: 'be動詞の文には、<em>do</em> はかくれていません。' },
-    { t: 7, text: '疑問文では、be動詞そのものが主語と<em>入れ替わって</em>、先頭に出ます。' },
-    { t: 12.5, text: '<em>Are you a student?</em>' },
+    { t: 7, text: '疑問文では、<em>be動詞だけ</em>が文の先頭へ移動します。主語は動きません。' },
+    { t: 11.5, text: 'be動詞がいた場所は、空っぽになります。' },
+    { t: 14.5, text: '<em>Are you a student?</em>' },
   ],
 });
 const beAnswer = answerScene({
-  id: 'be-answer', heading: '答え方（be動詞の文）',
+  id: 'be-answer', toc: { item: '3', row: 'be', col: 'a' }, heading: '答え方（be動詞の文）',
   lines: [
     { html: '<span class="hl">Are</span> you a student?', t: 0.3 },
     { html: 'Yes, I <span class="hl">am</span>.', tag: 'はい', color: ROLE.o.color, t: 3 },
@@ -269,7 +283,8 @@ const beAnswer = answerScene({
   ],
 });
 const beNegative = transformScene({
-  id: 'be-negative',
+  id: 'be-negative', toc: { item: '3', row: 'be', col: 'n' },
+  rows: ['肯定文', '否定文'], jp: ['私は生徒です。', '私は生徒ではありません。'],
   heading: 'be動詞の否定文<small>肯定文 → 否定文</small>',
   chunks: [
     { en: 'I', role: 's' },
@@ -289,15 +304,16 @@ const beNegative = transformScene({
 
 // ======== 4 練習問題 ========
 const p4 = transformScene({
-  id: 'practice4', versions: ['full'], practice: '練習 4',
-  heading: '疑問文にしよう<small>「あなたは毎日ピアノをひきます。」</small>',
+  id: 'practice4', toc: { item: '4', row: 'gen', col: 'q' },
+  rows: ['肯定文', '疑問文'], jp: ['あなたは毎日ピアノをひきます。', 'あなたは毎日ピアノをひきますか？'], versions: ['full'], practice: '練習 4',
+  heading: '疑問文にしよう',
   chunks: [
     { en: 'do', en2: 'Do', role: 'x' }, { en: 'You', en2: 'you', role: 's' }, { en: 'play', role: 'v' },
     { en: 'the piano', role: 'o' }, { en: 'every day.', en2: 'every day?', role: 'm' },
   ],
   baseOrder: [1, 2, 3, 4], newOrder: [0, 1, 2, 3, 4], insert: 0, behind: 2, changeAlt: [0, 1, 4],
   peekNote: 'かくれている do', note: '質問の合図',
-  T: { show: 0, peek: 1, insert: 3, alt: 5, note: 6, end: 11 },
+  T: { show: 0, copy: 0.6, peek: 0.6, insert: 3, alt: 5, note: 6, end: 11 },
   narration: [
     { t: 0, text: '練習4　この文を疑問文にしよう。' },
     { t: 1, text: '<em>play</em> の後ろの <em>do</em> は、どこへ出てくるかな？　止めて考えてもOK！' },
@@ -306,15 +322,16 @@ const p4 = transformScene({
   ],
 });
 const p5 = transformScene({
-  id: 'practice5', versions: ['full'], practice: '練習 5',
-  heading: '否定文にしよう<small>「私たちは夕食の後にテレビを見ます。」</small>',
+  id: 'practice5', toc: { item: '4', row: 'gen', col: 'n' },
+  rows: ['肯定文', '否定文'], jp: ['私たちは夕食の後にテレビを見ます。', '私たちは夕食の後にテレビを見ません。'], versions: ['full'], practice: '練習 5',
+  heading: '否定文にしよう',
   chunks: [
     { en: 'We', role: 's' }, { en: 'do', en2: "don't", role: 'x' }, { en: 'watch', role: 'v' },
     { en: 'TV', role: 'o' }, { en: 'after dinner.', role: 'm' },
   ],
   baseOrder: [0, 2, 3, 4], newOrder: [0, 1, 2, 3, 4], insert: 1, behind: 2, changeAlt: [1],
   peekNote: 'かくれている do', note: 'do + not = don\'t',
-  T: { show: 0, peek: 1, insert: 3, alt: 5, note: 5, end: 11 },
+  T: { show: 0, copy: 0.6, peek: 0.6, insert: 3, alt: 5, note: 5, end: 11 },
   narration: [
     { t: 0, text: '練習5　この文を否定文にしよう。' },
     { t: 1, text: '<em>watch</em> の後ろの <em>do</em> は、どこへ出てくるかな？　止めて考えてもOK！' },
@@ -324,33 +341,35 @@ const p5 = transformScene({
 });
 
 
-const sec4 = sectionScene({ id: 'sec4', versions: ['full'], no: 4, title: '練習問題', sub: '否定文・疑問文に書きかえよう',
+const sec4 = sectionScene({ id: 'sec4', toc: '4', versions: ['full'], no: 4, title: '練習問題', sub: '否定文・疑問文に書きかえよう',
   narration: [{ t: 0.5, text: '最後の練習問題。否定文・疑問文に書きかえよう。' }] });
 const p6 = transformScene({
-  id: 'practice6', versions: ['full'], practice: '練習 6',
-  heading: '疑問文にしよう<small>「彼は先生です。」</small>',
+  id: 'practice6', toc: { item: '4', row: 'be', col: 'q' },
+  rows: ['肯定文', '疑問文'], jp: ['彼は先生です。', '彼は先生ですか？'], versions: ['full'], practice: '練習 6',
+  heading: '疑問文にしよう',
   chunks: [
     { en: 'He', en2: 'he', role: 's' }, { en: 'is', en2: 'Is', role: 'v', label: 'be動詞' }, { en: 'a teacher.', en2: 'a teacher?', role: 'c' },
   ],
   baseOrder: [0, 1, 2], newOrder: [1, 0, 2], insert: 1, changeAlt: [0, 1, 2],
-  note: '主語と入れ替わる',
-  T: { show: 0, peek: 1, insert: 3, alt: 4.5, note: 5, end: 10 },
+  note: 'be動詞だけが先頭へ',
+  T: { show: 0, copy: 0.6, peek: 0.6, insert: 3, alt: 4.5, note: 5, end: 10 },
   narration: [
     { t: 0, text: '練習6　この文を疑問文にしよう。' },
-    { t: 1, text: 'be動詞の文だね。何が動くかな？　止めて考えてもOK！' },
-    { t: 11, text: '答え：be動詞 <em>is</em> が主語と入れ替わる。' },
+    { t: 1, text: 'be動詞の文だね。どのカードが動くかな？　止めて考えてもOK！' },
+    { t: 11, text: '答え：be動詞 <em>is</em> だけが先頭へ移動する。' },
     { t: 13.5, text: '<em>Is he a teacher?</em>' },
   ],
 });
 const p7 = transformScene({
-  id: 'practice7', versions: ['full'], practice: '練習 7',
-  heading: '否定文にしよう<small>「私たちは忙しいです。」</small>',
+  id: 'practice7', toc: { item: '4', row: 'be', col: 'n' },
+  rows: ['肯定文', '否定文'], jp: ['私たちは忙しいです。', '私たちは忙しくありません。'], versions: ['full'], practice: '練習 7',
+  heading: '否定文にしよう',
   chunks: [
     { en: 'We', role: 's' }, { en: 'are', role: 'v', label: 'be動詞' }, { en: 'not', role: 'x' }, { en: 'busy.', role: 'c' },
   ],
   baseOrder: [0, 1, 3], newOrder: [0, 1, 2, 3], insert: 2,
   note: 'be動詞のあとに not',
-  T: { show: 0, peek: 1, insert: 3, alt: 4.5, note: 4.5, end: 10 },
+  T: { show: 0, copy: 0.6, peek: 0.6, insert: 3, alt: 4.5, note: 4.5, end: 10 },
   narration: [
     { t: 0, text: '練習7　この文を否定文にしよう。' },
     { t: 1, text: 'be動詞の文だね。not はどこに入るかな？　止めて考えてもOK！' },
@@ -359,7 +378,7 @@ const p7 = transformScene({
   ],
 });
 const p8 = answerScene({
-  id: 'practice8', versions: ['full'], practice: { label: '練習 8', think0: 2.5, think: 7 },
+  id: 'practice8', toc: { item: '4', row: 'be', col: 'a' }, versions: ['full'], practice: { label: '練習 8', think0: 2.5, think: 7 },
   heading: '「いいえ」で答えよう<small>「あなたはおなかがすいていますか？」</small>',
   lines: [
     { html: '<span class="hl">Are</span> you hungry?', t: 0.3 },
@@ -373,7 +392,7 @@ const p8 = answerScene({
   ],
 });
 const p9 = answerScene({
-  id: 'practice9', versions: ['full'], practice: { label: '練習 9', think0: 2.5, think: 7 },
+  id: 'practice9', toc: { item: '4', row: 'gen', col: 'a' }, versions: ['full'], practice: { label: '練習 9', think0: 2.5, think: 7 },
   heading: '「はい」で答えよう<small>「あなたはネコが好きですか？」</small>',
   lines: [
     { html: '<span class="hl">Do</span> you like cats?', t: 0.3 },
@@ -392,14 +411,14 @@ const summary = {
   id: 'summary', versions: BOTH, duration: { full: 16, digest: 12 },
   narration: [
     { t: 0, text: 'まとめ。英語がわからなくなる原因は、<em>語順</em>と<em>英語式の入れ替え</em>。' },
-    { t: 4.5, text: '一般動詞は do が出てくる。be動詞は自分が動く。これで迷わない！' },
+    { t: 4.5, text: '一般動詞は do が出てくる。be動詞は自分が動く。主語は動かない！' },
   ],
   setup(root) {
     const head = h('div', 'heading'); head.textContent = 'まとめ'; root.appendChild(head);
     const items = [
       `be動詞は「＝（イコール）」、一般動詞は「動作」。動詞は1文に1つ`,
       `一般動詞の文：かくれた <b style="color:var(--x)">do</b> が前に出る（Do you〜? / I don't〜.）`,
-      `be動詞の文：<b style="color:var(--v)">be動詞</b>が主語と入れ替わる、後ろに not`,
+      `be動詞の文：<b style="color:var(--v)">be動詞</b>だけが先頭へ移動、否定は後ろに not`,
       `答えるときは、聞かれた形（do / be動詞）で答える`,
     ].map((html, i) => {
       const el = h('div', 'box');

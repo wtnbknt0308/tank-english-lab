@@ -129,88 +129,130 @@ export function practiceTimes(n, think = 10) {
 }
 
 /**
- * 肯定文 → 疑問文・否定文への変形。
- * 合図のカード（do）は、最初から一般動詞のカードの「後ろ」にかくれている。
- * peek でカードが少しのぞき、insert で見える位置へスライドして出てくる。
- *   chunks: 英語カード。insert: かくれているカードの番号、behind: その前にある一般動詞のカードの番号
- *   baseOrder / newOrder、changeAlt: en → en2 に変えるカード番号（do→Do, You→you, . →? など）
- *   T: show 元の文 / peek のぞく / insert スライド / alt 文字の変化 / note 説明 / end
- *   peekNote / note: 吹き出しの文字
+ * 肯定文 → 疑問文・否定文への変形（2行表示）。
+ * 1行目に肯定文、2行目にその写しを出し、2行目だけを変化させる。主語は動かさない。
+ *   enter（自動判定）
+ *     'hidden' do が一般動詞のカードの後ろにかくれていて、のぞいてから見える位置へ移動する
+ *     'move'   be動詞そのものが先頭へ移動する。もとの場所には空欄が残る
+ *     'drop'   not が上から入る
+ *   chunks: 英語カード。insert: 動くカードの番号、behind: do がかくれる一般動詞の番号
+ *   baseOrder / newOrder、changeAlt: en → en2 に変えるカード（do→Do, You→you, . →? など）
+ *   rows: ['肯定文', '疑問文']、jp: ['日本語訳1', '日本語訳2']
+ *   T: show 1行目 / copy 2行目が出る / peek のぞく / insert 移動 / alt 文字の変化 / note 説明 / end
  */
-export function transformScene({ id, versions = BOTH, heading, chunks, baseOrder, newOrder, insert, behind, changeAlt = [], T, narration, peekNote, note, practice, think = 7 }) {
-  // enter: 'hidden' 動詞の後ろから出てくる / 'move' 文の中のカードが動く（be動詞） / 'drop' 上から入る（not）
+export function transformScene({ id, versions = BOTH, heading, chunks, baseOrder, newOrder, insert, behind, changeAlt = [], T, narration, peekNote, note, practice, think = 7, rows = ['肯定文', '疑問文'], jp = ['', ''], toc }) {
   const enter = baseOrder.includes(insert) ? 'move' : behind != null ? 'hidden' : 'drop';
-  if (T.peek == null) T = { ...T, peek: T.show };
+  T = { copy: T.show + 1.2, peek: T.show + 1.2, ...T };
   const shift = practice ? think + 1 : 0; // 練習のときは考える時間を入れる
-  const TT = Object.fromEntries(Object.entries(T).map(([k, v]) => [k, k === 'show' || k === 'peek' ? v : v + shift]));
-  const Y = 450, PEEK = 100;
+  const fixed = ['show', 'copy', 'peek'];
+  const TT = Object.fromEntries(Object.entries(T).map(([k, v]) => [k, fixed.includes(k) ? v : v + shift]));
+  const Y1 = 330, Y2 = 640, PEEK = 72, GAP = 28, CX = 120; // CX: 左の「肯定文」ラベルの分だけ右へ寄せる
   return {
-    id, versions, duration: TT.end, narration,
+    id, versions, duration: TT.end, narration, toc,
     setup(root) {
-      const head = h('div', 'heading'); head.innerHTML = heading; root.appendChild(head);
-      const row = new ChunkRow(root, chunks, { y: Y });
-      row.cards.forEach((k, i) => { k.card.style.zIndex = i === insert ? 1 : 2; });
-      const mk = (text) => { const e = h('div', 'badge', text ?? ''); e.style.background = 'var(--x)'; e.style.fontSize = '34px'; e.style.zIndex = 3; root.appendChild(e); return e; };
+      const head = h('div', 'heading'); head.style.top = '110px'; head.innerHTML = heading; root.appendChild(head);
+      const slot = h('div', 'anchor'); slot.style.setProperty('--role', '#9aa1b0'); slot.style.top = Y2 + 'px'; root.appendChild(slot);
+      const base = chunks.map((c) => ({ ...c, en2: c.en }));
+      // 2行目の最終位置を計算する：主語（先頭）は動かさない。
+      // 左のラベル（250px）から右端（1890px）に入らなければ、文字を小さくして作り直す
+      let r1, r2, A, B, w2, L, Rr, fontSize = 60;
+      for (let tries = 0; tries < 3; tries++) {
+        r1 = new ChunkRow(root, base, { y: Y1, gap: GAP, fontSize });
+        r2 = new ChunkRow(root, chunks, { y: Y2, gap: GAP, fontSize });
+        A = r1.positions(baseOrder, 'en').map((x) => (x == null ? null : x + CX));
+        w2 = r2.w.en2;
+        B = A.slice();
+        if (newOrder.indexOf(insert) === 0) {
+          B[insert] = A[newOrder[1]] - GAP - w2[insert];
+        } else {
+          let x = A[newOrder[0]];
+          newOrder.forEach((i) => { B[i] = x; x += w2[i] + GAP; });
+        }
+        const xs = [...A, ...B].map((x, j) => [x, j < A.length ? r1.w.en[j] : w2[j - A.length]]).filter(([x]) => x != null);
+        L = Math.min(...xs.map(([x]) => x)); Rr = Math.max(...xs.map(([x, w]) => x + w));
+        if (Rr - L <= 1640) break;
+        [...r1.cards, ...r2.cards].forEach((k) => k.card.remove());
+        fontSize = Math.floor(fontSize * 1600 / (Rr - L));
+      }
+      r2.cards.forEach((k, i) => { k.card.style.zIndex = i === insert ? 1 : 2; });
+      // 2行とも同じだけずらして、画面に収める（上下のそろいは保つ）
+      let dx = 0;
+      if (Rr > 1890) dx = 1890 - Rr;
+      if (L + dx < 250) dx = 250 - L;
+      for (let i = 0; i < A.length; i++) { if (A[i] != null) A[i] += dx; if (B[i] != null) B[i] += dx; }
+      slot.style.left = A[insert] + 'px'; slot.style.width = r1.w.en[insert] + 'px';
+      const lab = (y, text, bg) => { const e = h('div', 'badge', text); e.style.left = '48px'; e.style.top = y + 38 + 'px'; e.style.background = bg; e.style.fontSize = '36px'; root.appendChild(e); return e; };
+      const l1 = lab(Y1, rows[0], 'var(--sub)'), l2 = lab(Y2, rows[1], 'var(--x)');
+      const jpLine = (y, text) => { const e = h('div', 'sentence'); e.style.top = y + 198 + 'px'; e.style.left = CX * 2 + 'px'; e.style.fontSize = '32px'; e.style.color = 'var(--sub)'; e.style.fontWeight = '700'; e.textContent = text ? `「${text}」` : ''; root.appendChild(e); return e; };
+      const j1 = jpLine(Y1, jp[0]), j2 = jpLine(Y2, jp[1]);
+      const mk = (text) => { const e = h('div', 'badge', text ?? ''); e.style.background = 'var(--x)'; e.style.fontSize = '32px'; e.style.zIndex = 4; root.appendChild(e); return e; };
       const peekEl = mk(peekNote), noteEl = mk(note);
       let cd = null, badge = null;
       if (practice) {
-        cd = new Countdown(root, think);
+        cd = new Countdown(root, think, { x: 110, y: 905, size: 130 });
         badge = h('div', 'badge', practice); badge.style.left = '64px'; badge.style.top = '110px'; badge.style.background = 'var(--accent)';
         root.appendChild(badge);
       }
-      return { head, row, peekEl, noteEl, cd, badge };
+      return { head, slot, r1, r2, A, B, l1, l2, j1, j2, peekEl, noteEl, cd, badge };
     },
-    render({ head, row, peekEl, noteEl, cd, badge }, t) {
+    render({ head, slot, r1, r2, A, B, l1, l2, j1, j2, peekEl, noteEl, cd, badge }, t) {
       fadeIn(head, t, 0, 0.5);
       if (badge) fadeIn(badge, t, 0, 0.4);
-      const A = row.positions(baseOrder, 'en');
-      const B = row.positions(newOrder, 'en2');
+      fadeIn(l1, t, TT.show); fadeIn(j1, t, TT.show + 0.4);
+      fadeIn(l2, t, TT.insert); fadeIn(j2, t, TT.alt + 0.6);
+      const pCopy = ease(seg(t, TT.copy, TT.copy + 1.0));
       const pMake = ease(seg(t, TT.insert, TT.insert + 1.6));
-      // かくれている位置：一般動詞のカードの真後ろ（中央そろえ）
-      const hideX = enter === 'hidden' ? A[behind] + (row.w.en[behind] - row.w.en[insert]) / 2
-        : enter === 'move' ? A[insert] : B[insert];
-      const pPeek = enter === 'hidden' ? ease(seg(t, TT.peek, TT.peek + 0.8)) : 0;
+      const pPeek = enter === 'hidden' ? ease(seg(t, TT.peek + 1.0, TT.peek + 1.8)) : 0;
+      const hideX = enter === 'hidden' ? A[behind] + (r2.w.en[behind] - r2.w.en[insert]) / 2 : enter === 'move' ? A[insert] : B[insert];
       chunks.forEach((c, i) => {
+        const inBase = baseOrder.includes(i);
+        // 1行目：肯定文（変化しない）
+        if (inBase) r1.set(i, { x: A[i], w: r1.w.en[i], lang: 1, colored: 1, label: 1, opacity: seg(t, TT.show + 0.2 + i * 0.1, TT.show + 0.6 + i * 0.1) });
+        else r1.set(i, { x: 0, w: 0, opacity: 0 });
+        // 2行目：写しが下りてきて、動くカードだけが変化する
         const pAlt = changeAlt.includes(i) ? ease(seg(t, TT.alt, TT.alt + 0.8)) : 0;
-        const w = mix(row.w.en[i], row.w.en2[i], pAlt);
+        const w = mix(r2.w.en[i], r2.w.en2[i], pAlt);
+        const yCopy = mix(Y1, Y2, pCopy);
         if (i === insert) {
-          // のぞいた高さから、スライドしながら列に下りる（ほかのカードの上を通る）
-          const x = mix(hideX, B[i] + (row.w.en2[i] - w) / 2, pMake);
-          // かくれている間は動詞の後ろ、出てくるときはほかのカードの手前を通る
-          row.cards[i].card.style.zIndex = t >= TT.insert ? 3 : 1;
+          r2.cards[i].card.style.zIndex = t >= TT.insert ? 3 : 1;
+          const x = mix(hideX, B[i] + (r2.w.en2[i] - w) / 2, pMake);
           const dropIn = enter === 'drop' ? 1 - easeOutBack(seg(t, TT.insert + 0.4, TT.insert + 1.2)) : 0;
-          row.set(i, {
-            x, w, lang: 1, colored: 1, label: enter === 'move' ? 1 : 0, alt: pAlt,
-            opacity: enter === 'drop' ? seg(t, TT.insert + 0.3, TT.insert + 0.6) : seg(t, TT.show, TT.show + 0.6),
-            lift: mix(PEEK * pPeek, 0, ease(seg(t, TT.insert + 0.6, TT.insert + 1.6))) + (enter === 'drop' ? 230 * dropIn : (enter === 'move' ? 150 : 40) * Math.sin(Math.PI * seg(t, TT.insert, TT.insert + 1.2))),
-            scale: 1 + 0.1 * Math.sin(Math.PI * seg(t, TT.alt, TT.alt + 0.8)) * (changeAlt.includes(i) ? 1 : 0),
+          const hop = enter === 'move' ? 150 : 40;
+          r2.set(i, {
+            x, w, y: enter === 'drop' ? Y2 : yCopy, lang: 1, colored: 1, label: enter === 'move' ? 1 : 0, alt: pAlt,
+            opacity: enter === 'drop' ? seg(t, TT.insert + 0.3, TT.insert + 0.6) : pCopy,
+            lift: mix(PEEK * pPeek, 0, ease(seg(t, TT.insert + 0.6, TT.insert + 1.6))) + (enter === 'drop' ? 230 * dropIn : hop * Math.sin(Math.PI * seg(t, TT.insert, TT.insert + 1.2))),
+            scale: 1 + 0.1 * Math.sin(Math.PI * pAlt),
           });
           return;
         }
-        row.set(i, {
-          x: mix(A[i], B[i], pMake), w, lang: 1, y: Y, colored: 1, label: 1, alt: pAlt,
-          opacity: seg(t, TT.show + 0.2 + i * 0.1, TT.show + 0.6 + i * 0.1),
-          scale: 1 + 0.12 * Math.sin(Math.PI * pAlt) * (changeAlt.includes(i) ? 1 : 0),
+        r2.set(i, {
+          x: mix(A[i], B[i], pMake), w, y: yCopy, lang: 1, colored: 1, label: 1, alt: pAlt,
+          opacity: pCopy, scale: 1 + 0.12 * Math.sin(Math.PI * pAlt),
         });
       });
-      // 吹き出し：のぞいたとき（かくれている do）と、出てきたあと
-      const place = (el, cx, top, p) => {
-        el.style.left = cx + 'px'; el.style.top = top + 'px';
-        el.style.opacity = p; el.style.transform = `translate(-50%, ${(1 - p) * 20}px)`;
+      // be動詞が抜けたあとの空欄
+      slot.style.opacity = enter === 'move' ? ease(seg(t, TT.insert + 0.3, TT.insert + 1.0)) : 0;
+      const place = (el, left, top, p, center = true) => {
+        el.style.left = left + 'px'; el.style.top = top + 'px';
+        el.style.opacity = p; el.style.transform = `translate(${center ? '-50%' : '0'}, ${(1 - p) * 16}px)`;
       };
-      if (peekNote) place(peekEl, A[behind] + row.w.en[behind] / 2, Y - PEEK - 70, Math.min(ease(seg(t, TT.peek + 0.5, TT.peek + 1)), 1 - seg(t, TT.insert - 0.2, TT.insert + 0.2)));
+      if (peekNote && enter === 'hidden') place(peekEl, hideX + r2.w.en[insert] + 14, Y2 - PEEK + 8, Math.min(ease(seg(t, TT.peek + 1.5, TT.peek + 2)), 1 - seg(t, TT.insert - 0.2, TT.insert + 0.2)), false);
       else peekEl.style.opacity = 0;
-      if (note) place(noteEl, B[insert] + row.w.en2[insert] / 2, Y - 95, ease(seg(t, TT.note, TT.note + 0.5)));
+      if (note) place(noteEl, B[insert] + r2.w.en2[insert] / 2, Y2 - 70, ease(seg(t, TT.note, TT.note + 0.5)));
       else noteEl.style.opacity = 0;
-      if (cd) cd.set(t - TT.peek - 1.5, Math.min(seg(t, TT.peek + 1.1, TT.peek + 1.5), 1 - seg(t, TT.peek + 1.5 + think, TT.peek + 2 + think)));
+      if (cd) {
+        const c0 = TT.peek + 2;
+        cd.set(t - c0, Math.min(seg(t, c0 - 0.4, c0), 1 - seg(t, c0 + think, c0 + think + 0.5)));
+      }
     },
   };
 }
 
 /** 章の中の区切り（1 一般動詞とbe動詞 など） */
-export function sectionScene({ id, versions = BOTH, no, title, sub = '', duration = 4, narration = [] }) {
+export function sectionScene({ id, versions = BOTH, no, title, sub = '', duration = 4, narration = [], toc }) {
   return {
-    id, versions, duration, narration,
+    id, versions, duration, narration, toc,
     setup(root) {
       const wrap = h('div', 'title-wrap');
       const n = h('div', 'section-no', String(no));
@@ -230,10 +272,10 @@ export function sectionScene({ id, versions = BOTH, no, title, sub = '', duratio
  * 空所補充の練習。chunks のうち blank 番目が（　）になり、考える時間のあとで答えのカードが入る。
  * options: 選択肢（文字列）、why: 答えの理由（字幕）
  */
-export function fillBlankScene({ id, versions = ['full'], no, jp, chunks, blank, options, why, think = 8 }) {
+export function fillBlankScene({ id, versions = ['full'], no, jp, chunks, blank, options, why, think = 8, toc }) {
   const think0 = 2, T1 = think0 + think, end = T1 + 6;
   return {
-    id, versions, duration: end,
+    id, versions, duration: end, toc,
     narration: [
       { t: 0, text: `練習${no}　「${jp}」` },
       { t: think0, text: '（　）に入る語はどれ？　止めて考えてもOK！' },
@@ -289,9 +331,9 @@ export function fillBlankScene({ id, versions = ['full'], no, jp, chunks, blank,
  * lines: [{ html, tag, color, t }]（html の中の <span class="hl"> が光る）、hlAt: 光らせる時刻
  * practice: { label, think0, think } を渡すと、答えの前に考える時間が入る
  */
-export function answerScene({ id, versions = BOTH, heading, lines, hlAt, duration, narration, practice }) {
+export function answerScene({ id, versions = BOTH, heading, lines, hlAt, duration, narration, practice, toc }) {
   return {
-    id, versions, duration, narration,
+    id, versions, duration, narration, toc,
     setup(root) {
       const head = h('div', 'heading'); head.innerHTML = heading; root.appendChild(head);
       const els = lines.map((l, i) => {

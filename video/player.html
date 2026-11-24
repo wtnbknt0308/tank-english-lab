@@ -9,6 +9,7 @@
 <div id="stage">
   <div id="scene"></div>
   <div id="chapter-tag"><span class="code"></span><span class="name"></span></div>
+  <div id="toc"></div>
   <div id="subtitle"></div>
   <div id="progress"></div>
 </div>
@@ -30,6 +31,35 @@ const prog = document.getElementById('progress');
 document.querySelector('#chapter-tag .code').textContent = chapter.meta.code;
 document.querySelector('#chapter-tag .name').textContent = chapter.meta.title;
 
+// ---- 右上の目次（chapter.meta.toc があるときだけ） ----
+const tocEl = document.getElementById('toc');
+const tocCells = {};
+if (chapter.meta.toc) {
+  for (const it of chapter.meta.toc) {
+    const row = document.createElement('div'); row.className = 'toc-item';
+    row.innerHTML = `<span class="toc-no">${it.key}</span><span>${it.label}</span>`;
+    tocEl.appendChild(row); tocCells[it.key] = row;
+    if (it.grid) {
+      const g = document.createElement('div'); g.className = 'toc-grid';
+      g.style.gridTemplateColumns = `auto repeat(${it.grid.cols.length}, 1fr)`;
+      g.appendChild(document.createElement('div'));
+      for (const c of it.grid.cols) { const e = document.createElement('div'); e.className = 'toc-col'; e.textContent = c.label; g.appendChild(e); }
+      for (const r of it.grid.rows) {
+        const e = document.createElement('div'); e.className = 'toc-row'; e.textContent = r.label; g.appendChild(e);
+        for (const c of it.grid.cols) { const cell = document.createElement('div'); cell.className = 'toc-cell'; g.appendChild(cell); tocCells[`${r.key}/${c.key}`] = cell; }
+      }
+      tocEl.appendChild(g);
+    }
+  }
+}
+function updateToc(scene) {
+  const on = scene.toc != null && chapter.meta.toc;
+  tocEl.style.display = on ? '' : 'none';
+  if (!on) return;
+  const tc = typeof scene.toc === 'object' ? scene.toc : { item: scene.toc };
+  for (const [k, el] of Object.entries(tocCells)) el.classList.toggle('on', k === String(tc.item) || k === `${tc.row}/${tc.col}`);
+}
+
 let current = null, state = null;
 const ctx = { version };
 
@@ -45,6 +75,7 @@ function seek(t) {
     current = scene;
     state = scene.setup ? scene.setup(root, ctx) : null;
     document.getElementById('chapter-tag').style.display = scene.hideTag ? 'none' : '';
+    updateToc(scene);
   }
   if (scene.render) scene.render(state, local, ctx);
   let text = '';
