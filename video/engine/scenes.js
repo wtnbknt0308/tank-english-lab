@@ -1,5 +1,5 @@
 // よく使う場面の型。各関数は scene オブジェクト（setup / render を持つ）を返す。
-import { h, ChunkRow, Countdown, mixLayouts, layoutPositions, STAGE_W, seg, ease, easeOutBack, mix, fadeIn, ROLE } from './parts.js';
+import { h, ChunkRow, Countdown, mixLayouts, layoutPositions, STAGE_W, seg, ease, easeOutBack, mix, fadeIn, ROLE, plain } from './parts.js';
 
 const BOTH = ['full', 'digest'];
 
@@ -140,13 +140,15 @@ export function practiceTimes(n, think = 10) {
  *   rows: ['肯定文', '疑問文']、jp: ['日本語訳1', '日本語訳2']
  *   T: show 1行目 / copy 2行目が出る / peek のぞく / insert 移動 / alt 文字の変化 / note 説明 / end
  */
-export function transformScene({ id, versions = BOTH, heading, chunks, baseOrder, newOrder, insert = null, behind, changeAlt = [], T, narration, peekNote, note, noteAt, practice, think = 7, rows = ['肯定文', '疑問文'], jp = ['', ''], toc }) {
+export function transformScene({ id, versions = BOTH, heading, chunks, baseOrder, newOrder, insert = null, behind, changeAlt = [], extra = [], T, narration, peekNote, note, noteAt, practice, think = 7, rows = ['肯定文', '疑問文'], jp = ['', ''], toc }) {
+  // extra: 2行目の最後に上から入るカード（for five years など）。T.mark: [ ] の印を光らせる時刻
   // insert が null のときは、カードは動かず形だけが変わる（play → played など）。noteAt: 吹き出しを出すカード
   if (noteAt == null) noteAt = insert;
   const enter = baseOrder.includes(insert) ? 'move' : behind != null ? 'hidden' : 'drop';
   T = { copy: T.show + 1.2, peek: T.show + 1.2, ...T };
+  if (T.mark == null) T = { ...T, mark: T.peek + 1.5 };
   const shift = practice ? think + 1 : 0; // 練習のときは考える時間を入れる
-  const fixed = ['show', 'copy', 'peek'];
+  const fixed = ['show', 'copy', 'peek', 'mark'];
   const TT = Object.fromEntries(Object.entries(T).map(([k, v]) => [k, fixed.includes(k) ? v : v + shift]));
   const Y1 = 330, Y2 = 640, PEEK = 72, GAP = 28, CX = 120; // CX: 左の「肯定文」ラベルの分だけ右へ寄せる
   return {
@@ -214,8 +216,9 @@ export function transformScene({ id, versions = BOTH, heading, chunks, baseOrder
       const hideX = enter === 'hidden' ? A[behind] + (r2.w.en[behind] - r2.w.en[insert]) / 2 : enter === 'move' ? A[insert] : B[insert];
       chunks.forEach((c, i) => {
         const inBase = baseOrder.includes(i);
+        const pMark = ease(seg(t, TT.mark, TT.mark + 0.6));
         // 1行目：肯定文（変化しない）
-        if (inBase) r1.set(i, { x: A[i], w: r1.w.en[i], lang: 1, colored: 1, label: 1, opacity: seg(t, TT.show + 0.2 + i * 0.1, TT.show + 0.6 + i * 0.1) });
+        if (inBase) r1.set(i, { x: A[i], w: r1.w.en[i], lang: 1, colored: 1, label: 1, opacity: seg(t, TT.show + 0.2 + i * 0.1, TT.show + 0.6 + i * 0.1), mark: pMark });
         else r1.set(i, { x: 0, w: 0, opacity: 0 });
         // 2行目：写しが下りてきて、動くカードだけが変化する
         const pAlt = changeAlt.includes(i) ? ease(seg(t, TT.alt, TT.alt + 0.8)) : 0;
@@ -230,13 +233,18 @@ export function transformScene({ id, versions = BOTH, heading, chunks, baseOrder
             x, w, y: enter === 'drop' ? Y2 : yCopy, lang: 1, colored: 1, label: enter === 'move' ? 1 : 0, alt: pAlt,
             opacity: enter === 'drop' ? seg(t, TT.insert + 0.3, TT.insert + 0.6) : pCopy,
             lift: mix(PEEK * pPeek, 0, ease(seg(t, TT.insert + 0.6, TT.insert + 1.6))) + (enter === 'drop' ? 230 * dropIn : hop * Math.sin(Math.PI * seg(t, TT.insert, TT.insert + 1.2))),
-            scale: 1 + 0.1 * Math.sin(Math.PI * pAlt),
+            scale: 1 + 0.1 * Math.sin(Math.PI * pAlt), mark: pMark,
           });
+          return;
+        }
+        if (extra.includes(i)) {
+          const d = easeOutBack(seg(t, TT.alt + 0.2, TT.alt + 1.0));
+          r2.set(i, { x: B[i], w: r2.w.en2[i], y: Y2, lang: 1, colored: 1, label: 1, alt: 1, opacity: seg(t, TT.alt + 0.1, TT.alt + 0.4), lift: 230 * (1 - d), mark: pMark });
           return;
         }
         r2.set(i, {
           x: mix(A[i], B[i], pMake), w, y: yCopy, lang: 1, colored: 1, label: 1, alt: pAlt,
-          opacity: pCopy, scale: 1 + 0.12 * Math.sin(Math.PI * pAlt),
+          opacity: pCopy, scale: 1 + 0.12 * Math.sin(Math.PI * pAlt), mark: pMark,
         });
       });
       // be動詞が抜けたあとの空欄
@@ -287,7 +295,7 @@ export function fillBlankScene({ id, versions = ['full'], no, jp, chunks, blank,
     narration: [
       { t: 0, text: `練習${no}　「${jp}」` },
       { t: think0, text: '（　）に入る語はどれ？　止めて考えてもOK！' },
-      { t: T1, text: `答え：<em>${chunks[blank].en}</em>` },
+      { t: T1, text: `答え：<em>${plain(chunks[blank].en)}</em>` },
       { t: T1 + 1.8, text: why },
     ],
     setup(root) {
@@ -321,7 +329,7 @@ export function fillBlankScene({ id, versions = ['full'], no, jp, chunks, blank,
       slot.style.opacity = seg(t, 0.5, 0.9);
       opts.forEach((e, i) => {
         const p = ease(seg(t, think0 - 0.6 + i * 0.15, think0 - 0.2 + i * 0.15));
-        const right = e.textContent === chunks[blank].en;
+        const right = e.textContent === plain(chunks[blank].en);
         const hit = right ? ease(seg(t, T1, T1 + 0.4)) : 0;
         e.style.opacity = right ? p : p * (1 - 0.6 * seg(t, T1, T1 + 0.4));
         e.style.transform = `translate(-50%, ${(1 - p) * 20}px) scale(${1 + 0.15 * hit})`;
@@ -364,6 +372,48 @@ export function answerScene({ id, versions = BOTH, heading, lines, hlAt, duratio
       const p = ease(seg(t, hlAt, hlAt + 0.6));
       hls.flat().forEach((e) => { e.style.background = `rgba(242,157,18,${p})`; e.style.color = p > 0.5 ? '#fff' : ''; e.style.borderRadius = '10px'; e.style.padding = '0 8px'; });
       if (cd) cd.set(t - practice.think0, Math.min(seg(t, practice.think0 - 0.4, practice.think0), 1 - seg(t, practice.think0 + practice.think, practice.think0 + practice.think + 0.5)));
+    },
+  };
+}
+
+/**
+ * 「いちばんシンプルな現在形」を上に、新しい表現を下に並べて、何がどう変わったかを見せる。
+ * base: { html, jp }、items: [{ label, html, jp, t }]（html の中の <span class="chg"> が変わった部分）
+ */
+export function compareStackScene({ id, versions = BOTH, toc, heading = 'シンプルな現在形からの変化', base, items, duration, narration }) {
+  return {
+    id, versions, duration, narration, toc,
+    setup(root) {
+      const head = h('div', 'heading'); head.style.top = '110px'; head.textContent = heading; root.appendChild(head);
+      const top = h('div', 'box'); top.style.left = '160px'; top.style.width = '1600px'; top.style.top = '220px'; top.style.height = '130px';
+      top.style.borderColor = 'var(--sub)';
+      top.innerHTML = `<div class="badge" style="left:28px;top:38px;background:var(--sub);font-size:30px">いちばんシンプルな現在形</div>
+        <div style="position:absolute;left:470px;top:0;bottom:0;display:flex;align-items:center;font-size:58px;font-weight:900;white-space:pre"><span>${base.html}</span></div>
+        <div style="position:absolute;right:40px;top:0;bottom:0;display:flex;align-items:center;font-size:32px;font-weight:700;color:var(--sub)">「${base.jp}」</div>`;
+      root.appendChild(top);
+      const arrow = h('div', 'mark', '↓'); arrow.style.cssText += 'left:930px;top:340px;font-size:64px;color:var(--sub);';
+      root.appendChild(arrow);
+      const gap = Math.min(120, 470 / Math.max(1, items.length));
+      const rows = items.map((it, i) => {
+        const r = h('div'); r.style.cssText = `position:absolute;left:160px;width:1600px;top:${440 + i * gap}px;height:${gap - 14}px;`;
+        r.innerHTML = `<div class="badge" style="position:absolute;left:28px;top:50%;transform:translateY(-50%);background:var(--x);font-size:30px">${it.label}</div>
+          <div style="position:absolute;left:300px;top:0;bottom:0;display:flex;align-items:center;font-size:52px;font-weight:900;white-space:pre"><span>${it.html}</span></div>
+          <div style="position:absolute;right:40px;top:0;bottom:0;display:flex;align-items:center;font-size:30px;font-weight:700;color:var(--sub)">「${it.jp}」</div>`;
+        root.appendChild(r); return r;
+      });
+      // 英文が右の日本語訳にかかるときは、英文の文字を小さくする
+      const fit = (box) => {
+        const [sent, jp] = [...box.children].slice(1);
+        const span = sent.firstChild;
+        let fs = parseFloat(sent.style.fontSize);
+        while (fs > 32 && span.getBoundingClientRect().right > jp.firstChild.getBoundingClientRect?.().left - 30) { fs -= 2; sent.style.fontSize = fs + 'px'; }
+      };
+      [top, ...rows].forEach((b) => { b.children[2].innerHTML = `<span>${b.children[2].innerHTML}</span>`; fit(b); });
+      return { head, top, arrow, rows };
+    },
+    render({ head, top, arrow, rows }, t) {
+      fadeIn(head, t, 0); fadeIn(top, t, 0.4); fadeIn(arrow, t, 1.2, 0.4, 0);
+      rows.forEach((r, i) => fadeIn(r, t, items[i].t));
     },
   };
 }

@@ -29,6 +29,13 @@ export const ROLE = {
   c: { name: '補語', color: '#8e44ad' },
 };
 
+/** 'play[s]' の [ ] の中を印（.mk）にする。印は「同じ文字だ」と示すためのハイライト */
+export function markup(str) {
+  const esc = String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  return esc.replace(/\[([^\]]+)\]/g, '<span class="mk">$1</span>');
+}
+export const plain = (str) => String(str ?? '').replace(/[\[\]]/g, '');
+
 export function h(tag, cls, text) {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
@@ -54,12 +61,12 @@ export class ChunkRow {
       const body = h('span', 'jp-body', c.jp);
       const part = h('span', 'jp-p', c.p || '');
       jp.append(body, part);
-      const en = h('div', 'card-en'); en.appendChild(h('span', null, c.en));
-      const en2 = h('div', 'card-en'); en2.appendChild(h('span', null, c.en2 ?? c.en));
+      const en = h('div', 'card-en'); const es = h('span'); es.innerHTML = markup(c.en); en.appendChild(es);
+      const en2 = h('div', 'card-en'); const es2 = h('span'); es2.innerHTML = markup(c.en2 ?? c.en); en2.appendChild(es2);
       const label = h('div', 'card-label', c.label ?? ROLE[c.role].name);
       card.append(fill, jp, en, en2, label);
       parent.appendChild(card);
-      return { card, fill, jp, body, part, en, en2, label };
+      return { card, fill, jp, body, part, en, en2, label, marks: [...card.querySelectorAll('.mk')] };
     });
     this.measure();
   }
@@ -90,7 +97,7 @@ export class ChunkRow {
    * particle: 助詞の見え方 0..1 / glow: 助詞を光らせる 0..1 / label: 役割名 0..1 / scale
    * frame: カードの枠と白地 0..1（0 だと普通の文字に見える） / alt: en → en2 の切り替え 0..1
    */
-  set(i, { x, y = this.y, w, opacity = 1, colored = 0, lang = 0, particle = 1, glow = 0, label = 0, scale = 1, lift = 0, frame = 1, alt = 0 }) {
+  set(i, { x, y = this.y, w, opacity = 1, colored = 0, lang = 0, particle = 1, glow = 0, label = 0, scale = 1, lift = 0, frame = 1, alt = 0, mark = 0 }) {
     const k = this.cards[i];
     const s = k.card.style;
     s.transform = `translate(${x}px, ${y - lift}px) scale(${scale})`;
@@ -112,6 +119,12 @@ export class ChunkRow {
     k.part.style.boxShadow = glow > 0 ? `0 0 ${30 * glow}px rgba(255,214,10,${glow})` : 'none';
     k.part.style.color = glow > 0.5 ? '#1d2433' : '';
     k.label.style.opacity = label;
+    // 印：白い地に黒い文字＋黄色の縁。どのカードの上でも同じ見た目になる
+    for (const m of k.marks) {
+      m.style.background = `rgba(255,255,255,${mark})`;
+      m.style.color = mark > 0.5 ? '#1d2433' : '';
+      m.style.boxShadow = mark > 0 ? `0 0 0 ${4 * mark}px rgba(255,214,10,${mark})` : 'none';
+    }
   }
 }
 
